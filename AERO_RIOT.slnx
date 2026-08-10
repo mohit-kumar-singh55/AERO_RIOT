@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="AERO_RIOT/AERO_RIOT.vcxproj" Id="af75de35-9a7c-417c-82ce-dcfeb21e1686" />
+</Solution>

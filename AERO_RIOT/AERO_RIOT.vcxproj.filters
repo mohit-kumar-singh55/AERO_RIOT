@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="SNX">
+      <UniqueIdentifier>{f983cec6-e774-471b-8470-21e2a0617ab4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Input">
+      <UniqueIdentifier>{d2e75130-6db0-438c-b9b6-19a4839d4e29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Graphics">
+      <UniqueIdentifier>{5dd4eb4d-7f66-4cbd-87c6-b184d7d94813}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core">
+      <UniqueIdentifier>{ddb53e9d-9f4e-40c5-9c59-0ba724b66715}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Audio">
+      <UniqueIdentifier>{5fc2315e-afb9-4a68-98e2-ac933d14cd32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Object">
+      <UniqueIdentifier>{a3977474-ade8-4247-ab57-8b29f1b0af90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Components">
+      <UniqueIdentifier>{df389567-f979-45e2-9ca0-a846cbbead42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Components\Renderer">
+      <UniqueIdentifier>{1b432c7a-7734-4f84-a256-af697a069854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Components\Collider">
+      <UniqueIdentifier>{e508a819-700d-4e09-b49d-682d684dfc83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Materials">
+      <UniqueIdentifier>{98a8d451-9100-4bb1-8067-f9834e229d45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Scene">
+      <UniqueIdentifier>{3cff6259-5fa4-4190-a4ed-d6ca45ebc65b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scenes">
+      <UniqueIdentifier>{9e58288b-0fb2-43b8-b5f8-de9ffa445ed9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Components\Camera">
+      <UniqueIdentifier>{bb4a693a-3579-4c37-b491-e0e773b87b48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Docs">
+      <UniqueIdentifier>{32867961-5ccf-467b-9c06-ef7acf72c9f2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Gameplay">
+      <UniqueIdentifier>{b91efc4c-6c68-4300-9d19-ce3968bb0fbd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="Docs\TODO.md">
+      <Filter>Docs</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="SNX\Audio\AudioManager.cpp">
+      <Filter>SNX\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\ModelObject3D.cpp">
+      <Filter>SNX\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\TextureFactory.cpp">
+      <Filter>SNX\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Graphics\DeviceResources.cpp">
+      <Filter>SNX\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Input\InputManager.cpp">
+      <Filter>SNX\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Time.cpp">
+      <Filter>SNX\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Object\Component.cpp">
+      <Filter>SNX\Core\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Object\GameObject.cpp">
+      <Filter>SNX\Core\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Object\GameObjectManager.cpp">
+      <Filter>SNX\Core\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Components\Transform.cpp">
+      <Filter>SNX\Core\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Components\Renderer\PrimitiveRenderer.cpp">
+      <Filter>SNX\Core\Components\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Materials\BasicPrimitiveMaterial.cpp">
+      <Filter>SNX\Core\Materials</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Components\Renderer\MeshRenderer.cpp">
+      <Filter>SNX\Core\Components\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Scene\Scene.cpp">
+      <Filter>SNX\Core\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Scene\SceneManager.cpp">
+      <Filter>SNX\Core\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Scenes\MainScene.cpp">
+      <Filter>Scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Components\Camera\Camera.cpp">
+      <Filter>SNX\Core\Components\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Gameplay\Health.cpp">
+      <Filter>SNX\Gameplay</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="SNX\Audio\AudioManager.h">
+      <Filter>SNX\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Collision.h">
+      <Filter>SNX\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\ModelObject3D.h">
+      <Filter>SNX\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\TextureFactory.h">
+      <Filter>SNX\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Graphics\DeviceResources.h">
+      <Filter>SNX\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Input\InputManager.h">
+      <Filter>SNX\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Time.h">
+      <Filter>SNX\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Object\Component.h">
+      <Filter>SNX\Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Object\GameObject.h">
+      <Filter>SNX\Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Object\GameObjectManager.h">
+      <Filter>SNX\Core\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Components\Transform.h">
+      <Filter>SNX\Core\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Graphics\RenderContext.h">
+      <Filter>SNX\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Components\Renderer\PrimitiveRenderer.h">
+      <Filter>SNX\Core\Components\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Components\Renderer\Renderer.h">
+      <Filter>SNX\Core\Components\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Materials\BasicPrimitiveMaterial.h">
+      <Filter>SNX\Core\Materials</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Components\Renderer\MeshRenderer.h">
+      <Filter>SNX\Core\Components\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Scene\SceneTypes.h">
+      <Filter>SNX\Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Scene\SceneContext.h">
+      <Filter>SNX\Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Scene\Scene.h">
+      <Filter>SNX\Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Scene\SceneManager.h">
+      <Filter>SNX\Core\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Scenes\MainScene.h">
+      <Filter>Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="Scenes\SceneIds.h">
+      <Filter>Scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Components\Camera\Camera.h">
+      <Filter>SNX\Core\Components\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Gameplay\Health.h">
+      <Filter>SNX\Gameplay</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Docs\DETAILS.txt">
+      <Filter>Docs</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

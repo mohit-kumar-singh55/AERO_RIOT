@@ -1,0 +1,8 @@
+- Using fonts
+	- create a .spritefont file using the command line
+	- then use it using spriteFont class
+
+- Importing & using own models
+	- add models as .obj with .mtl (material file) and textures
+	- convert them into runtime mesh file like .cmo, .sdkmesh or .vbo using "meshconvert" command line tool
+	- then import that .cmo file through code
