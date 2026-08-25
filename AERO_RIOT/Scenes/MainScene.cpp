@@ -11,6 +11,8 @@
 #include <SimpleMath.h>
 #include <SpriteFont.h>
 
+#include <string>
+
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	Scene(sceneManager, context) {}
 
@@ -76,4 +78,30 @@ void MainScene::OnRenderUI() {
 		),
 		DirectX::Colors::White
 	);
+
+	if (InputManager::Get().IsGamePadConnected()) {
+		GetContext().font.DrawString(
+			&GetContext().spriteBatch,
+			L"Gamepad Connected!!!",
+			DirectX::SimpleMath::Vector2(
+				20.0f,
+				100.0f
+			),
+			DirectX::Colors::Red
+		);
+
+		GetContext().font.DrawString(
+			&GetContext().spriteBatch,
+			(
+				std::to_wstring(InputManager::Get().GetGamePadStick(GamePadStick::LeftStick).x) +
+				L" " +
+				std::to_wstring(InputManager::Get().GetGamePadStick(GamePadStick::LeftStick).y)
+				).c_str(),
+			DirectX::SimpleMath::Vector2(
+				20.0f,
+				140.0f
+			),
+			DirectX::Colors::Green
+		);
+	}
 }

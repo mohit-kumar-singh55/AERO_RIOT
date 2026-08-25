@@ -33,11 +33,18 @@ void InputManager::Initialize(HWND window) {
 
 	m_mouse->SetWindow(window);
 
-	if (m_isActive && m_gamepad)
-		m_gamepad->Resume();
+	/*
+	* there is a chance that:
+	*	- window is inactive but gamepad is still active
+	*	- window is active but gamepad is still inactive
+	*/
+	if (m_gamepad)
+		m_isActive ? m_gamepad->Resume() : m_gamepad->Suspend();
 
-	// without resetting after the application regains focus, 
-	// an old press could sometimes be interpreted as a new action
+	/*
+	* without resetting after the application regains focus,
+	* an old press could sometimes be interpreted as a new action
+	*/
 	Reset();
 }
 
@@ -70,7 +77,8 @@ void InputManager::Update() {
 
 	// ! read gamepad only for one controller (only for now)
 	m_gamepadState = m_gamepad->GetState(0, DirectX::GamePad::DEAD_ZONE_CIRCULAR);
-	if (m_gamepadState.connected)
+	m_isGamePadConnected = m_gamepadState.connected;
+	if (m_isGamePadConnected)
 		m_gamepadTracker.Update(m_gamepadState);
 	else
 		m_gamepadTracker.Reset();
@@ -193,37 +201,37 @@ DirectX::SimpleMath::Vector2 InputManager::GetMouseDelta() const noexcept {
 
 bool InputManager::IsGamePadButtonDown(GamePadButton button) const noexcept {
 	switch (button) {
-	case GamePadButton::a:
+	case GamePadButton::A:
 		return m_gamepadState.buttons.a;
-	case GamePadButton::b:
+	case GamePadButton::B:
 		return m_gamepadState.buttons.b;
-	case GamePadButton::x:
+	case GamePadButton::X:
 		return m_gamepadState.buttons.x;
-	case GamePadButton::y:
+	case GamePadButton::Y:
 		return m_gamepadState.buttons.y;
-	case GamePadButton::menu:
+	case GamePadButton::Menu:
 		return m_gamepadState.buttons.menu;
-	case GamePadButton::back:
+	case GamePadButton::Back:
 		return m_gamepadState.buttons.back;
-	case GamePadButton::start:
+	case GamePadButton::Start:
 		return m_gamepadState.buttons.start;
-	case GamePadButton::view:
+	case GamePadButton::View:
 		return m_gamepadState.buttons.view;
-	case GamePadButton::leftShoulder:
+	case GamePadButton::LeftShoulder:
 		return m_gamepadState.buttons.leftShoulder;
-	case GamePadButton::rightShoulder:
+	case GamePadButton::RightShoulder:
 		return m_gamepadState.buttons.rightShoulder;
-	case GamePadButton::leftStick:
+	case GamePadButton::LeftStick:
 		return m_gamepadState.buttons.leftStick;
-	case GamePadButton::rightStick:
+	case GamePadButton::RightStick:
 		return m_gamepadState.buttons.rightStick;
-	case GamePadButton::left:
+	case GamePadButton::dPadLeft:
 		return m_gamepadState.dpad.left;
-	case GamePadButton::right:
+	case GamePadButton::dPadRight:
 		return m_gamepadState.dpad.right;
-	case GamePadButton::up:
+	case GamePadButton::dPadUp:
 		return m_gamepadState.dpad.up;
-	case GamePadButton::down:
+	case GamePadButton::dPadDown:
 		return m_gamepadState.dpad.down;
 	default:
 		return false;
@@ -234,37 +242,37 @@ bool InputManager::IsGamePadButtonPressed(GamePadButton button) const noexcept {
 	using ButtonState = DirectX::GamePad::ButtonStateTracker::ButtonState;
 
 	switch (button) {
-	case GamePadButton::a:
+	case GamePadButton::A:
 		return m_gamepadTracker.a == ButtonState::PRESSED;
-	case GamePadButton::b:
+	case GamePadButton::B:
 		return m_gamepadTracker.b == ButtonState::PRESSED;
-	case GamePadButton::x:
+	case GamePadButton::X:
 		return m_gamepadTracker.x == ButtonState::PRESSED;
-	case GamePadButton::y:
+	case GamePadButton::Y:
 		return m_gamepadTracker.y == ButtonState::PRESSED;
-	case GamePadButton::menu:
+	case GamePadButton::Menu:
 		return m_gamepadTracker.menu == ButtonState::PRESSED;
-	case GamePadButton::back:
+	case GamePadButton::Back:
 		return m_gamepadTracker.back == ButtonState::PRESSED;
-	case GamePadButton::start:
+	case GamePadButton::Start:
 		return m_gamepadTracker.start == ButtonState::PRESSED;
-	case GamePadButton::view:
+	case GamePadButton::View:
 		return m_gamepadTracker.view == ButtonState::PRESSED;
-	case GamePadButton::leftShoulder:
+	case GamePadButton::LeftShoulder:
 		return m_gamepadTracker.leftShoulder == ButtonState::PRESSED;
-	case GamePadButton::rightShoulder:
+	case GamePadButton::RightShoulder:
 		return m_gamepadTracker.rightShoulder == ButtonState::PRESSED;
-	case GamePadButton::leftStick:
+	case GamePadButton::LeftStick:
 		return m_gamepadTracker.leftStick == ButtonState::PRESSED;
-	case GamePadButton::rightStick:
+	case GamePadButton::RightStick:
 		return m_gamepadTracker.rightStick == ButtonState::PRESSED;
-	case GamePadButton::left:
+	case GamePadButton::dPadLeft:
 		return m_gamepadTracker.dpadLeft == ButtonState::PRESSED;
-	case GamePadButton::right:
+	case GamePadButton::dPadRight:
 		return m_gamepadTracker.dpadRight == ButtonState::PRESSED;
-	case GamePadButton::up:
+	case GamePadButton::dPadUp:
 		return m_gamepadTracker.dpadUp == ButtonState::PRESSED;
-	case GamePadButton::down:
+	case GamePadButton::dPadDown:
 		return m_gamepadTracker.dpadDown == ButtonState::PRESSED;
 	default:
 		return false;
@@ -275,37 +283,37 @@ bool InputManager::IsGamePadButtonReleased(GamePadButton button) const noexcept 
 	using ButtonState = DirectX::GamePad::ButtonStateTracker::ButtonState;
 
 	switch (button) {
-	case GamePadButton::a:
+	case GamePadButton::A:
 		return m_gamepadTracker.a == ButtonState::RELEASED;
-	case GamePadButton::b:
+	case GamePadButton::B:
 		return m_gamepadTracker.b == ButtonState::RELEASED;
-	case GamePadButton::x:
+	case GamePadButton::X:
 		return m_gamepadTracker.x == ButtonState::RELEASED;
-	case GamePadButton::y:
+	case GamePadButton::Y:
 		return m_gamepadTracker.y == ButtonState::RELEASED;
-	case GamePadButton::menu:
+	case GamePadButton::Menu:
 		return m_gamepadTracker.menu == ButtonState::RELEASED;
-	case GamePadButton::back:
+	case GamePadButton::Back:
 		return m_gamepadTracker.back == ButtonState::RELEASED;
-	case GamePadButton::start:
+	case GamePadButton::Start:
 		return m_gamepadTracker.start == ButtonState::RELEASED;
-	case GamePadButton::view:
+	case GamePadButton::View:
 		return m_gamepadTracker.view == ButtonState::RELEASED;
-	case GamePadButton::leftShoulder:
+	case GamePadButton::LeftShoulder:
 		return m_gamepadTracker.leftShoulder == ButtonState::RELEASED;
-	case GamePadButton::rightShoulder:
+	case GamePadButton::RightShoulder:
 		return m_gamepadTracker.rightShoulder == ButtonState::RELEASED;
-	case GamePadButton::leftStick:
+	case GamePadButton::LeftStick:
 		return m_gamepadTracker.leftStick == ButtonState::RELEASED;
-	case GamePadButton::rightStick:
+	case GamePadButton::RightStick:
 		return m_gamepadTracker.rightStick == ButtonState::RELEASED;
-	case GamePadButton::left:
+	case GamePadButton::dPadLeft:
 		return m_gamepadTracker.dpadLeft == ButtonState::RELEASED;
-	case GamePadButton::right:
+	case GamePadButton::dPadRight:
 		return m_gamepadTracker.dpadRight == ButtonState::RELEASED;
-	case GamePadButton::up:
+	case GamePadButton::dPadUp:
 		return m_gamepadTracker.dpadUp == ButtonState::RELEASED;
-	case GamePadButton::down:
+	case GamePadButton::dPadDown:
 		return m_gamepadTracker.dpadDown == ButtonState::RELEASED;
 	default:
 		return false;
@@ -314,12 +322,12 @@ bool InputManager::IsGamePadButtonReleased(GamePadButton button) const noexcept 
 
 DirectX::SimpleMath::Vector2 InputManager::GetGamePadStick(GamePadStick stick) const noexcept {
 	switch (stick) {
-	case GamePadStick::leftStick:
+	case GamePadStick::LeftStick:
 		return {
 			m_gamepadState.thumbSticks.leftX,
 			m_gamepadState.thumbSticks.leftY
 		};
-	case GamePadStick::rightStick:
+	case GamePadStick::RightStick:
 		return {
 			m_gamepadState.thumbSticks.rightX,
 			m_gamepadState.thumbSticks.rightY
@@ -331,9 +339,9 @@ DirectX::SimpleMath::Vector2 InputManager::GetGamePadStick(GamePadStick stick) c
 
 float InputManager::GetGamePadTrigger(GamePadTrigger trigger) const noexcept {
 	switch (trigger) {
-	case GamePadTrigger::left:
+	case GamePadTrigger::Left:
 		return m_gamepadState.triggers.left;
-	case GamePadTrigger::right:
+	case GamePadTrigger::Right:
 		return m_gamepadState.triggers.right;
 	default:
 		return 0.0f;

@@ -19,34 +19,34 @@ enum class MouseButton {
 };
 
 enum class GamePadButton {
-	a,
-	b,
-	x,
-	y,
-	menu,
-	back,
-	start,
-	view,
-	leftShoulder,
-	rightShoulder,
+	A,
+	B,
+	X,
+	Y,
+	Menu,
+	Back,
+	Start,
+	View,
+	LeftShoulder,
+	RightShoulder,
 	// stich buttons
-	leftStick,
-	rightStick,
+	LeftStick,
+	RightStick,
 	// d-pad buttons
-	left,
-	right,
-	up,
-	down
+	dPadLeft,
+	dPadRight,
+	dPadUp,
+	dPadDown
 };
 
 enum class GamePadStick {
-	leftStick,		// directional action
-	rightStick
+	LeftStick,		// directional action
+	RightStick
 };
 
 enum class GamePadTrigger {
-	left,
-	right
+	Left,
+	Right
 };
 
 /* Singleton class for input management */
@@ -182,6 +182,9 @@ public:
 	[[nodiscard]]
 	float GetGamePadTrigger(GamePadTrigger trigger) const noexcept;
 
+	[[nodiscard]]
+	bool IsGamePadConnected() const noexcept { return m_isGamePadConnected; }
+
 	/*
 	* ===================================
 	* State & Tracker Getters
@@ -235,6 +238,8 @@ private:
 	DirectX::GamePad::ButtonStateTracker m_gamepadTracker;
 
 	int m_scrollWheelDelta = 0;
+
+	bool m_isGamePadConnected = false;
 
 	bool m_isActive = false;
 	bool m_isInitialized = false;
