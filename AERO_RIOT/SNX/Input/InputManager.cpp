@@ -5,6 +5,8 @@
 void InputManager::OnAppActivationChanged(bool active) {
 	m_isActive = active;
 
+	if (!m_gamepad) return;
+
 	/*
 	* unlike keyboard or mouse,
 	* gamepad could receive global input
@@ -31,6 +33,9 @@ void InputManager::Initialize(HWND window) {
 
 	m_mouse->SetWindow(window);
 
+	if (m_isActive && m_gamepad)
+		m_gamepad->Resume();
+
 	// without resetting after the application regains focus, 
 	// an old press could sometimes be interpreted as a new action
 	Reset();
@@ -48,11 +53,11 @@ void InputManager::Shutdown() noexcept {
 }
 
 void InputManager::Update() {
-	// window is not in focus
-	if (!m_isActive) return;
-
 	if (!m_isInitialized)
 		throw std::logic_error("InputManager must be initialized before Update");
+
+	// window is not in focus
+	if (!m_isActive) return;
 
 	// read keyboard only once for this frame
 	m_keyboardState = m_keyboard->GetState();
@@ -212,6 +217,14 @@ bool InputManager::IsGamePadButtonDown(GamePadButton button) const noexcept {
 		return m_gamepadState.buttons.leftStick;
 	case GamePadButton::rightStick:
 		return m_gamepadState.buttons.rightStick;
+	case GamePadButton::left:
+		return m_gamepadState.dpad.left;
+	case GamePadButton::right:
+		return m_gamepadState.dpad.right;
+	case GamePadButton::up:
+		return m_gamepadState.dpad.up;
+	case GamePadButton::down:
+		return m_gamepadState.dpad.down;
 	default:
 		return false;
 	}
@@ -245,6 +258,14 @@ bool InputManager::IsGamePadButtonPressed(GamePadButton button) const noexcept {
 		return m_gamepadTracker.leftStick == ButtonState::PRESSED;
 	case GamePadButton::rightStick:
 		return m_gamepadTracker.rightStick == ButtonState::PRESSED;
+	case GamePadButton::left:
+		return m_gamepadTracker.dpadLeft == ButtonState::PRESSED;
+	case GamePadButton::right:
+		return m_gamepadTracker.dpadRight == ButtonState::PRESSED;
+	case GamePadButton::up:
+		return m_gamepadTracker.dpadUp == ButtonState::PRESSED;
+	case GamePadButton::down:
+		return m_gamepadTracker.dpadDown == ButtonState::PRESSED;
 	default:
 		return false;
 	}
@@ -278,6 +299,14 @@ bool InputManager::IsGamePadButtonReleased(GamePadButton button) const noexcept 
 		return m_gamepadTracker.leftStick == ButtonState::RELEASED;
 	case GamePadButton::rightStick:
 		return m_gamepadTracker.rightStick == ButtonState::RELEASED;
+	case GamePadButton::left:
+		return m_gamepadTracker.dpadLeft == ButtonState::RELEASED;
+	case GamePadButton::right:
+		return m_gamepadTracker.dpadRight == ButtonState::RELEASED;
+	case GamePadButton::up:
+		return m_gamepadTracker.dpadUp == ButtonState::RELEASED;
+	case GamePadButton::down:
+		return m_gamepadTracker.dpadDown == ButtonState::RELEASED;
 	default:
 		return false;
 	}
