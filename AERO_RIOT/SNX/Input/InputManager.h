@@ -29,18 +29,18 @@ enum class GamePadButton {
 	View,
 	LeftShoulder,
 	RightShoulder,
-	// stich buttons
+	// stick buttons
 	LeftStick,
 	RightStick,
 	// d-pad buttons
-	dPadLeft,
-	dPadRight,
-	dPadUp,
-	dPadDown
+	DPadLeft,
+	DPadRight,
+	DPadUp,
+	DPadDown
 };
 
 enum class GamePadStick {
-	LeftStick,		// directional action
+	LeftStick,
 	RightStick
 };
 

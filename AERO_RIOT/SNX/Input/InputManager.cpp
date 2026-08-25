@@ -99,6 +99,8 @@ void InputManager::Reset() noexcept {
 	m_mouseTracker.Reset();
 	m_gamepadTracker.Reset();
 
+	m_isGamePadConnected = false;
+
 	m_scrollWheelDelta = 0;
 
 	if (m_mouse)
@@ -225,13 +227,13 @@ bool InputManager::IsGamePadButtonDown(GamePadButton button) const noexcept {
 		return m_gamepadState.buttons.leftStick;
 	case GamePadButton::RightStick:
 		return m_gamepadState.buttons.rightStick;
-	case GamePadButton::dPadLeft:
+	case GamePadButton::DPadLeft:
 		return m_gamepadState.dpad.left;
-	case GamePadButton::dPadRight:
+	case GamePadButton::DPadRight:
 		return m_gamepadState.dpad.right;
-	case GamePadButton::dPadUp:
+	case GamePadButton::DPadUp:
 		return m_gamepadState.dpad.up;
-	case GamePadButton::dPadDown:
+	case GamePadButton::DPadDown:
 		return m_gamepadState.dpad.down;
 	default:
 		return false;
@@ -266,13 +268,13 @@ bool InputManager::IsGamePadButtonPressed(GamePadButton button) const noexcept {
 		return m_gamepadTracker.leftStick == ButtonState::PRESSED;
 	case GamePadButton::RightStick:
 		return m_gamepadTracker.rightStick == ButtonState::PRESSED;
-	case GamePadButton::dPadLeft:
+	case GamePadButton::DPadLeft:
 		return m_gamepadTracker.dpadLeft == ButtonState::PRESSED;
-	case GamePadButton::dPadRight:
+	case GamePadButton::DPadRight:
 		return m_gamepadTracker.dpadRight == ButtonState::PRESSED;
-	case GamePadButton::dPadUp:
+	case GamePadButton::DPadUp:
 		return m_gamepadTracker.dpadUp == ButtonState::PRESSED;
-	case GamePadButton::dPadDown:
+	case GamePadButton::DPadDown:
 		return m_gamepadTracker.dpadDown == ButtonState::PRESSED;
 	default:
 		return false;
@@ -307,13 +309,13 @@ bool InputManager::IsGamePadButtonReleased(GamePadButton button) const noexcept 
 		return m_gamepadTracker.leftStick == ButtonState::RELEASED;
 	case GamePadButton::RightStick:
 		return m_gamepadTracker.rightStick == ButtonState::RELEASED;
-	case GamePadButton::dPadLeft:
+	case GamePadButton::DPadLeft:
 		return m_gamepadTracker.dpadLeft == ButtonState::RELEASED;
-	case GamePadButton::dPadRight:
+	case GamePadButton::DPadRight:
 		return m_gamepadTracker.dpadRight == ButtonState::RELEASED;
-	case GamePadButton::dPadUp:
+	case GamePadButton::DPadUp:
 		return m_gamepadTracker.dpadUp == ButtonState::RELEASED;
-	case GamePadButton::dPadDown:
+	case GamePadButton::DPadDown:
 		return m_gamepadTracker.dpadDown == ButtonState::RELEASED;
 	default:
 		return false;
