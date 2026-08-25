@@ -5,6 +5,7 @@
 
 #include <Keyboard.h>
 #include <Mouse.h>
+#include <GamePad.h>
 #include <SimpleMath.h>
 
 #include <memory>
@@ -17,6 +18,31 @@ enum class MouseButton {
 	X2
 };
 
+enum class GamePadButton {
+	a,
+	b,
+	x,
+	y,
+	menu,
+	back,
+	start,
+	view,
+	leftShoulder,
+	rightShoulder,
+	leftStick,		// click action
+	rightStick
+};
+
+enum class GamePadStick {
+	leftStick,		// directional action
+	rightStick
+};
+
+enum class GamePadTrigger {
+	left,
+	right
+};
+
 /* Singleton class for input management */
 class InputManager final {
 public:
@@ -26,6 +52,8 @@ public:
 		return instance;
 	}
 
+	void OnAppActivationChanged(bool active);
+
 	void Initialize(HWND window);
 	void Shutdown() noexcept;
 	void Update();
@@ -33,6 +61,11 @@ public:
 
 	void SetMouseMode(DirectX::Mouse::Mode mode);
 
+	/*
+	* ===================================
+	* Keyboard Getters
+	* ===================================
+	*/
 	/// <summary>
 	/// true every frame while holding
 	/// </summary>
@@ -57,6 +90,11 @@ public:
 	[[nodiscard]]
 	bool IsKeyReleased(DirectX::Keyboard::Keys key) const noexcept;
 
+	/*
+	* ===================================
+	* Mouse Getters
+	* ===================================
+	*/
 	/// <summary>
 	/// true every frame while holding
 	/// </summary>
@@ -103,11 +141,54 @@ public:
 		return m_mouseState.positionMode == DirectX::Mouse::MODE_RELATIVE;
 	}
 
+	/*
+	* ===================================
+	* GamePad Getters
+	* ===================================
+	*/
+	/// <summary>
+	/// true every frame while holding
+	/// </summary>
+	/// <param name="button"></param>
+	/// <returns></returns>
+	[[nodiscard]]
+	bool IsGamePadButtonDown(GamePadButton button) const noexcept;
+
+	/// <summary>
+	/// true only the first frame when pressed
+	/// </summary>
+	/// <param name="button"></param>
+	/// <returns></returns>
+	[[nodiscard]]
+	bool IsGamePadButtonPressed(GamePadButton button) const noexcept;
+
+	/// <summary>
+	/// true only one frame when released
+	/// </summary>
+	/// <param name="button"></param>
+	/// <returns></returns>
+	[[nodiscard]]
+	bool IsGamePadButtonReleased(GamePadButton button) const noexcept;
+
+	[[nodiscard]]
+	DirectX::SimpleMath::Vector2 GetGamePadStick(GamePadStick stick) const noexcept;
+
+	[[nodiscard]]
+	float GetGamePadTrigger(GamePadTrigger trigger) const noexcept;
+
+	/*
+	* ===================================
+	* State & Tracker Getters
+	* ===================================
+	*/
 	[[nodiscard]]
 	const DirectX::Keyboard::State& GetKeyboardState() const noexcept { return m_keyboardState; }
 
 	[[nodiscard]]
 	const DirectX::Mouse::State& GetMouseState() const noexcept { return m_mouseState; }
+
+	[[nodiscard]]
+	const DirectX::GamePad::State& GetGamePadState() const noexcept { return m_gamepadState; }
 
 	[[nodiscard]]
 	const DirectX::Keyboard::KeyboardStateTracker& GetKeyboardTracker() const noexcept {
@@ -117,6 +198,11 @@ public:
 	[[nodiscard]]
 	const DirectX::Mouse::ButtonStateTracker& GetMouseTracker() const noexcept {
 		return m_mouseTracker;
+	}
+
+	[[nodiscard]]
+	const DirectX::GamePad::ButtonStateTracker& GetGamePadTracker() const noexcept {
+		return m_gamepadTracker;
 	}
 
 private:
@@ -132,14 +218,18 @@ private:
 private:
 	std::unique_ptr<DirectX::Keyboard> m_keyboard;
 	std::unique_ptr<DirectX::Mouse> m_mouse;
+	std::unique_ptr<DirectX::GamePad> m_gamepad;
 
 	DirectX::Keyboard::State m_keyboardState{};
 	DirectX::Mouse::State m_mouseState{};
+	DirectX::GamePad::State m_gamepadState{};
 
 	DirectX::Keyboard::KeyboardStateTracker m_keyboardTracker;
 	DirectX::Mouse::ButtonStateTracker m_mouseTracker;
+	DirectX::GamePad::ButtonStateTracker m_gamepadTracker;
 
 	int m_scrollWheelDelta = 0;
 
+	bool m_isActive = false;
 	bool m_isInitialized = false;
 };

@@ -44,7 +44,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 	switch (message)
 	{
 	case WM_ACTIVATEAPP:
-		InputManager::Get().Reset();
+		InputManager::Get().OnAppActivationChanged(wParam != FALSE);
 		return 0;
 
 	case WM_DESTROY:
