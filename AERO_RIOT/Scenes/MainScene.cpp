@@ -13,6 +13,8 @@
 #include <SimpleMath.h>
 #include <SpriteFont.h>
 
+#include <string>
+
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	Scene(sceneManager, context) {}
 
@@ -41,18 +43,34 @@ void MainScene::OnLoad() {
 	// ! create basic aircraft hierarchy
 	GameObject& aircraftRoot = GetGameObjects().CreateGameObject("AircraftRoot");
 	GameObject& aircraftBody = GetGameObjects().CreateGameObject("AircraftBody");
+	GameObject& aircraftBase = GetGameObjects().CreateGameObject("AircraftBase");
+	GameObject& aircraftWing = GetGameObjects().CreateGameObject("AircraftWing");
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
-	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
-	bodyTransform.SetLocalScale({ 1.0f,5.0f,1.0f });
-	bodyTransform.RotateEulerDegrees({ -90.0f,0.0f,0.0f });
+	Transform& baseTransform = aircraftBase.GetTransform();
+	Transform& wingTransform = aircraftWing.GetTransform();
 
-	auto& renderer = aircraftBody.AddComponent<PrimitiveRenderer>(
+	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
+	baseTransform.SetParent(&bodyTransform, false);
+	wingTransform.SetParent(&bodyTransform, false);
+
+	baseTransform.SetLocalScale({ 1.0f,5.0f,1.0f });
+	baseTransform.RotateEulerDegrees({ -90.0f,0.0f,0.0f });
+
+	wingTransform.SetLocalScale({ 5.0f,0.1f,0.8f });
+
+	auto& baseRenderer = aircraftBase.AddComponent<PrimitiveRenderer>(
 		context.deviceResources.GetContext(),
 		PrimitiveShape::Cone
 	);
 
-	renderer.SetColor({ 1.0f,0.5f,0.0f,1.0f });
+	auto& wingRenderer = aircraftWing.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Cube
+	);
+
+	baseRenderer.SetColor({ 1.0f,0.5f,0.0f,1.0f });
+	wingRenderer.SetColor({ 0.0f,0.5f,1.0f,1.0f });
 
 	m_aircraftRoot = &aircraftRoot;
 
@@ -103,4 +121,18 @@ void MainScene::OnRenderUI() {
 		),
 		DirectX::Colors::White
 	);
+
+	if (InputManager::Get().IsGamePadConnected()) {
+		auto& input = InputManager::Get();
+
+		GetContext().font.DrawString(
+			&GetContext().spriteBatch,
+			std::to_wstring(input.GetGamePadTrigger(GamePadTrigger::Right)).c_str(),
+			DirectX::SimpleMath::Vector2(
+				20.0f,
+				100.0f
+			),
+			DirectX::Colors::Green
+		);
+	}
 }
