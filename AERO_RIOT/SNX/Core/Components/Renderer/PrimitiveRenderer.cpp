@@ -25,6 +25,9 @@ void PrimitiveRenderer::OnInitialize() {
 	case PrimitiveShape::Sphere:
 		m_primitive = DirectX::GeometricPrimitive::CreateSphere(m_creationContext, 1.0f);
 		break;
+	case PrimitiveShape::Cone:
+		m_primitive = DirectX::GeometricPrimitive::CreateCone(m_creationContext, 1.0f);
+		break;
 	case PrimitiveShape::Cube:
 	default:
 		m_primitive = DirectX::GeometricPrimitive::CreateCube(m_creationContext, 1.0f);

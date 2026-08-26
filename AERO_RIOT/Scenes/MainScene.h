@@ -19,4 +19,6 @@ protected:
 
 private:
 	Camera* m_camera = nullptr;
+
+	GameObject* m_aircraftRoot = nullptr;
 };

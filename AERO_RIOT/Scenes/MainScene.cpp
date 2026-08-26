@@ -3,6 +3,8 @@
 #include <SNX/Core/Components/Camera/Camera.h>
 #include <SNX/Core/Object/GameObject.h>
 
+#include <SNX/Core/Components/Renderer/PrimitiveRenderer.h>
+
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
 
@@ -10,8 +12,6 @@
 #include <Keyboard.h>
 #include <SimpleMath.h>
 #include <SpriteFont.h>
-
-#include <string>
 
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	Scene(sceneManager, context) {}
@@ -34,9 +34,30 @@ void MainScene::OnLoad() {
 		static_cast<float>(context.deviceResources.GetHeight());
 
 	camera.SetPerspective(60.0f, aspect, 0.1f, 1000.0f);
-	camera.LookAt(Vector3(0.0f, 3.0f, 8.0f), Vector3::Zero);
+	camera.LookAt(Vector3(0.0f, 4.0f, 8.0f), Vector3::Zero);
 
 	m_camera = &camera;
+
+	// ! create basic aircraft hierarchy
+	GameObject& aircraftRoot = GetGameObjects().CreateGameObject("AircraftRoot");
+	GameObject& aircraftBody = GetGameObjects().CreateGameObject("AircraftBody");
+
+	Transform& bodyTransform = aircraftBody.GetTransform();
+	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
+	bodyTransform.SetLocalScale({ 1.0f,5.0f,1.0f });
+	bodyTransform.RotateEulerDegrees({ -90.0f,0.0f,0.0f });
+
+	auto& renderer = aircraftBody.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Cone
+	);
+
+	renderer.SetColor({ 1.0f,0.5f,0.0f,1.0f });
+	renderer.SetEmissiveColor({ 1.0f,0.5f,0.0f });
+
+	m_aircraftRoot = &aircraftRoot;
+
+	camera.LookAtFromCurrentPosition(aircraftRoot.GetTransform().GetPosition());
 }
 
 void MainScene::OnUpdate() {

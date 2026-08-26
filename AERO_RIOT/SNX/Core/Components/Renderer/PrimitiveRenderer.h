@@ -10,7 +10,7 @@
 
 #include <memory>
 
-enum class PrimitiveShape { Cube, Sphere };
+enum class PrimitiveShape { Cube, Sphere, Cone };
 
 class PrimitiveRenderer final : public Renderer {
 public:
