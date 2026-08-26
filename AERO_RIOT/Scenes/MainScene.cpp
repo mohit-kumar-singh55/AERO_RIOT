@@ -53,11 +53,15 @@ void MainScene::OnLoad() {
 	);
 
 	renderer.SetColor({ 1.0f,0.5f,0.0f,1.0f });
-	renderer.SetEmissiveColor({ 1.0f,0.5f,0.0f });
 
 	m_aircraftRoot = &aircraftRoot;
 
 	camera.LookAtFromCurrentPosition(aircraftRoot.GetTransform().GetPosition());
+}
+
+void MainScene::OnUnload() {
+	m_camera = nullptr;
+	m_aircraftRoot = nullptr;
 }
 
 void MainScene::OnUpdate() {

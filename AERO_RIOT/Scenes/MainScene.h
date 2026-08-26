@@ -10,6 +10,7 @@ public:
 
 protected:
 	void OnLoad() override;
+	void OnUnload() override;
 
 	void OnUpdate() override;
 
