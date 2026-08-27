@@ -18,12 +18,13 @@ void Aircraft::OnLateUpdate() {
 		});
 
 	// movement
+	float speedRateOfChange = m_speedRate * Time::DeltaTime();
 	if (m_controlInput.throttle > 0.0f && m_controlInput.airBrake == 0.0f)
-		m_currentSpeed += m_speedRate * m_controlInput.throttle;
+		m_currentSpeed += speedRateOfChange * m_controlInput.throttle;
 	else if (m_controlInput.airBrake > 0.0f)
-		m_currentSpeed -= m_speedRate * m_speedDrag * m_airBrakePower * m_controlInput.airBrake;
+		m_currentSpeed -= speedRateOfChange * m_speedDrag * m_airBrakePower * m_controlInput.airBrake;
 	else
-		m_currentSpeed -= m_speedRate * m_speedDrag;
+		m_currentSpeed -= speedRateOfChange * m_speedDrag;
 
 	m_currentSpeed = std::clamp(m_currentSpeed, 0.0f, m_maxSpeed);
 
@@ -55,12 +56,13 @@ void Aircraft::PerformEvadeRoll() noexcept {
 		m_startForward = transform.GetForward();
 		m_startRight = transform.GetRight();
 		m_evadeRollElapsedTime = 0.0f;
+		m_previousDisplaceOffset = 0.0f;
 	}
-	// continue roll
-	else
-		m_evadeRollElapsedTime += Time::DeltaTime();
+
+	m_evadeRollElapsedTime += Time::DeltaTime();
 
 	float t = m_evadeRollElapsedTime / m_evadeRollDuration;
+	t = std::clamp(t, 0.0f, 1.0f);
 	float angle = DirectX::XMConvertToRadians(m_evadeRollAngle) * t;
 
 	angle *= (int)m_currentRollingDir;
@@ -70,8 +72,12 @@ void Aircraft::PerformEvadeRoll() noexcept {
 	transform.SetRotation(m_startRotation * rollDelta);
 
 	// displace
-	Vector3 displacementDelta = m_startRight * (int)m_currentRollingDir * m_evadeDistance * t;
-	transform.SetPosition(transform.GetPosition() + displacementDelta);
+	float currentOffset = m_evadeDistance * t;
+	// offset to move this frame
+	float deltaOffset = currentOffset - m_previousDisplaceOffset;
+	Vector3 newPosition = transform.GetPosition() + m_startRight * (int)m_currentRollingDir * deltaOffset;
+	transform.SetPosition(newPosition);
+	m_previousDisplaceOffset = currentOffset;
 
 	// finish the roll
 	if (m_evadeRollElapsedTime >= m_evadeRollDuration) {

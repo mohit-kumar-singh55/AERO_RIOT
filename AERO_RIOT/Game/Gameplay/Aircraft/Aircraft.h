@@ -49,16 +49,16 @@ private:
 
 	// configurable
 	float m_maxSpeed = 20.0f;
-	float m_speedRate = 0.1f;
+	float m_speedRate = 5.0f;
 	float m_currentSpeed = 0.0f;
 	float m_speedDrag = 1.0f;		// natural drag
-	float m_airBrakePower = 2.0f;
+	float m_airBrakePower = 4.0f;
 
 	float m_rotationSpeed = 30.0f;	// degree/s
 
 	float m_evadeRollDuration = 0.5f;
 	float m_evadeRollAngle = 360.0f;	// degrees
-	float m_evadeDistance = .2f;		// amount of displacement when doing evade roll
+	float m_evadeDistance = 5.0f;		// amount of displacement when doing evade roll
 
 	// evade roll purpose **
 	bool m_isEvadeRolling = false;
@@ -67,5 +67,6 @@ private:
 	DirectX::SimpleMath::Vector3 m_startForward;
 	DirectX::SimpleMath::Vector3 m_startRight;
 	float m_evadeRollElapsedTime = 0.0f;
+	float m_previousDisplaceOffset = 0.0f;
 	// *********************
 };
