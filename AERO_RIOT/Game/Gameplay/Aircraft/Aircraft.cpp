@@ -10,19 +10,12 @@ void Aircraft::OnLateUpdate() {
 	auto& transform = GetTransform();
 
 	// rotation
-	float speedDelta = DirectX::XMConvertToRadians(m_rotationSpeed) * Time::DeltaTime();
-	auto finalRotation = Quaternion::CreateFromAxisAngle(transform.GetRight(), -m_controlInput.pitch * speedDelta) *
-		Quaternion::CreateFromAxisAngle(transform.GetUp(), -m_controlInput.turn * speedDelta) *
-		Quaternion::CreateFromAxisAngle(transform.GetForward(), m_controlInput.turn * speedDelta);
-
-	transform.SetRotation(transform.GetRotation() * finalRotation);
-
-	//float speedDelta = m_rotationSpeed * Time::DeltaTime();
-	//transform.RotateEulerDegrees({
-	//	-m_controlInput.pitch * speedDelta,
-	//	-m_controlInput.turn * speedDelta,
-	//	m_controlInput.turn * speedDelta
-	//	});
+	float speedDelta = m_rotationSpeed * Time::DeltaTime();
+	transform.RotateEulerDegrees({
+		-m_controlInput.pitch * speedDelta,
+		-m_controlInput.turn * speedDelta,
+		m_controlInput.turn * speedDelta
+		});
 
 	// movement
 	if (m_controlInput.throttle > 0.0f && m_controlInput.airBrake == 0.0f)
@@ -51,6 +44,7 @@ void Aircraft::PerformEvadeRoll() noexcept {
 		return;
 
 	using DirectX::SimpleMath::Quaternion;
+	using DirectX::SimpleMath::Vector3;
 	auto& transform = GetTransform();
 
 	// start new roll
@@ -59,6 +53,7 @@ void Aircraft::PerformEvadeRoll() noexcept {
 		m_currentRollingDir = m_controlInput.evadeRoll;
 		m_startRotation = transform.GetRotation();
 		m_startForward = transform.GetForward();
+		m_startRight = transform.GetRight();
 		m_evadeRollElapsedTime = 0.0f;
 	}
 	// continue roll
@@ -70,8 +65,13 @@ void Aircraft::PerformEvadeRoll() noexcept {
 
 	angle *= (int)m_currentRollingDir;
 
+	// roll
 	auto rollDelta = Quaternion::CreateFromAxisAngle(m_startForward, angle);
 	transform.SetRotation(m_startRotation * rollDelta);
+
+	// displace
+	Vector3 displacementDelta = m_startRight * (int)m_currentRollingDir * m_evadeDistance * t;
+	transform.SetPosition(transform.GetPosition() + displacementDelta);
 
 	// finish the roll
 	if (m_evadeRollElapsedTime >= m_evadeRollDuration) {

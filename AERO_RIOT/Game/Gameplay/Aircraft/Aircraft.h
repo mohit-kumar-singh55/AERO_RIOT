@@ -58,12 +58,14 @@ private:
 
 	float m_evadeRollDuration = 0.5f;
 	float m_evadeRollAngle = 360.0f;	// degrees
+	float m_evadeDistance = .2f;		// amount of displacement when doing evade roll
 
 	// evade roll purpose **
 	bool m_isEvadeRolling = false;
 	EvadeRoll m_currentRollingDir = EvadeRoll::None;
 	DirectX::SimpleMath::Quaternion m_startRotation;
 	DirectX::SimpleMath::Vector3 m_startForward;
+	DirectX::SimpleMath::Vector3 m_startRight;
 	float m_evadeRollElapsedTime = 0.0f;
 	// *********************
 };
