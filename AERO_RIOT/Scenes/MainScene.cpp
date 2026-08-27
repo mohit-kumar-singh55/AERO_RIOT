@@ -8,6 +8,9 @@
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
 
+#include <Game/Gameplay/Aircraft/Aircraft.h>
+#include <Game/Gameplay/Aircraft/AircraftController.h>
+
 #include <DirectXColors.h>
 #include <Keyboard.h>
 #include <SimpleMath.h>
@@ -45,6 +48,9 @@ void MainScene::OnLoad() {
 	GameObject& aircraftBody = GetGameObjects().CreateGameObject("AircraftBody");
 	GameObject& aircraftBase = GetGameObjects().CreateGameObject("AircraftBase");
 	GameObject& aircraftWing = GetGameObjects().CreateGameObject("AircraftWing");
+
+	aircraftRoot.AddComponent<Aircraft>();
+	aircraftRoot.AddComponent<AircraftController>();
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();

@@ -50,6 +50,27 @@
     <Filter Include="SNX\Gameplay">
       <UniqueIdentifier>{b91efc4c-6c68-4300-9d19-ce3968bb0fbd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{25eab853-d93f-40b6-aff0-38842a4ac8f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Data">
+      <UniqueIdentifier>{1db63e13-9f96-4683-ad96-9158b4579718}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Utils">
+      <UniqueIdentifier>{9fe105e5-53af-48f8-b2a1-d4e2f298a188}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Core">
+      <UniqueIdentifier>{018817ad-4191-4e0b-9555-db364aa5946b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Gameplay">
+      <UniqueIdentifier>{e4cdd0d1-a2ae-4c38-9f5c-94409be3ab06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Managers">
+      <UniqueIdentifier>{16e277c5-8be7-4a52-b6e3-c8fe2b618118}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game\Gameplay\Aircraft">
+      <UniqueIdentifier>{5364325c-d8fe-44dd-8fe1-abc91b8aa299}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -113,6 +134,12 @@
     </ClCompile>
     <ClCompile Include="SNX\Gameplay\Health.cpp">
       <Filter>SNX\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Gameplay\Aircraft\Aircraft.cpp">
+      <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Gameplay\Aircraft\AircraftController.cpp">
+      <Filter>Game\Gameplay\Aircraft</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -188,6 +215,12 @@
     </ClInclude>
     <ClInclude Include="SNX\Gameplay\Health.h">
       <Filter>SNX\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Aircraft\Aircraft.h">
+      <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Aircraft\AircraftController.h">
+      <Filter>Game\Gameplay\Aircraft</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

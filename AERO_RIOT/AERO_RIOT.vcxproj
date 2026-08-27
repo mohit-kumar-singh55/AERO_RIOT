@@ -172,6 +172,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Game\Gameplay\Aircraft\Aircraft.cpp" />
+    <ClCompile Include="Game\Gameplay\Aircraft\AircraftController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Scenes\MainScene.cpp" />
     <ClCompile Include="SNX\Audio\AudioManager.cpp" />
@@ -194,6 +196,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Game\Gameplay\Aircraft\Aircraft.h" />
+    <ClInclude Include="Game\Gameplay\Aircraft\AircraftController.h" />
     <ClInclude Include="Scenes\MainScene.h" />
     <ClInclude Include="Scenes\SceneIds.h" />
     <ClInclude Include="SNX\Audio\AudioManager.h" />
