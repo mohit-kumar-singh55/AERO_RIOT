@@ -2,18 +2,20 @@
 
 #include <SNX/Core/Object/Component.h>
 
+#include <SimpleMath.h>
+
 #include <algorithm>
 
-enum class EvadeRoll { None, Left = -360, Right = 360 };
+enum class EvadeRoll { None, Left = -1, Right = 1 };
 
 struct AircraftControlInput final {
 	// -1 ... +1
-	float pitch;
-	float turn;
+	float pitch = 0;
+	float turn = 0;
 
 	// 0 ... 1
-	float throttle;
-	float airBrake;
+	float throttle = 0;
+	float airBrake = 0;
 
 	EvadeRoll evadeRoll = EvadeRoll::None;
 
@@ -32,12 +34,12 @@ class Aircraft final : public Component {
 public:
 	using Component::Component;
 
-	void SetControlInput(AircraftControlInput& controlInput) noexcept {
+	void SetControlInput(AircraftControlInput controlInput) noexcept {
 		m_controlInput = controlInput.GetNormalized();
 	}
 
 protected:
-	void OnUpdate() override;
+	void OnLateUpdate() override;
 
 private:
 	void PerformEvadeRoll() noexcept;
@@ -46,10 +48,22 @@ private:
 	AircraftControlInput m_controlInput;
 
 	// configurable
-	float m_speed = 5.0f;
-	float m_rotationSpeed = 5.0f;
-	float m_evadeRollRate = 10.0f;
+	float m_maxSpeed = 20.0f;
+	float m_speedRate = 0.1f;
+	float m_currentSpeed = 0.0f;
+	float m_speedDrag = 1.0f;		// natural drag
+	float m_airBrakePower = 2.0f;
 
+	float m_rotationSpeed = 30.0f;	// degree/s
+
+	float m_evadeRollDuration = 0.5f;
+	float m_evadeRollAngle = 360.0f;	// degrees
+
+	// evade roll purpose **
 	bool m_isEvadeRolling = false;
 	EvadeRoll m_currentRollingDir = EvadeRoll::None;
+	DirectX::SimpleMath::Quaternion m_startRotation;
+	DirectX::SimpleMath::Vector3 m_startForward;
+	float m_evadeRollElapsedTime = 0.0f;
+	// *********************
 };
