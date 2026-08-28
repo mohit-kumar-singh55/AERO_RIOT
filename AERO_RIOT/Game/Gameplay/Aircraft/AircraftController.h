@@ -16,5 +16,5 @@ protected:
 	void OnDestroy() override;
 
 private:
-	Aircraft* m_aircraft;
+	Aircraft* m_aircraft = nullptr;
 };

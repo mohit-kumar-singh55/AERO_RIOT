@@ -71,6 +71,9 @@
     <Filter Include="Game\Gameplay\Aircraft">
       <UniqueIdentifier>{5364325c-d8fe-44dd-8fe1-abc91b8aa299}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Gameplay\Cameras">
+      <UniqueIdentifier>{b30fd1ca-23fe-4cf2-bf85-d659ab7565bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -140,6 +143,9 @@
     </ClCompile>
     <ClCompile Include="Game\Gameplay\Aircraft\AircraftController.cpp">
       <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Gameplay\Cameras\AircraftCameraController.cpp">
+      <Filter>Game\Gameplay\Cameras</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -221,6 +227,9 @@
     </ClInclude>
     <ClInclude Include="Game\Gameplay\Aircraft\AircraftController.h">
       <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Cameras\AircraftCameraController.h">
+      <Filter>Game\Gameplay\Cameras</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

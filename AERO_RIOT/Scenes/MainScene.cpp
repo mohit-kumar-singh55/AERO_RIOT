@@ -10,6 +10,7 @@
 
 #include <Game/Gameplay/Aircraft/Aircraft.h>
 #include <Game/Gameplay/Aircraft/AircraftController.h>
+#include <Game/Gameplay/Cameras/AircraftCameraController.h>
 
 #include <DirectXColors.h>
 #include <Keyboard.h>
@@ -30,24 +31,12 @@ void MainScene::OnLoad() {
 	input.SetMouseMode(DirectX::Mouse::MODE_ABSOLUTE);
 	input.Reset();
 
-	// ! create default camera
-	GameObject& cameraObject = GetGameObjects().CreateGameObject("Main Camera");
-	Camera& camera = cameraObject.AddComponent<Camera>();
-
-	const float aspect =
-		static_cast<float>(context.deviceResources.GetWidth()) /
-		static_cast<float>(context.deviceResources.GetHeight());
-
-	camera.SetPerspective(60.0f, aspect, 0.1f, 1000.0f);
-	camera.LookAt(Vector3(0.0f, 4.0f, 8.0f), Vector3::Zero);
-
-	m_camera = &camera;
-
 	// ! create basic aircraft hierarchy
 	GameObject& aircraftRoot = GetGameObjects().CreateGameObject("AircraftRoot");
 	GameObject& aircraftBody = GetGameObjects().CreateGameObject("AircraftBody");
 	GameObject& aircraftBase = GetGameObjects().CreateGameObject("AircraftBase");
 	GameObject& aircraftWing = GetGameObjects().CreateGameObject("AircraftWing");
+	GameObject& thirdPersonCameraAnchor = GetGameObjects().CreateGameObject("ThirdPersonCameraAnchor");
 
 	aircraftRoot.AddComponent<Aircraft>();
 	aircraftRoot.AddComponent<AircraftController>();
@@ -55,10 +44,14 @@ void MainScene::OnLoad() {
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();
 	Transform& wingTransform = aircraftWing.GetTransform();
+	Transform& tpcaTransform = thirdPersonCameraAnchor.GetTransform();
 
 	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
 	baseTransform.SetParent(&bodyTransform, false);
 	wingTransform.SetParent(&bodyTransform, false);
+	tpcaTransform.SetParent(&aircraftRoot.GetTransform(), false);
+
+	tpcaTransform.SetLocalPosition({ 0.0f,0.0f,0.0f });
 
 	baseTransform.SetLocalScale({ 1.0f,5.0f,1.0f });
 	baseTransform.RotateEulerDegrees({ -90.0f,0.0f,0.0f });
@@ -80,7 +73,19 @@ void MainScene::OnLoad() {
 
 	m_aircraftRoot = &aircraftRoot;
 
+	// ! create default camera
+	GameObject& cameraObject = GetGameObjects().CreateGameObject("AircraftCamera");
+	Camera& camera = cameraObject.AddComponent<Camera>();
+	AircraftCameraController& aircraftCamera = cameraObject.AddComponent<AircraftCameraController>(&tpcaTransform);
+
+	const float aspect =
+		static_cast<float>(context.deviceResources.GetWidth()) /
+		static_cast<float>(context.deviceResources.GetHeight());
+
+	camera.SetPerspective(60.0f, aspect, 0.1f, 1000.0f);
 	camera.LookAtFromCurrentPosition(aircraftRoot.GetTransform().GetPosition());
+
+	m_camera = &camera;
 }
 
 void MainScene::OnUnload() {
