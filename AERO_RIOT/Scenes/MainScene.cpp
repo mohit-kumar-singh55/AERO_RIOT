@@ -18,6 +18,8 @@
 #include <SpriteFont.h>
 
 #include <string>
+#include <random>
+#include <time.h>
 
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	Scene(sceneManager, context) {}
@@ -85,6 +87,21 @@ void MainScene::OnLoad() {
 	camera.SetPerspective(60.0f, aspect, 0.1f, 1000.0f);
 
 	m_camera = &camera;
+
+	std::srand(std::time(NULL));
+
+	// ? just for debugging purpose
+	for (int i = 0;i < 50;i++) {
+		auto& cube = GetGameObjects().CreateGameObject("DEBUG_CUBE" + i);
+		auto& renderer = cube.AddComponent<PrimitiveRenderer>(
+			context.deviceResources.GetContext(),
+			PrimitiveShape::Cube
+		);
+		renderer.SetColor({ 0.5f,0.2f,0.7f,1.0 });
+		auto& cubeTrans = cube.GetTransform();
+		cubeTrans.SetScale({ 0.2f,4.0f,20.0f });
+		cubeTrans.SetPosition({ (float)(std::rand() % 10) + i,(float)(std::rand() % 10) + i,(float)(std::rand() % 10) + i });
+	}
 }
 
 void MainScene::OnUnload() {

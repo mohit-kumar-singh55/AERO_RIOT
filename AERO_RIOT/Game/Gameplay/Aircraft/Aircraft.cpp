@@ -14,7 +14,7 @@ void Aircraft::OnLateUpdate() {
 	transform.RotateEulerDegrees({
 		-m_controlInput.pitch * speedDelta,
 		-m_controlInput.turn * speedDelta,
-		m_controlInput.turn * speedDelta
+		-m_controlInput.turn * speedDelta
 		});
 
 	// movement
