@@ -26,8 +26,18 @@ void AircraftCameraController::OnDestroy() {
 void AircraftCameraController::OnLateUpdate() {
 	if (!m_mainCam || !m_target) return;
 
-	m_mainCam->LookAt(
-		m_target->GetPosition() + m_cameraOffset,
-		m_target->GetPosition() + m_lookAheadOffset
-	);
+	using DirectX::SimpleMath::Vector3;
+
+	auto pivot = m_target->GetPosition();
+
+	auto cameraPos =
+		pivot
+		- m_target->GetForward() * m_followDistance
+		+ Vector3::Up * m_height;
+
+	auto lookTarget =
+		pivot
+		+ m_target->GetForward() * m_lookAheadDistance;
+
+	m_mainCam->LookAt(cameraPos, lookTarget, Vector3::Up);
 }

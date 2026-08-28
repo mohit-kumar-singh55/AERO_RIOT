@@ -76,14 +76,13 @@ void MainScene::OnLoad() {
 	// ! create default camera
 	GameObject& cameraObject = GetGameObjects().CreateGameObject("AircraftCamera");
 	Camera& camera = cameraObject.AddComponent<Camera>();
-	AircraftCameraController& aircraftCamera = cameraObject.AddComponent<AircraftCameraController>(&tpcaTransform);
+	cameraObject.AddComponent<AircraftCameraController>(&tpcaTransform);
 
 	const float aspect =
 		static_cast<float>(context.deviceResources.GetWidth()) /
 		static_cast<float>(context.deviceResources.GetHeight());
 
 	camera.SetPerspective(60.0f, aspect, 0.1f, 1000.0f);
-	camera.LookAtFromCurrentPosition(aircraftRoot.GetTransform().GetPosition());
 
 	m_camera = &camera;
 }

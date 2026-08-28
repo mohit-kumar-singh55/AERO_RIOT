@@ -21,6 +21,7 @@ private:
 	Transform* m_target = nullptr;
 
 	// configurable
-	DirectX::SimpleMath::Vector3 m_cameraOffset{ 0.0f,4.0f,10.0f };		// camera offset from the target
-	DirectX::SimpleMath::Vector3 m_lookAheadOffset{ 0.0f,0.0f,-2.0f };		// look offset from the target
+	float m_followDistance = 6.0f;
+	float m_height = 6.0f;
+	float m_lookAheadDistance = 2.0f;
 };
