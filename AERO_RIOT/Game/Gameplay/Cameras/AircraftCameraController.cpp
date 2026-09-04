@@ -27,6 +27,9 @@ void AircraftCameraController::OnStart() {
 	// set the intial look
 	m_orbitYaw = m_defaultOrbitYaw;
 	m_orbitPitch = m_defaultOrbitPitch;
+
+	// convert degree to radian
+	m_minMaxPitch = DirectX::XMConvertToRadians(m_minMaxPitch);
 }
 
 void AircraftCameraController::OnDestroy() {
@@ -47,7 +50,7 @@ void AircraftCameraController::OnLateUpdate() {
 	auto& input = InputManager::Get();
 
 	auto stickVal = input.GetGamePadStick(GamePadStick::RightStick);
-	
+
 	// use input to rotate around pivot
 	if (stickVal.x || stickVal.y) {
 		m_inputUnavailabilityTimer = 0.0f;
