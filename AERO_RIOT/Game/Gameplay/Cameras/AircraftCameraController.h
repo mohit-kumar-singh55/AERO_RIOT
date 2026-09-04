@@ -28,10 +28,10 @@ private:
 
 	// orbit settings
 	// initial & default orbit yar & pitch
-	float m_defaultOrbitYaw = 3.15f;
+	float m_defaultOrbitYaw = DirectX::g_XMPi.f[0];
 	float m_defaultOrbitPitch = 0.5f;
 	float m_freeLookSpeed = 2.0f;	// radians/s
-	float m_minMaxPitch = 60.0f;	// degrees
+	float m_maxOrbitPitch = 60.0f;	// degrees
 	float m_followDistance = 6.0f;	// orbit radius
 
 	// auto re-center (auto reset the camera's rotation around the pivot to its inital state)

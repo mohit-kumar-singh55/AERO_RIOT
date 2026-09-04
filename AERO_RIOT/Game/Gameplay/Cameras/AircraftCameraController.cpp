@@ -29,7 +29,7 @@ void AircraftCameraController::OnStart() {
 	m_orbitPitch = m_defaultOrbitPitch;
 
 	// convert degree to radian
-	m_minMaxPitch = DirectX::XMConvertToRadians(m_minMaxPitch);
+	m_maxOrbitPitch = DirectX::XMConvertToRadians(m_maxOrbitPitch);
 }
 
 void AircraftCameraController::OnDestroy() {
@@ -73,12 +73,16 @@ void AircraftCameraController::OnLateUpdate() {
 	// reset camera yaw & pitch to default rotation around pivot
 	else if (m_elapsedTimeToReset <= m_timeToReset) {
 		m_elapsedTimeToReset += Time::DeltaTime();
-		m_orbitYaw = std::lerp(m_lastOrbitYaw, m_defaultOrbitYaw, m_elapsedTimeToReset / m_timeToReset);
-		m_orbitPitch = std::lerp(m_lastOrbitPitch, m_defaultOrbitPitch, m_elapsedTimeToReset / m_timeToReset);
+
+		float t = m_elapsedTimeToReset / m_timeToReset;
+		t = std::clamp(t, 0.0f, 1.0f);
+
+		m_orbitYaw = std::lerp(m_lastOrbitYaw, m_defaultOrbitYaw, t);
+		m_orbitPitch = std::lerp(m_lastOrbitPitch, m_defaultOrbitPitch, t);
 	}
 
 	// limit the pitch
-	m_orbitPitch = std::clamp(m_orbitPitch, -m_minMaxPitch, m_minMaxPitch);
+	m_orbitPitch = std::clamp(m_orbitPitch, -m_maxOrbitPitch, m_maxOrbitPitch);
 
 	Vector3 orbitOffset = {
 		m_followDistance * std::sin(m_orbitYaw) * std::cos(m_orbitPitch),
@@ -98,4 +102,5 @@ void AircraftCameraController::OnLateUpdate() {
 		+ targetForward * m_lookAheadDistance;
 
 	m_mainCam->LookAt(cameraPos, lookTarget, Vector3::Up);
+	//m_mainCam->LookAt(cameraPos, lookTarget, targetUp);
 }
