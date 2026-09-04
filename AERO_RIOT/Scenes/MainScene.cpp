@@ -18,7 +18,6 @@
 #include <SpriteFont.h>
 
 #include <string>
-#include <random>
 #include <time.h>
 
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
@@ -100,7 +99,7 @@ void MainScene::OnLoad() {
 		renderer.SetColor({ 0.5f,0.2f,0.7f,1.0 });
 		auto& cubeTrans = cube.GetTransform();
 		cubeTrans.SetScale({ 0.2f,4.0f,20.0f });
-		cubeTrans.SetPosition({ (float)(std::rand() % 10) + i,(float)(std::rand() % 10) + i,(float)(std::rand() % 10) + i });
+		cubeTrans.SetPosition({ (float)(std::rand() % 10) - i,-(float)(std::rand() % 10) + i,-(float)(std::rand() % 20) - i });
 	}
 }
 

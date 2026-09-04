@@ -54,7 +54,7 @@ private:
 	float m_speedDrag = 1.0f;		// natural drag
 	float m_airBrakePower = 4.0f;
 
-	float m_rotationSpeed = 30.0f;	// degree/s
+	float m_rotationSpeed = 60.0f;	// degree/s
 
 	float m_evadeRollDuration = 0.5f;
 	float m_evadeRollAngle = 360.0f;	// degrees
