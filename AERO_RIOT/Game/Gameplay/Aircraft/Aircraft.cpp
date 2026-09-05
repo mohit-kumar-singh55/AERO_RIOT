@@ -6,7 +6,8 @@
 
 void Aircraft::OnInitialize() {
 	// ! considering the body gameobject is at index 0
-	m_aircraftBody = GetGameObject().GetTransform().GetChild(0)->GetGameObject();
+	// TODO: change it to explicit
+	m_aircraftBody = GetGameObject().GetTransform().GetChild(0);
 
 	if (!m_aircraftBody)
 		throw std::runtime_error("Aircraft: Cannot find Aircraft Body Gameobject at child index 0.");
@@ -58,15 +59,15 @@ void Aircraft::PerformEvadeRoll() noexcept {
 	using DirectX::SimpleMath::Quaternion;
 	using DirectX::SimpleMath::Vector3;
 	auto& rootTransform = GetTransform();
-	auto& bodyTransform = m_aircraftBody->GetTransform();
 
 	// start new roll
 	if (!m_isEvadeRolling) {
 		m_isEvadeRolling = true;
 		m_currentRollingDir = m_controlInput.evadeRoll;
-		m_startRotation = bodyTransform.GetRotation();
-		m_startForward = bodyTransform.GetForward();
-		m_startRight = bodyTransform.GetRight();
+		//m_startRotation = m_aircraftBody->GetRotation();
+		m_startRotation = m_aircraftBody->GetLocalRotation();
+		m_startForward = m_aircraftBody->GetForward();
+		m_startRight = rootTransform.GetRight();
 		m_evadeRollElapsedTime = 0.0f;
 		m_previousDisplaceOffset = 0.0f;
 	}
@@ -81,7 +82,9 @@ void Aircraft::PerformEvadeRoll() noexcept {
 
 	// roll (the body)
 	auto rollDelta = Quaternion::CreateFromAxisAngle(m_startForward, angle);
-	bodyTransform.SetRotation(m_startRotation * rollDelta);
+	const Quaternion result = Quaternion::Concatenate(rollDelta, m_startRotation);
+	m_aircraftBody->SetLocalRotation(result);
+	//m_aircraftBody->SetRotation(m_startRotation * rollDelta);
 
 	// displace (the root)
 	float currentOffset = m_evadeDistance * t;

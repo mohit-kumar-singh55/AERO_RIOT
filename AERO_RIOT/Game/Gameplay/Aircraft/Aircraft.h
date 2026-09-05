@@ -48,7 +48,7 @@ private:
 
 private:
 	AircraftControlInput m_controlInput;
-	GameObject* m_aircraftBody;		// visual child
+	Transform* m_aircraftBody;		// visual child
 
 	// configurable
 	float m_maxSpeed = 20.0f;
@@ -59,7 +59,7 @@ private:
 
 	float m_rotationSpeed = 60.0f;	// degree/s
 
-	float m_evadeRollDuration = 0.5f;
+	float m_evadeRollDuration = 0.3f;
 	float m_evadeRollAngle = 360.0f;	// degrees
 	float m_evadeDistance = 5.0f;		// amount of displacement when doing evade roll
 
