@@ -1,7 +1,16 @@
 #include "Aircraft.h"
 
 #include <SNX/Core/Components/Transform.h>
+#include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
+
+void Aircraft::OnInitialize() {
+	// ! considering the body gameobject is at index 0
+	m_aircraftBody = GetGameObject().GetTransform().GetChild(0)->GetGameObject();
+
+	if (!m_aircraftBody)
+		throw std::runtime_error("Aircraft: Cannot find Aircraft Body Gameobject at child index 0.");
+}
 
 void Aircraft::OnLateUpdate() {
 	using DirectX::SimpleMath::Vector3;
@@ -35,6 +44,8 @@ void Aircraft::OnLateUpdate() {
 }
 
 void Aircraft::PerformEvadeRoll() noexcept {
+	if (!m_aircraftBody) return;
+
 	/*
 	* return if not currently rolling &
 	* no new roll input command
@@ -46,15 +57,16 @@ void Aircraft::PerformEvadeRoll() noexcept {
 
 	using DirectX::SimpleMath::Quaternion;
 	using DirectX::SimpleMath::Vector3;
-	auto& transform = GetTransform();
+	auto& rootTransform = GetTransform();
+	auto& bodyTransform = m_aircraftBody->GetTransform();
 
 	// start new roll
 	if (!m_isEvadeRolling) {
 		m_isEvadeRolling = true;
 		m_currentRollingDir = m_controlInput.evadeRoll;
-		m_startRotation = transform.GetRotation();
-		m_startForward = transform.GetForward();
-		m_startRight = transform.GetRight();
+		m_startRotation = bodyTransform.GetRotation();
+		m_startForward = bodyTransform.GetForward();
+		m_startRight = bodyTransform.GetRight();
 		m_evadeRollElapsedTime = 0.0f;
 		m_previousDisplaceOffset = 0.0f;
 	}
@@ -67,16 +79,16 @@ void Aircraft::PerformEvadeRoll() noexcept {
 
 	angle *= (int)m_currentRollingDir;
 
-	// roll
+	// roll (the body)
 	auto rollDelta = Quaternion::CreateFromAxisAngle(m_startForward, angle);
-	transform.SetRotation(m_startRotation * rollDelta);
+	bodyTransform.SetRotation(m_startRotation * rollDelta);
 
-	// displace
+	// displace (the root)
 	float currentOffset = m_evadeDistance * t;
 	// offset to move this frame
 	float deltaOffset = currentOffset - m_previousDisplaceOffset;
-	Vector3 newPosition = transform.GetPosition() + m_startRight * (int)m_currentRollingDir * deltaOffset;
-	transform.SetPosition(newPosition);
+	Vector3 newPosition = rootTransform.GetPosition() + m_startRight * (int)m_currentRollingDir * deltaOffset;
+	rootTransform.SetPosition(newPosition);
 	m_previousDisplaceOffset = currentOffset;
 
 	// finish the roll

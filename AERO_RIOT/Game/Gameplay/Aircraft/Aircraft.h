@@ -39,6 +39,8 @@ public:
 	}
 
 protected:
+	void OnInitialize() override;
+
 	void OnLateUpdate() override;
 
 private:
@@ -46,6 +48,7 @@ private:
 
 private:
 	AircraftControlInput m_controlInput;
+	GameObject* m_aircraftBody;		// visual child
 
 	// configurable
 	float m_maxSpeed = 20.0f;

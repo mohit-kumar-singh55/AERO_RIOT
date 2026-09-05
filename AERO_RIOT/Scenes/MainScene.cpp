@@ -34,9 +34,9 @@ void MainScene::OnLoad() {
 
 	// ! create basic aircraft hierarchy
 	GameObject& aircraftRoot = GetGameObjects().CreateGameObject("AircraftRoot");
-	GameObject& aircraftBody = GetGameObjects().CreateGameObject("AircraftBody");
-	GameObject& aircraftBase = GetGameObjects().CreateGameObject("AircraftBase");
-	GameObject& aircraftWing = GetGameObjects().CreateGameObject("AircraftWing");
+	GameObject& aircraftBody = GetGameObjects().CreateGameObject("Body");
+	GameObject& aircraftBase = GetGameObjects().CreateGameObject("Base");
+	GameObject& aircraftWing = GetGameObjects().CreateGameObject("Wing");
 	GameObject& thirdPersonCameraAnchor = GetGameObjects().CreateGameObject("ThirdPersonCameraAnchor");
 
 	aircraftRoot.AddComponent<Aircraft>();
