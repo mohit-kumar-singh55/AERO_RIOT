@@ -48,7 +48,7 @@ private:
 
 private:
 	AircraftControlInput m_controlInput;
-	Transform* m_aircraftBody;		// visual child
+	Transform* m_aircraftBody = nullptr;		// visual child
 
 	// configurable
 	float m_maxSpeed = 20.0f;
@@ -67,7 +67,6 @@ private:
 	bool m_isEvadeRolling = false;
 	EvadeRoll m_currentRollingDir = EvadeRoll::None;
 	DirectX::SimpleMath::Quaternion m_startRotation;
-	DirectX::SimpleMath::Vector3 m_startForward;
 	DirectX::SimpleMath::Vector3 m_startRight;
 	float m_evadeRollElapsedTime = 0.0f;
 	float m_previousDisplaceOffset = 0.0f;

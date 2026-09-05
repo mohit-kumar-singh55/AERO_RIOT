@@ -64,9 +64,7 @@ void Aircraft::PerformEvadeRoll() noexcept {
 	if (!m_isEvadeRolling) {
 		m_isEvadeRolling = true;
 		m_currentRollingDir = m_controlInput.evadeRoll;
-		//m_startRotation = m_aircraftBody->GetRotation();
 		m_startRotation = m_aircraftBody->GetLocalRotation();
-		m_startForward = m_aircraftBody->GetForward();
 		m_startRight = rootTransform.GetRight();
 		m_evadeRollElapsedTime = 0.0f;
 		m_previousDisplaceOffset = 0.0f;
@@ -81,7 +79,7 @@ void Aircraft::PerformEvadeRoll() noexcept {
 	angle *= (int)m_currentRollingDir;
 
 	// roll (the body)
-	auto rollDelta = Quaternion::CreateFromAxisAngle(m_startForward, angle);
+	auto rollDelta = Quaternion::CreateFromAxisAngle(Vector3::Forward, angle);
 	const Quaternion result = Quaternion::Concatenate(rollDelta, m_startRotation);
 	m_aircraftBody->SetLocalRotation(result);
 	//m_aircraftBody->SetRotation(m_startRotation * rollDelta);
@@ -98,5 +96,8 @@ void Aircraft::PerformEvadeRoll() noexcept {
 	if (m_evadeRollElapsedTime >= m_evadeRollDuration) {
 		m_isEvadeRolling = false;
 		m_currentRollingDir = EvadeRoll::None;
+
+		// first and last rotation should be same
+		m_aircraftBody->SetLocalRotation(m_startRotation);
 	}
 }
