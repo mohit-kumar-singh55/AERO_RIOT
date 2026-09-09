@@ -51,6 +51,12 @@ public:
 		return m_objects.size() + m_pendingObjects.size();
 	}
 
+	// get current scene
+	[[nodiscard]]
+	Scene* GetScene() noexcept { return m_scene; }
+	[[nodiscard]]
+	const Scene* GetScene() const noexcept { return m_scene; }
+
 private:
 	void AddPendingObjects();
 	void RemoveDestroyedObjects() noexcept;

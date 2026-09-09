@@ -8,7 +8,7 @@ GameObjectManager::~GameObjectManager() {
 }
 
 GameObject& GameObjectManager::CreateGameObject(std::string name) {
-	auto gameObject = std::make_unique<GameObject>(m_scene, std::move(name));
+	auto gameObject = std::make_unique<GameObject>(this, std::move(name));
 
 	GameObject& reference = *gameObject;
 

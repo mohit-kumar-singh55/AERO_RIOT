@@ -1,8 +1,8 @@
 #include "GameObject.h"
 
-GameObject::GameObject(Scene* scene, std::string name) :
-	m_name(name),
-	m_scene(scene) {
+GameObject::GameObject(GameObjectManager* gameObjects, std::string name) :
+	m_gameObjects(gameObjects),
+	m_name(name) {
 	m_transform.SetGameObject(this);
 }
 

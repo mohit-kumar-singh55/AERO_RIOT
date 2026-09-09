@@ -9,12 +9,12 @@
 #include <utility>
 #include <vector>
 
-class Scene;
+class GameObjectManager;
 struct RenderContext;
 
 class GameObject final {
 public:
-	explicit GameObject(Scene* scene, std::string name = "GameObject");
+	explicit GameObject(GameObjectManager* gameObjects, std::string name = "GameObject");
 	~GameObject();
 
 	// disallow to copy or move
@@ -130,9 +130,9 @@ public:
 
 	// get current scene
 	[[nodiscard]]
-	Scene* GetScene() noexcept { return m_scene; }
+	GameObjectManager* GetGameObjects() noexcept { return m_gameObjects; }
 	[[nodiscard]]
-	const Scene* GetScene() const noexcept { return m_scene; }
+	const GameObjectManager* GetGameObjects() const noexcept { return m_gameObjects; }
 
 private:
 	void EnsureComponentStarted(Component& component);
@@ -144,7 +144,7 @@ private:
 private:
 	std::string m_name;
 
-	Scene* m_scene;
+	GameObjectManager* m_gameObjects;
 
 	Transform m_transform;
 
