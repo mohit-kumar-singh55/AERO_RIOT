@@ -7,11 +7,12 @@
 #include <string_view>
 #include <vector>
 
+class Scene;
 struct RenderContext;
 
 class GameObjectManager final {
 public:
-	GameObjectManager() = default;
+	explicit GameObjectManager(Scene* scene);
 	~GameObjectManager();
 
 	// disallow to copy or move
@@ -55,6 +56,8 @@ private:
 	void RemoveDestroyedObjects() noexcept;
 
 private:
+	Scene* m_scene = nullptr;
+
 	std::vector<std::unique_ptr<GameObject>> m_objects;
 	std::vector<std::unique_ptr<GameObject>> m_pendingObjects;
 };

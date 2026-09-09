@@ -6,7 +6,8 @@
 
 Scene::Scene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	m_sceneManager(sceneManager),
-	m_context(context) {
+	m_context(context),
+	m_gameObjects(this) {
 	// initial render context setup
 	auto& deviceResources = GetContext().deviceResources;
 	m_renderContext.device = deviceResources.GetDevice();
@@ -47,8 +48,12 @@ void Scene::FixedUpdate() {
 
 	OnFixedUpdate();
 
-	if (ShouldUpdateGameObjects())
+	if (ShouldUpdateGameObjects()) {
 		m_gameObjects.FixedUpdate();
+
+		// phase to apply physics
+		m_kinetics.Integrate(Time::FixedDeltaTime());
+	}
 }
 
 void Scene::Update() {

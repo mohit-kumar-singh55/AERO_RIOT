@@ -179,9 +179,11 @@
     <ClCompile Include="Scenes\MainScene.cpp" />
     <ClCompile Include="SNX\Audio\AudioManager.cpp" />
     <ClCompile Include="SNX\Core\Components\Camera\Camera.cpp" />
+    <ClCompile Include="SNX\Core\Components\Kinetics\KineticBody.cpp" />
     <ClCompile Include="SNX\Core\Components\Renderer\MeshRenderer.cpp" />
     <ClCompile Include="SNX\Core\Components\Renderer\PrimitiveRenderer.cpp" />
     <ClCompile Include="SNX\Core\Components\Transform.cpp" />
+    <ClCompile Include="SNX\Core\Kinetics\Kinetics.cpp" />
     <ClCompile Include="SNX\Core\Materials\BasicPrimitiveMaterial.cpp" />
     <ClCompile Include="SNX\Core\ModelObject3D.cpp" />
     <ClCompile Include="SNX\Core\Object\Component.cpp" />
@@ -205,10 +207,12 @@
     <ClInclude Include="SNX\Audio\AudioManager.h" />
     <ClInclude Include="SNX\Core\Collision.h" />
     <ClInclude Include="SNX\Core\Components\Camera\Camera.h" />
+    <ClInclude Include="SNX\Core\Components\Kinetics\KineticBody.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\MeshRenderer.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\PrimitiveRenderer.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\Renderer.h" />
     <ClInclude Include="SNX\Core\Components\Transform.h" />
+    <ClInclude Include="SNX\Core\Kinetics\Kinetics.h" />
     <ClInclude Include="SNX\Core\Materials\BasicPrimitiveMaterial.h" />
     <ClInclude Include="SNX\Core\ModelObject3D.h" />
     <ClInclude Include="SNX\Core\Object\Component.h" />

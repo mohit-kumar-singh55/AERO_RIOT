@@ -1,11 +1,14 @@
 #include "GameObjectManager.h"
 
+GameObjectManager::GameObjectManager(Scene* scene) :
+	m_scene(scene) {}
+
 GameObjectManager::~GameObjectManager() {
 	Clear();
 }
 
 GameObject& GameObjectManager::CreateGameObject(std::string name) {
-	auto gameObject = std::make_unique<GameObject>(std::move(name));
+	auto gameObject = std::make_unique<GameObject>(m_scene, std::move(name));
 
 	GameObject& reference = *gameObject;
 

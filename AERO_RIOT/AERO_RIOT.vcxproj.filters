@@ -74,6 +74,12 @@
     <Filter Include="Game\Gameplay\Cameras">
       <UniqueIdentifier>{b30fd1ca-23fe-4cf2-bf85-d659ab7565bd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SNX\Core\Components\Kinetics">
+      <UniqueIdentifier>{51acac98-2387-4fe8-8ce5-da658a841e01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SNX\Core\Kinetics">
+      <UniqueIdentifier>{307b7f29-2d3c-4f7c-8d78-889df01ed87a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -146,6 +152,12 @@
     </ClCompile>
     <ClCompile Include="Game\Gameplay\Cameras\AircraftCameraController.cpp">
       <Filter>Game\Gameplay\Cameras</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Components\Kinetics\KineticBody.cpp">
+      <Filter>SNX\Core\Components\Kinetics</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Kinetics\Kinetics.cpp">
+      <Filter>SNX\Core\Kinetics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -230,6 +242,12 @@
     </ClInclude>
     <ClInclude Include="Game\Gameplay\Cameras\AircraftCameraController.h">
       <Filter>Game\Gameplay\Cameras</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Components\Kinetics\KineticBody.h">
+      <Filter>SNX\Core\Components\Kinetics</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Kinetics\Kinetics.h">
+      <Filter>SNX\Core\Kinetics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

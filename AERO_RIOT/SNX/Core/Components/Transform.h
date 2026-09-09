@@ -54,7 +54,6 @@ public:
 
 	// --------------------------------------------------
 	// World transform
-	// Unity-like names: position, rotation, lossyScale
 	// --------------------------------------------------
 
 	[[nodiscard]]

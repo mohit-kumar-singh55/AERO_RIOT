@@ -82,7 +82,6 @@ void Aircraft::PerformEvadeRoll() noexcept {
 	auto rollDelta = Quaternion::CreateFromAxisAngle(Vector3::Forward, angle);
 	const Quaternion result = Quaternion::Concatenate(rollDelta, m_startRotation);
 	m_aircraftBody->SetLocalRotation(result);
-	//m_aircraftBody->SetRotation(m_startRotation * rollDelta);
 
 	// displace (the root)
 	float currentOffset = m_evadeDistance * t;

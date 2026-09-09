@@ -5,6 +5,7 @@
 
 #include <SNX/Graphics/RenderContext.h>
 #include <SNX/Core/Object/GameObjectManager.h>
+#include <SNX/Core/Kinetics/Kinetics.h>
 
 #include <array>
 #include <string_view>
@@ -41,6 +42,11 @@ public:
 
 	[[nodiscard]]
 	std::array<float, 4> GetClearColor() const noexcept { return OnGetClearColor(); }
+
+	[[nodiscard]]
+	Kinetics* GetKinetics() noexcept { return &m_kinetics; }
+	[[nodiscard]]
+	const Kinetics* GetKinetics() const noexcept { return &m_kinetics; }
 
 protected:
 	[[nodiscard]]
@@ -102,6 +108,7 @@ private:
 
 	RenderContext m_renderContext;
 
+	Kinetics m_kinetics;
 	GameObjectManager m_gameObjects;
 
 	bool m_loaded = false;
