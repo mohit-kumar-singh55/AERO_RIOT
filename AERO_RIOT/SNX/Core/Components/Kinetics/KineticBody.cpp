@@ -1,8 +1,6 @@
 #include "KineticBody.h"
 
 #include <SNX/Core/Components/Transform.h>
-#include <SNX/Core/Object/GameObject.h>
-#include <SNX/Core/Object/GameObjectManager.h>
 #include <SNX/Core/Scene/Scene.h>
 
 #include <stdexcept>
@@ -13,16 +11,17 @@ void KineticBody::OnInitialize() {
 	* check if this gameobject has no other kinetic body already attached.
 	* if so, don't allow to attach this one and remove itself
 	*/
-	if (GetGameObject().GetComponent<KineticBody>())
+	auto* existing = GetGameObject().GetComponent<KineticBody>();
+	if (existing && existing != this)
 		throw std::runtime_error("A gameobject cannot have multiple KineticBody components.");
 
 	// register this component to Kinetics class
-	GetGameObject().GetGameObjects()->GetScene()->GetKinetics()->RegisterKineticBody(this);
+	GetScene()->GetKinetics()->RegisterKineticBody(this);
 }
 
 void KineticBody::OnDestroy() {
 	// unregister this component from Kinetics class
-	GetGameObject().GetGameObjects()->GetScene()->GetKinetics()->UnregisterKineticBody(this);
+	GetScene()->GetKinetics()->UnregisterKineticBody(this);
 }
 
 void KineticBody::Integrate(float fixedDeltaTime) noexcept {

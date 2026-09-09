@@ -128,7 +128,6 @@ public:
 	[[nodiscard]]
 	const Transform& GetTransform() const noexcept { return m_transform; }
 
-	// get current scene
 	[[nodiscard]]
 	GameObjectManager* GetGameObjects() noexcept { return m_gameObjects; }
 	[[nodiscard]]

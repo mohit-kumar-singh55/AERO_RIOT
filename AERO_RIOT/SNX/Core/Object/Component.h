@@ -1,5 +1,6 @@
 #pragma once
 
+class Scene;
 class GameObject;
 class Transform;
 
@@ -31,6 +32,12 @@ public:
 
 	[[nodiscard]]
 	bool IsRemoveRequested() const noexcept { return m_removeRequested; }
+
+	// get current scene
+	[[nodiscard]]
+	Scene* GetScene() noexcept;
+	[[nodiscard]]
+	const Scene* GetScene() const noexcept;
 
 protected:
 	// called once after the component is created
