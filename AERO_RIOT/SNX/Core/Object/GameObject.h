@@ -128,6 +128,7 @@ public:
 	[[nodiscard]]
 	const Transform& GetTransform() const noexcept { return m_transform; }
 
+	// get current scene
 	[[nodiscard]]
 	Scene* GetScene() noexcept { return m_scene; }
 	[[nodiscard]]

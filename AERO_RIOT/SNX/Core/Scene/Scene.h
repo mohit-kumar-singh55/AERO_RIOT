@@ -43,6 +43,18 @@ public:
 	[[nodiscard]]
 	std::array<float, 4> GetClearColor() const noexcept { return OnGetClearColor(); }
 
+	// change scene
+	bool RequestSceneLoad(SceneId sceneId);
+	bool RequestSceneLoad(std::string_view sceneName);
+
+	[[nodiscard]]
+	GameObjectManager& GetGameObjects() noexcept { return m_gameObjects; }
+	[[nodiscard]]
+	const GameObjectManager& GetGameObjects() const noexcept { return m_gameObjects; }
+
+	// ! close the game
+	void RequestQuit() const;
+
 	[[nodiscard]]
 	Kinetics* GetKinetics() noexcept { return &m_kinetics; }
 	[[nodiscard]]
@@ -58,16 +70,6 @@ protected:
 	SceneContext& GetContext() noexcept { return m_context; }
 	[[nodiscard]]
 	const SceneContext& GetContext() const noexcept { return m_context; }
-
-	[[nodiscard]]
-	GameObjectManager& GetGameObjects() noexcept { return m_gameObjects; }
-	[[nodiscard]]
-	const GameObjectManager& GetGameObjects() const noexcept { return m_gameObjects; }
-
-	bool RequestSceneLoad(SceneId sceneId);
-	bool RequestSceneLoad(std::string_view sceneName);
-
-	void RequestQuit() const;
 
 protected:
 	virtual void OnLoad() {}
