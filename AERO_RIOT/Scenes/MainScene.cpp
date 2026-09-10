@@ -20,6 +20,8 @@
 #include <string>
 #include <time.h>
 
+#include <SNX/Core/Components/Kinetics/KineticBody.h>
+
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	Scene(sceneManager, context) {}
 
@@ -96,11 +98,22 @@ void MainScene::OnLoad() {
 			context.deviceResources.GetContext(),
 			PrimitiveShape::Cube
 		);
-		renderer.SetColor({ 0.5f,0.2f,0.7f,1.0 });
+		renderer.SetColor({ 0.5f,0.2f,0.7f,1.0f });
 		auto& cubeTrans = cube.GetTransform();
 		cubeTrans.SetScale({ 0.2f,4.0f,20.0f });
 		cubeTrans.SetPosition({ (float)(std::rand() % 10) - i,-(float)(std::rand() % 10) + i,-(float)(std::rand() % 20) - i });
 	}
+
+	// ? TESTING
+	auto& testCubeGO = GetGameObjects().CreateGameObject("TEST_CUBE");
+	auto& testCube = testCubeGO.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Cube
+	);
+	testCube.SetColor({ 0.3f,0.6f,0.9f,1.0f });
+	testCube.GetTransform().SetPosition(DirectX::SimpleMath::Vector3::Zero);
+	m_testCubeKB = &testCubeGO.AddComponent<KineticBody>();
+	//m_testCubeKB->AddForce(Vector3::Forward * 1.0f);
 }
 
 void MainScene::OnUnload() {
@@ -112,6 +125,10 @@ void MainScene::OnUpdate() {
 	// ! close the window
 	if (InputManager::Get().IsKeyPressed(DirectX::Keyboard::Escape))
 		RequestQuit();
+}
+
+void MainScene::OnFixedUpdate() {
+	m_testCubeKB->AddForce(Vector3::Forward * 1.0f);
 }
 
 bool MainScene::BuildRenderContext(RenderContext& context) const noexcept {
@@ -161,4 +178,14 @@ void MainScene::OnRenderUI() {
 			DirectX::Colors::Green
 		);
 	}
+
+	GetContext().font.DrawString(
+		&GetContext().spriteBatch,
+		std::to_wstring(m_testCubeKB->GetLinearVelocity().Length()).c_str(),
+		DirectX::SimpleMath::Vector2(
+			20.0f,
+			140.0f
+		),
+		DirectX::Colors::Crimson
+	);
 }

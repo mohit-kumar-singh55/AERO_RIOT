@@ -13,6 +13,7 @@ protected:
 	void OnUnload() override;
 
 	void OnUpdate() override;
+	void OnFixedUpdate() override;
 
 	bool BuildRenderContext(RenderContext& context) const noexcept override;
 
@@ -22,4 +23,6 @@ private:
 	Camera* m_camera = nullptr;
 
 	GameObject* m_aircraftRoot = nullptr;
+
+	KineticBody* m_testCubeKB = nullptr;
 };
