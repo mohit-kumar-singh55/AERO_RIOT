@@ -13,7 +13,7 @@ void KineticBody::OnInitialize() {
 	*/
 	auto* existing = GetGameObject().GetComponent<KineticBody>();
 	if (existing && existing != this)
-		throw std::runtime_error("A gameobject cannot have multiple KineticBody components.");
+		throw std::runtime_error("KineticBody::OnInitialize(): A gameobject cannot have multiple KineticBody components.");
 
 	// register this component to Kinetics class
 	GetScene()->GetKinetics()->RegisterKineticBody(this);
