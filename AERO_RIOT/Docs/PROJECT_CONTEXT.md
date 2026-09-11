@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-11
 
-Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect the latest `master` before assuming this file is perfectly current.
+Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect latest `master` before assuming this file is perfectly current.
 
 ## Project / learning goal
 
@@ -45,7 +45,7 @@ Important decisions:
 - GameObject stores non-owning `GameObjectManager*`.
 - GameObjectManager stores non-owning owning `Scene*`.
 - Component can reach Scene through GameObject -> GameObjectManager -> Scene.
-- Scene exposes intentional scene-level capabilities (e.g. RequestSceneLoad, GetKinetics); gameplay should not tunnel directly into SceneManager.
+- Scene exposes intentional scene-level capabilities such as RequestSceneLoad and GetKinetics; gameplay should not tunnel directly into SceneManager.
 - New objects are pending until BeginFrame; component/object destruction is deferred to safe EndFrame processing.
 
 Scene member order intentionally keeps Kinetics alive while objects/components are destroyed:
@@ -192,7 +192,7 @@ Aircraft can still look visually smooth because chase camera moves with it and d
 
 ## Build system / PCH — COMPLETE
 
-Precompiled headers are now enabled and working (commit `81943c8558ba91dd8faf74149eb0965055e7fefe`, followed by merge commit `3dc1d13fc689f2053640233fce2b371a1fa5f72d`).
+Precompiled headers are enabled and working.
 
 Project-root files:
 - `pch.h`
@@ -208,29 +208,47 @@ Current PCH contains stable/common external headers only:
 
 Do not put SNX gameplay/engine systems into the PCH just because they are common. Keep engine dependencies explicit. Headers should remain self-contained even if a type is also available through PCH.
 
-Important distinction:
-- PCH = compiler/build optimization
-- common/umbrella header = source dependency convenience (not created yet; avoid dumping ground)
-- AppConfig = runtime/startup settings
-- Aircraft/AI/Weapon definitions = gameplay data/config, separate from AppConfig
+## AppConfig — COMPLETE (minor cleanup noted)
 
-## NEXT IMMEDIATE STEP — AppConfig
+Current application config lives at `Configs/AppConfig.h` and contains:
+- `std::wstring title = L"AERO RIOT"`
+- `windowWidth = 1280`
+- `windowHeight = 720`
+- `useVSync = true`
+- `isFullScreen = false`
 
-Create a deliberately small application/startup configuration layer for genuinely global settings already used by the program, such as:
-- initial window width/height
-- VSync preference if the current rendering path supports/configures it
-- FPS cap only if/when an actual limiter exists
-- possibly title/startup constants if appropriate
+Current flow:
+- `wWinMain` creates one `const AppConfig appConfig{}`.
+- `CreateGameWindow` reads width/height/title from it.
+- `Game::Initialize` receives it and stores an owned `AppConfig m_appConfig` copy.
+- `Game::Render` calls `m_deviceResources.Present(m_appConfig.useVSync)`.
 
-Do not mix gameplay tuning, aircraft stats, AI tuning, debug build macros, or every engine constant into AppConfig.
+Ownership decision: Game owns its config value rather than storing an external pointer/reference. Passing into helper/init functions should be by `const AppConfig&` to avoid temporary copies; current code still passes `AppConfig` by value in `CreateGameWindow` and `Game::Initialize`, so change those signatures to `const AppConfig&` when convenient.
 
-Prefer typed modern C++ (`struct`, `constexpr`, enum class where useful) over global preprocessor macros. Decide first whether values are compile-time defaults only or runtime mutable settings; do not build JSON/INI loading until there is a real need.
+Forward-declaration lesson: `struct AppConfig;` is sufficient for declarations involving only pointer/reference types, but `Game` stores `AppConfig m_appConfig` by value, so `Game.h` needs the complete type and must include `AppConfig.h`.
 
-After the small AppConfig step, return to aircraft physics.
+`isFullScreen` is config data but fullscreen behavior is not wired yet. Do not build JSON/INI loading until there is a real need.
+
+Important config boundary:
+- AppConfig = executable/startup/runtime app settings
+- PCH = build optimization
+- common/umbrella header = source dependency convenience
+- Aircraft/AI/Weapon definitions = gameplay tuning data, separate from AppConfig
+
+## NEXT IMMEDIATE STEP — aircraft-local airflow / directional aerodynamic resistance
+
+Current drag uses one isotropic world-velocity quadratic drag coefficient, so the aircraft resists motion equally in every direction. Next teach and implement local velocity decomposition so forward, sideways, and vertical aerodynamic resistance can differ.
+
+Goal of next step:
+- understand world velocity vs aircraft-local velocity/components
+- project/decompose velocity onto aircraft Forward/Right/Up axes
+- apply stronger resistance to sideways/vertical slip than forward motion
+- keep lift separate for the following step
+
+Do not jump directly to full lift/AoA/stall yet.
 
 ## Planned physics progression
 
-Next physics topics:
 - aircraft-local airflow / directional aerodynamic resistance
 - lift
 - angle of attack
