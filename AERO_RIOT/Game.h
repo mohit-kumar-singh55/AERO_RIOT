@@ -5,6 +5,8 @@
 // window related
 #include <windows.h>
 
+#include <Configs/AppConfig.h>
+
 // DirectXTK
 #include <SpriteBatch.h>
 #include <SpriteFont.h>
@@ -25,7 +27,7 @@ public:
 	Game(Game&&) = delete;
 	Game& operator=(Game&&) = delete;
 
-	void Initialize(HWND window, int width, int height);
+	void Initialize(HWND window, const AppConfig appConfig);
 
 	void Tick();
 
@@ -36,6 +38,9 @@ private:
 	void Render();
 
 private:
+	// global app config
+	AppConfig m_appConfig;
+
 	// device related
 	DeviceResources m_deviceResources;
 

@@ -205,6 +205,7 @@
     <ClCompile Include="SNX\Input\InputManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Configs\AppConfig.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Game\Gameplay\Aircraft\Aircraft.h" />
     <ClInclude Include="Game\Gameplay\Aircraft\AircraftController.h" />

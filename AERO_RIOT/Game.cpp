@@ -10,8 +10,10 @@
 
 #include <stdexcept>
 
-void Game::Initialize(HWND window, int width, int height) {
-	m_deviceResources.Initialize(window, width, height);
+void Game::Initialize(HWND window, const AppConfig appConfig) {
+	m_appConfig = appConfig;
+
+	m_deviceResources.Initialize(window, m_appConfig.windowWidth, m_appConfig.windowHeight);
 
 	// init singleton input manager
 	InputManager::Get().Initialize(window);
@@ -117,5 +119,5 @@ void Game::Render() {
 	// ***********
 
 	// swap chain present
-	m_deviceResources.Present();	// TODO: add a variable in config file, whether to use vsync or not
+	m_deviceResources.Present(m_appConfig.useVSync);
 }

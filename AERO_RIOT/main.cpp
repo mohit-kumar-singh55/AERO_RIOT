@@ -1,6 +1,6 @@
-#define WIN32_LEAN_AND_MEAN
-
 #include "pch.h"
+
+#include <Configs/AppConfig.h>
 
 #include "Game.h"
 
@@ -27,9 +27,6 @@
 // -----------------------------------------------------------------------------
 
 HWND g_window = nullptr;								// window handle, needs a window before we can render it
-
-constexpr int WINDOW_WIDTH = 1280;
-constexpr int WINDOW_HEIGHT = 720;
 
 std::unique_ptr<Game> g_game;
 
@@ -61,7 +58,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 // Create Win32 window
 // -----------------------------------------------------------------------------
 
-void CreateGameWindow(HINSTANCE instance, int showCommand) {
+void CreateGameWindow(HINSTANCE instance, int showCommand, const AppConfig config) {
 	const wchar_t CLASS_NAME[] = L"DXTKGameWindowClass";
 
 	// create window class instance
@@ -84,8 +81,8 @@ void CreateGameWindow(HINSTANCE instance, int showCommand) {
 	RECT rect = {};
 	rect.left = 0;
 	rect.top = 0;
-	rect.right = WINDOW_WIDTH;
-	rect.bottom = WINDOW_HEIGHT;
+	rect.right = config.windowWidth;
+	rect.bottom = config.windowHeight;
 
 	// resize the window
 	AdjustWindowRect(&rect, windowStyle, FALSE);
@@ -98,7 +95,7 @@ void CreateGameWindow(HINSTANCE instance, int showCommand) {
 	g_window = CreateWindowEx(
 		0,
 		CLASS_NAME,
-		L"Prototype Alpha",
+		config.title.c_str(),
 		windowStyle,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -145,11 +142,13 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int showCommand) {
 	try {
 		SetWorkingDirectoryToExecutable();
 
-		CreateGameWindow(instance, showCommand);
+		const AppConfig appConfig{};
+
+		CreateGameWindow(instance, showCommand, appConfig);
 
 		g_game = std::make_unique<Game>();
 
-		g_game->Initialize(g_window, WINDOW_WIDTH, WINDOW_HEIGHT);
+		g_game->Initialize(g_window, appConfig);
 
 		MSG msg = {};
 

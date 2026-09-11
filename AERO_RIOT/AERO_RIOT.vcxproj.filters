@@ -80,6 +80,9 @@
     <Filter Include="SNX\Core\Kinetics">
       <UniqueIdentifier>{307b7f29-2d3c-4f7c-8d78-889df01ed87a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configs">
+      <UniqueIdentifier>{3afd2b58-6b4d-420b-8a52-b03c3ae0ef6c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -254,6 +257,9 @@
       <Filter>SNX\Core\Kinetics</Filter>
     </ClInclude>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Configs\AppConfig.h">
+      <Filter>Configs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Docs\DETAILS.txt">
