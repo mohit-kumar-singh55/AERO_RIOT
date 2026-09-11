@@ -1,5 +1,7 @@
-#include "Aircraft.h"
+#include "pch.h"
+
 #include "AircraftController.h"
+#include "Aircraft.h"
 
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Input/InputManager.h>

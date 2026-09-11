@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "MeshRenderer.h"
 
 #include <SNX/Core/Components/Transform.h>

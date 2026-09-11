@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Time.h"
 
 #include <algorithm>

@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "ModelObject3D.h"
 
 #include <DirectXColors.h>

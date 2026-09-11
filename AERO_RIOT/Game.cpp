@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Game.h"
 
 #include <Scenes/SceneIds.h>

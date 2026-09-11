@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "BasicPrimitiveMaterial.h"
 
 #include <SNX/Graphics/RenderContext.h>

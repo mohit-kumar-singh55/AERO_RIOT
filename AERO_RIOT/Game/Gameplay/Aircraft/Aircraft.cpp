@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Aircraft.h"
 
 #include <SNX/Core/Components/Transform.h>

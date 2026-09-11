@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "TextureFactory.h"
 
 #include <stdexcept>

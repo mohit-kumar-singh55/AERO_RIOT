@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "AircraftCameraController.h"
 
 #include <SNX/Input/InputManager.h>

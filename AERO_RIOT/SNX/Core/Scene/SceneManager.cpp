@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "SceneManager.h"
 
 #include <stdexcept>

@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "DeviceResources.h"
 
 #include <stdexcept>

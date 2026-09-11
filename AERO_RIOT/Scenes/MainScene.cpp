@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "MainScene.h"
 
 #include <SNX/Core/Components/Camera/Camera.h>

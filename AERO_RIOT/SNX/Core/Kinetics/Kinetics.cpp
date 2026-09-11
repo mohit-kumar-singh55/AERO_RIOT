@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Kinetics.h"
 
 #include <SNX/Core/Components/Kinetics/KineticBody.h>

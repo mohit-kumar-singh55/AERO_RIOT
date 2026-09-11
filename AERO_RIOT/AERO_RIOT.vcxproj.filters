@@ -162,6 +162,7 @@
     <ClCompile Include="SNX\Core\Kinetics\Kinetics.cpp">
       <Filter>SNX\Core\Kinetics</Filter>
     </ClCompile>
+    <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -252,6 +253,7 @@
     <ClInclude Include="SNX\Core\Kinetics\Kinetics.h">
       <Filter>SNX\Core\Kinetics</Filter>
     </ClInclude>
+    <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Docs\DETAILS.txt">

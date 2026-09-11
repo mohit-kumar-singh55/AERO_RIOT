@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Component.h"
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Object/GameObjectManager.h>
