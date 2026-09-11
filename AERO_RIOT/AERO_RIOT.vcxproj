@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="Docs\PROJECT_CONTEXT.md" />
     <None Include="Docs\TODO.md" />
     <None Include="packages.config" />
   </ItemGroup>

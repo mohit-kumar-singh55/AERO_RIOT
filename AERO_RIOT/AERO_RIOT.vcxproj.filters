@@ -86,6 +86,9 @@
     <None Include="Docs\TODO.md">
       <Filter>Docs</Filter>
     </None>
+    <None Include="Docs\PROJECT_CONTEXT.md">
+      <Filter>Docs</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

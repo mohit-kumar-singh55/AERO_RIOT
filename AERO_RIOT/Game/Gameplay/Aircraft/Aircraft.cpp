@@ -18,7 +18,7 @@ void Aircraft::OnStart() {
 	m_kb = GetGameObject().GetComponent<KineticBody>();
 
 	if (!m_kb)
-		throw std::runtime_error("Aircraft::OnInitialize: Cannot find KineticBody component.");
+		throw std::runtime_error("Aircraft::OnStart: Cannot find KineticBody component.");
 }
 
 void Aircraft::OnFixedUpdate() {
@@ -28,7 +28,7 @@ void Aircraft::OnFixedUpdate() {
 	auto& transform = GetTransform();
 
 	// rotation
-	float speedDelta = m_rotationSpeed * Time::DeltaTime();
+	float speedDelta = m_rotationSpeed * Time::FixedDeltaTime();
 	transform.RotateEulerDegrees({
 		-m_controlInput.pitch * speedDelta,
 		-m_controlInput.turn * speedDelta,
@@ -47,10 +47,11 @@ void Aircraft::OnFixedUpdate() {
 	// ! apply aerodynamic drag
 	const Vector3 velocity = m_kb->GetLinearVelocity();
 	const float speed = velocity.Length();
-	Vector3 drag = -m_airDrag * speed * velocity;
-
-	if (m_controlInput.airBrake > 0.0f)
-		drag *= m_controlInput.airBrake * m_airBrakePower;
+	Vector3 drag =
+		-m_airDrag
+		* speed
+		* velocity
+		* (1.0f + m_controlInput.airBrake * m_airBrakePower);
 
 	m_kb->AddForce(drag);
 }
