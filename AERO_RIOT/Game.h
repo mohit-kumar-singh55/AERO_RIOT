@@ -27,7 +27,7 @@ public:
 	Game(Game&&) = delete;
 	Game& operator=(Game&&) = delete;
 
-	void Initialize(HWND window, const AppConfig appConfig);
+	void Initialize(HWND window, const AppConfig& appConfig);
 
 	void Tick();
 

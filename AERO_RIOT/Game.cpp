@@ -10,7 +10,7 @@
 
 #include <stdexcept>
 
-void Game::Initialize(HWND window, const AppConfig appConfig) {
+void Game::Initialize(HWND window, const AppConfig& appConfig) {
 	m_appConfig = appConfig;
 
 	m_deviceResources.Initialize(window, m_appConfig.windowWidth, m_appConfig.windowHeight);

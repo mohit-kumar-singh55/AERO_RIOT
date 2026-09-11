@@ -58,7 +58,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPara
 // Create Win32 window
 // -----------------------------------------------------------------------------
 
-void CreateGameWindow(HINSTANCE instance, int showCommand, const AppConfig config) {
+void CreateGameWindow(HINSTANCE instance, int showCommand, const AppConfig& config) {
 	const wchar_t CLASS_NAME[] = L"DXTKGameWindowClass";
 
 	// create window class instance
