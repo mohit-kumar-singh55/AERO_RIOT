@@ -2,21 +2,29 @@
 
 #include <SNX/Core/Components/Transform.h>
 #include <SNX/Core/Object/GameObject.h>
+#include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Time.h>
 
 void Aircraft::OnInitialize() {
 	// ! considering the body gameobject is at index 0
 	// TODO: change it to explicit
-	m_aircraftBody = GetGameObject().GetTransform().GetChild(0);
+	m_aircraftBody = GetTransform().GetChild(0);
 
 	if (!m_aircraftBody)
-		throw std::runtime_error("Aircraft: Cannot find Aircraft Body Gameobject at child index 0.");
+		throw std::runtime_error("Aircraft::OnInitialize: Cannot find Aircraft Body Gameobject at child index 0.");
 }
 
-void Aircraft::OnLateUpdate() {
-	using DirectX::SimpleMath::Vector3;
-	using DirectX::SimpleMath::Quaternion;
+void Aircraft::OnStart() {
+	m_kb = GetGameObject().GetComponent<KineticBody>();
 
+	if (!m_kb)
+		throw std::runtime_error("Aircraft::OnInitialize: Cannot find KineticBody component.");
+}
+
+void Aircraft::OnFixedUpdate() {
+	using DirectX::SimpleMath::Vector3;
+
+	// ? temp direct rotation
 	auto& transform = GetTransform();
 
 	// rotation
@@ -26,21 +34,28 @@ void Aircraft::OnLateUpdate() {
 		-m_controlInput.turn * speedDelta,
 		-m_controlInput.turn * speedDelta
 		});
+	// ? *********************
 
-	// movement
-	float speedRateOfChange = m_speedRate * Time::DeltaTime();
-	if (m_controlInput.throttle > 0.0f && m_controlInput.airBrake == 0.0f)
-		m_currentSpeed += speedRateOfChange * m_controlInput.throttle;
-	else if (m_controlInput.airBrake > 0.0f)
-		m_currentSpeed -= speedRateOfChange * m_speedDrag * m_airBrakePower * m_controlInput.airBrake;
-	else
-		m_currentSpeed -= speedRateOfChange * m_speedDrag;
+	// ! apply thrust
+	const Vector3 thrust =
+		GetTransform().GetForward()
+		* m_maxThrust
+		* m_controlInput.throttle;
 
-	m_currentSpeed = std::clamp(m_currentSpeed, 0.0f, m_maxSpeed);
+	m_kb->AddForce(thrust);
 
-	Vector3 posChange = transform.GetForward() * m_currentSpeed * Time::DeltaTime();
-	transform.SetPosition(transform.GetPosition() + posChange);
+	// ! apply aerodynamic drag
+	const Vector3 velocity = m_kb->GetLinearVelocity();
+	const float speed = velocity.Length();
+	Vector3 drag = -m_airDrag * speed * velocity;
 
+	if (m_controlInput.airBrake > 0.0f)
+		drag *= m_controlInput.airBrake * m_airBrakePower;
+
+	m_kb->AddForce(drag);
+}
+
+void Aircraft::OnLateUpdate() {
 	PerformEvadeRoll();
 }
 

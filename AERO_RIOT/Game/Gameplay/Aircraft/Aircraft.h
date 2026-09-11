@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+class KineticBody;
+
 enum class EvadeRoll { None, Left = -1, Right = 1 };
 
 struct AircraftControlInput final {
@@ -41,6 +43,9 @@ public:
 protected:
 	void OnInitialize() override;
 
+	void OnStart() override;
+
+	void OnFixedUpdate() override;
 	void OnLateUpdate() override;
 
 private:
@@ -49,13 +54,12 @@ private:
 private:
 	AircraftControlInput m_controlInput;
 	Transform* m_aircraftBody = nullptr;		// visual child
+	KineticBody* m_kb = nullptr;
 
 	// configurable
-	float m_maxSpeed = 20.0f;
-	float m_speedRate = 5.0f;
-	float m_currentSpeed = 0.0f;
-	float m_speedDrag = 1.0f;		// natural drag
-	float m_airBrakePower = 4.0f;
+	float m_maxThrust = 20.0f;
+	float m_airDrag = 1.0f;		// aerodynamic drag coefficient
+	float m_airBrakePower = 4.0f;	// additional drag
 
 	float m_rotationSpeed = 60.0f;	// degree/s
 
