@@ -40,22 +40,47 @@ void Aircraft::OnFixedUpdate() {
 
 	// ! apply thrust
 	const Vector3 thrust =
-		GetTransform().GetForward()
+		transform.GetForward()
 		* m_maxThrust
 		* m_controlInput.throttle;
 
 	m_kb->AddForce(thrust);
 
-	// ! apply aerodynamic drag
+	// ! calc. directional aerodynamic drag
 	const Vector3 velocity = m_kb->GetLinearVelocity();
-	const float speed = velocity.Length();
-	Vector3 drag =
-		-m_airDrag
-		* speed
-		* velocity
-		* (1.0f + m_controlInput.airBrake * m_airBrakePower);
 
-	m_kb->AddForce(drag);
+	const Vector3 localForward = transform.GetForward();
+	const Vector3 localRight = transform.GetForward();
+	const Vector3 localUp = transform.GetForward();
+
+	const float forwardSpeed = velocity.Dot(localForward);
+	const float sideSpeed = velocity.Dot(localRight);
+	const float verticalSpeed = velocity.Dot(localUp);
+
+	const Vector3 forwardDrag =
+		-localForward
+		* m_forwardDrag
+		* forwardSpeed
+		* std::abs(forwardSpeed);
+
+	const Vector3 sideDrag =
+		-localRight
+		* m_sideDrag
+		* sideSpeed
+		* std::abs(sideSpeed);
+
+	const Vector3 verticalDrag =
+		-localUp
+		* m_verticalDrag
+		* verticalSpeed
+		* std::abs(verticalSpeed);
+
+	Vector3 totalDrag = forwardDrag + sideDrag + verticalDrag;
+
+	// ? temp: apply airbrake
+	totalDrag *= 1.0f + m_controlInput.airBrake * m_airBrakePower;
+
+	m_kb->AddForce(totalDrag);
 }
 
 void Aircraft::OnLateUpdate() {

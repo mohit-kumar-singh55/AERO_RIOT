@@ -44,7 +44,7 @@ void MainScene::OnLoad() {
 
 	aircraftRoot.AddComponent<Aircraft>();
 	aircraftRoot.AddComponent<AircraftController>();
-	aircraftRoot.AddComponent<KineticBody>();
+	m_kb = &aircraftRoot.AddComponent<KineticBody>();
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();
@@ -165,4 +165,14 @@ void MainScene::OnRenderUI() {
 			DirectX::Colors::Green
 		);
 	}
+
+	GetContext().font.DrawString(
+		&GetContext().spriteBatch,
+		std::to_wstring(m_kb->GetLinearVelocity().Length()).c_str(),
+		DirectX::SimpleMath::Vector2(
+			20.0f,
+			140.0f
+		),
+		DirectX::Colors::Green
+	);
 }

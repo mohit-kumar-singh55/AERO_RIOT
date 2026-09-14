@@ -58,14 +58,17 @@ private:
 
 	// configurable
 	float m_maxThrust = 20.0f;
-	float m_airDrag = 1.0f;		// aerodynamic drag coefficient
+	// directional aerodynamic drag coefficient
+	float m_forwardDrag = 1.0f;
+	float m_sideDrag = 2.0f;
+	float m_verticalDrag = 1.5f;
 	float m_airBrakePower = 4.0f;	// additional drag
 
 	float m_rotationSpeed = 60.0f;	// degree/s
 
 	float m_evadeRollDuration = 0.3f;
 	float m_evadeRollAngle = 360.0f;	// degrees
-	float m_evadeDistance = 5.0f;		// amount of displacement when doing evade roll
+	float m_evadeDistance = 5.0f;		// amount of displacement when evade rolling
 
 	// evade roll purpose **
 	bool m_isEvadeRolling = false;
