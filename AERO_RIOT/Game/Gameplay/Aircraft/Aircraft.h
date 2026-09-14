@@ -60,8 +60,8 @@ private:
 	float m_maxThrust = 20.0f;
 	// directional aerodynamic drag coefficient
 	float m_forwardDrag = 1.0f;
-	float m_sideDrag = 2.0f;
-	float m_verticalDrag = 1.5f;
+	float m_sideDrag = 3.0f;
+	float m_verticalDrag = 2.0f;
 	float m_airBrakePower = 4.0f;	// additional drag
 
 	float m_rotationSpeed = 60.0f;	// degree/s

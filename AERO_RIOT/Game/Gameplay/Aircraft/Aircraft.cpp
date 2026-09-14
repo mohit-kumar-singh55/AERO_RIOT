@@ -49,28 +49,28 @@ void Aircraft::OnFixedUpdate() {
 	// ! calc. directional aerodynamic drag
 	const Vector3 velocity = m_kb->GetLinearVelocity();
 
-	const Vector3 localForward = transform.GetForward();
-	const Vector3 localRight = transform.GetForward();
-	const Vector3 localUp = transform.GetForward();
+	const Vector3 aircraftForward = transform.GetForward();
+	const Vector3 aircraftRight = transform.GetRight();
+	const Vector3 aircraftUp = transform.GetUp();
 
-	const float forwardSpeed = velocity.Dot(localForward);
-	const float sideSpeed = velocity.Dot(localRight);
-	const float verticalSpeed = velocity.Dot(localUp);
+	const float forwardSpeed = velocity.Dot(aircraftForward);
+	const float sideSpeed = velocity.Dot(aircraftRight);
+	const float verticalSpeed = velocity.Dot(aircraftUp);
 
 	const Vector3 forwardDrag =
-		-localForward
+		-aircraftForward
 		* m_forwardDrag
 		* forwardSpeed
 		* std::abs(forwardSpeed);
 
 	const Vector3 sideDrag =
-		-localRight
+		-aircraftRight
 		* m_sideDrag
 		* sideSpeed
 		* std::abs(sideSpeed);
 
 	const Vector3 verticalDrag =
-		-localUp
+		-aircraftUp
 		* m_verticalDrag
 		* verticalSpeed
 		* std::abs(verticalSpeed);
