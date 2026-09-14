@@ -1,6 +1,6 @@
 # AERO_RIOT — Project Context
 
-Last updated: 2026-09-11
+Last updated: 2026-09-14
 
 Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect latest `master` before assuming this file is perfectly current.
 
@@ -29,7 +29,7 @@ For hard topics (physics/math/rendering/HLSL/memory/ownership/algorithms), teach
 
 Priority: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE.
 
-After each meaningful completed step, update/overwrite this file with the latest state rather than turning it into a raw chat log.
+After each meaningful completed step, update/overwrite this file with latest state rather than turning it into a raw chat log.
 
 ## Core engine architecture
 
@@ -44,7 +44,7 @@ Important decisions:
 - Scene owns scene-local systems and GameObjectManager.
 - GameObject stores non-owning `GameObjectManager*`.
 - GameObjectManager stores non-owning owning `Scene*`.
-- Component can reach Scene through GameObject -> GameObjectManager -> Scene.
+- Component reaches Scene through GameObject -> GameObjectManager -> Scene.
 - Scene exposes intentional scene-level capabilities such as RequestSceneLoad and GetKinetics; gameplay should not tunnel directly into SceneManager.
 - New objects are pending until BeginFrame; component/object destruction is deferred to safe EndFrame processing.
 
@@ -65,9 +65,10 @@ Members destroy in reverse declaration order, so GameObjects unregister before K
 - `Transform::GetForward/Right/Up()` return world-space directions.
 - `Vector3::Forward` is only the canonical axis; meaning comes from the coordinate frame.
 
-Rule already learned:
+Important rules:
 - local visual/body roll delta -> canonical `Vector3::Forward`
 - world thrust direction -> `Transform::GetForward()`
+- variables holding `GetForward/Right/Up()` are world-space aircraft basis directions; avoid misleading `localForward` naming.
 
 ## Update / fixed simulation phases
 
@@ -138,32 +139,33 @@ Root is simulation/gameplay orientation. Body is presentation-only for fake visu
 
 ## Aircraft linear physics — current
 
-Old scalar-speed/direct-position system removed:
-- no m_maxSpeed
-- no m_speedRate
-- no m_currentSpeed
-- no m_speedDrag
+Old scalar-speed/direct-position system is removed. Aircraft resolves sibling KineticBody in OnStart().
 
-Aircraft resolves sibling KineticBody in OnStart().
-
-Current config values:
-- m_maxThrust
-- m_airDrag
-- m_airBrakePower
-- temporary m_rotationSpeed
+Current configurable values:
+- `m_maxThrust = 20`
+- `m_forwardDrag = 1`
+- `m_sideDrag = 3`
+- `m_verticalDrag = 2`
+- `m_airBrakePower = 4`
+- temporary `m_rotationSpeed`
 
 `Aircraft::OnFixedUpdate()` currently:
-- TEMP direct kinematic pitch/turn/bank using `FixedDeltaTime`
-- thrust = world Forward * maxThrust * throttle
-- AddForce(thrust)
-- read velocity + speed from KineticBody
-- simplified quadratic drag
-- air brake increases drag as additional drag
-- AddForce(drag)
+- TEMP direct kinematic pitch/turn/bank using FixedDeltaTime
+- thrust = aircraft world Forward * maxThrust * throttle
+- reads KineticBody world velocity
+- projects velocity onto aircraft world Forward/Right/Up with dot products to get signed forward/side/vertical speeds
+- computes separate quadratic drag per axis with `-axis * coefficient * speed * abs(speed)`
+- sums directional drag contributions
+- TEMP air-brake multiplier scales total directional drag
+- submits thrust + drag with AddForce
 
 No artificial speed clamp; terminal speed emerges from thrust vs drag.
 
-Expected behavior: orientation and velocity are now different. Turning the nose does not instantly rotate velocity. That is intentional and motivates local airflow, directional resistance, lift, AoA, stall, etc.
+Directional aerodynamic resistance milestone is COMPLETE as of commit `94fba25f8fbeb015c95c28a15187f004195c21a8`.
+
+Important bug/lesson from this step: first implementation accidentally used `GetForward()` for Forward, Right, and Up. This made all three drag coefficients act on forward motion, producing straight terminal speed ~2.108 because effective k became 1+2+1.5=4.5, matching `sqrt(20/4.5)`. After turning, drag nearly vanished because all projections were onto the new Forward. Fixing Right/Up to `GetRight()` / `GetUp()` restored intended behavior. This was a useful example of using predicted physics values to diagnose coordinate/basis bugs.
+
+Expected behavior now: orientation and velocity remain distinct. A sharp nose turn creates side velocity relative to the aircraft; strong side drag then progressively removes sideslip while thrust builds velocity along the new Forward, curving the flight path rather than snapping velocity instantly.
 
 ## Temporary aircraft technical debt
 
@@ -171,6 +173,7 @@ Expected behavior: orientation and velocity are now different. Turning the nose 
 - Evade visual Body spin remains in LateUpdate.
 - Evade root lateral displacement still bypasses KineticBody; temporary.
 - Aircraft visual Body lookup still assumes child index 0; later make wiring explicit when prefab/factory/config work justifies it.
+- Air brake currently multiplies all directional drag; later model it as a separate drag contribution opposite relative airflow/velocity.
 
 ## Camera
 
@@ -186,7 +189,7 @@ Known technical debt: camera/aircraft LateUpdate can depend on creation order. A
 
 ## Rendering interpolation
 
-Not implemented yet. `RenderContext` carries `FixedInterpolationAlpha`, but primitive rendering currently uses the current Transform directly.
+Not implemented yet. `RenderContext` carries `FixedInterpolationAlpha`, but primitive rendering currently uses current Transform directly.
 
 Aircraft can still look visually smooth because chase camera moves with it and displacement per 60 Hz step is small.
 
@@ -206,52 +209,42 @@ Current PCH contains stable/common external headers only:
 - DirectXMath.h, SimpleMath.h
 - algorithm, cstdint, memory, stdexcept, string, string_view, utility, vector
 
-Do not put SNX gameplay/engine systems into the PCH just because they are common. Keep engine dependencies explicit. Headers should remain self-contained even if a type is also available through PCH.
+Do not put SNX gameplay/engine systems into PCH just because they are common. Keep engine dependencies explicit. Headers should remain self-contained even if a type is also available through PCH.
 
-## AppConfig — COMPLETE (minor cleanup noted)
+## AppConfig — COMPLETE
 
-Current application config lives at `Configs/AppConfig.h` and contains:
+`Configs/AppConfig.h` contains:
 - `std::wstring title = L"AERO RIOT"`
 - `windowWidth = 1280`
 - `windowHeight = 720`
 - `useVSync = true`
 - `isFullScreen = false`
 
-Current flow:
+Flow:
 - `wWinMain` creates one `const AppConfig appConfig{}`.
-- `CreateGameWindow` reads width/height/title from it.
-- `Game::Initialize` receives it and stores an owned `AppConfig m_appConfig` copy.
+- `CreateGameWindow(const AppConfig&)` reads width/height/title.
+- `Game::Initialize(..., const AppConfig&)` receives it and deliberately stores an owned `AppConfig m_appConfig` copy.
 - `Game::Render` calls `m_deviceResources.Present(m_appConfig.useVSync)`.
 
-Ownership decision: Game owns its config value rather than storing an external pointer/reference. Passing into helper/init functions should be by `const AppConfig&` to avoid temporary copies; current code still passes `AppConfig` by value in `CreateGameWindow` and `Game::Initialize`, so change those signatures to `const AppConfig&` when convenient.
+Forward-declaration lesson: `struct AppConfig;` is sufficient for pointer/reference declarations, but `Game` stores `AppConfig m_appConfig` by value, so `Game.h` needs the complete type and includes `AppConfig.h`.
 
-Forward-declaration lesson: `struct AppConfig;` is sufficient for declarations involving only pointer/reference types, but `Game` stores `AppConfig m_appConfig` by value, so `Game.h` needs the complete type and must include `AppConfig.h`.
+`isFullScreen` exists as config data but fullscreen behavior is not wired yet. Do not build JSON/INI loading until there is a real need.
 
-`isFullScreen` is config data but fullscreen behavior is not wired yet. Do not build JSON/INI loading until there is a real need.
+## NEXT IMMEDIATE STEP — relative airflow + angle of attack
 
-Important config boundary:
-- AppConfig = executable/startup/runtime app settings
-- PCH = build optimization
-- common/umbrella header = source dependency convenience
-- Aircraft/AI/Weapon definitions = gameplay tuning data, separate from AppConfig
+Directional resistance works. Next teach and implement the aerodynamic quantities needed before lift:
+- aircraft velocity relative to air
+- relative wind as the opposite direction of relative velocity
+- pitch-plane airflow
+- angle of attack (AoA): angle between aircraft chord/Forward and relative airflow/velocity direction in the Forward-Up plane
+- signed AoA, so nose-above-flow and nose-below-flow are distinguishable
 
-## NEXT IMMEDIATE STEP — aircraft-local airflow / directional aerodynamic resistance
-
-Current drag uses one isotropic world-velocity quadratic drag coefficient, so the aircraft resists motion equally in every direction. Next teach and implement local velocity decomposition so forward, sideways, and vertical aerodynamic resistance can differ.
-
-Goal of next step:
-- understand world velocity vs aircraft-local velocity/components
-- project/decompose velocity onto aircraft Forward/Right/Up axes
-- apply stronger resistance to sideways/vertical slip than forward motion
-- keep lift separate for the following step
-
-Do not jump directly to full lift/AoA/stall yet.
+Do not add a full lift/stall model until AoA is understood and observable/debuggable.
 
 ## Planned physics progression
 
-- aircraft-local airflow / directional aerodynamic resistance
+- relative airflow + angle of attack
 - lift
-- angle of attack
 - stall behavior
 - angular velocity
 - torque
