@@ -88,17 +88,18 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	m_kb->AddForce(liftDir * liftForce);
 }
 
-float AircraftKinetics::CalculateLiftCoefficient(const float angleOfAttack) noexcept {
+float AircraftKinetics::CalculateLiftCoefficient(const float angleOfAttack) const noexcept {
 	const float absAoA = std::abs(angleOfAttack);
 
 	const float maxAngle = DirectX::g_XMHalfPi.f[0];	// 90.0f
 
 	if (absAoA <= m_stallAngle)
-		return m_maxLiftCoef = m_liftSlope * angleOfAttack;
+		return m_liftSlope * angleOfAttack;
 	else if (absAoA > m_stallAngle && absAoA < maxAngle) {
+		float maxLiftCoef = m_liftSlope * m_stallAngle;
 		float postStallT = (absAoA - m_stallAngle) / (maxAngle - m_stallAngle);
 		float liftRemaining = 1 - postStallT;
-		return (angleOfAttack >= 0.0f ? 1.0f : -1.0f) * m_maxLiftCoef * liftRemaining;
+		return (angleOfAttack >= 0.0f ? 1.0f : -1.0f) * maxLiftCoef * liftRemaining;
 	}
 
 	// above 90.0f

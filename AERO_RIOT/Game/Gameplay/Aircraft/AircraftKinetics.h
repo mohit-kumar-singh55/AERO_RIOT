@@ -19,7 +19,7 @@ protected:
 
 private:
 	[[nodiscard]]
-	float CalculateLiftCoefficient(const float angleOfAttack) noexcept;
+	float CalculateLiftCoefficient(const float angleOfAttack) const noexcept;
 
 private:
 	KineticBody* m_kb = nullptr;
@@ -36,6 +36,4 @@ private:
 	float m_wingArea = 2.0f;
 	float m_liftSlope = 4.0f;	// per radian
 	float m_stallAngle = DirectX::XMConvertToRadians(15.0f);
-
-	float m_maxLiftCoef = 0.0f;	// changable state
 };
