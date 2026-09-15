@@ -27,4 +27,8 @@ private:
 	float m_sideDrag = 3.0f;
 	float m_verticalDrag = 2.0f;
 	float m_airBrakePower = 4.0f;	// additional drag
+
+	float m_airDensity = 1.225f;
+	float m_wingArea = 2.0f;
+	float m_liftSlope = 4.0f;	// per radian
 };

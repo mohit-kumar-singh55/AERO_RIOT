@@ -11,7 +11,7 @@ void AircraftKinetics::OnInitialize() {
 	m_kb = GetGameObject().GetComponent<KineticBody>();
 
 	if (!m_kb)
-		throw std::runtime_error("AircraftKinetics::OnStart: Cannot find KineticBody component.");
+		throw std::runtime_error("AircraftKinetics::OnInitialize: Cannot find KineticBody component.");
 }
 
 void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
@@ -55,11 +55,35 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 
 	Vector3 totalDrag = forwardDrag + sideDrag + verticalDrag;
 
-	// ? temp: apply airbrake
+	// ? TEMP
+	// TODO: calc. proper airbrake drag
 	totalDrag *= 1.0f + controlInput.airBrake * m_airBrakePower;
 
-	float angleOfAttack = -std::atan2(verticalSpeed, forwardSpeed);
-	angleOfAttack = DirectX::XMConvertToDegrees(angleOfAttack);
-
 	m_kb->AddForce(totalDrag);
+
+	// ! calc. lift force
+	float liftForce = 0.0f;
+	Vector3 liftDir = Vector3::Zero;
+	float pitchSpeedSquared = forwardSpeed * forwardSpeed + verticalSpeed * verticalSpeed;
+
+	if (pitchSpeedSquared <= 0.01f * 0.01)
+		liftForce = 0.0f;
+	else {
+		float angleOfAttack = -std::atan2(verticalSpeed, forwardSpeed);
+		float liftCoef = m_liftSlope * angleOfAttack;
+
+		liftForce =
+			0.5f
+			* m_airDensity
+			* pitchSpeedSquared
+			* m_wingArea
+			* liftCoef;
+
+		// calc. lift dir
+		const Vector3 pitchVelocity = aircraftForward * forwardSpeed + aircraftUp * verticalSpeed;
+		liftDir = aircraftRight.Cross(pitchVelocity);
+		liftDir.Normalize();
+	}
+
+	m_kb->AddForce(liftDir * liftForce);
 }
