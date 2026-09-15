@@ -35,6 +35,8 @@ Fixed simulation order:
 
 Current fixed step: 1/60 s.
 
+Component lifecycle detail: GameObject FixedUpdate iterates components in insertion order and calls `EnsureComponentStarted(component)` immediately before that same component's `OnFixedUpdate()`. Do not assume all sibling components have run OnStart before another component's FixedUpdate. Cross-component dependencies needed during first FixedUpdate should be resolved in OnInitialize or otherwise made explicit.
+
 ## Transform / coordinate conventions
 
 - canonical local Forward = (0,0,-1)
@@ -62,6 +64,8 @@ Semi-implicit Euler:
 
 Physics experiments already validated one-shot force, continuous acceleration, linear drag equilibrium, and quadratic drag equilibrium.
 
+Current gravity status: not implemented yet. Next small physics step is to add scene/world gravity before lift. Preferred architecture: Kinetics owns world gravity acceleration; KineticBody owns per-body `useGravity` (and optionally gravityScale later). During Kinetics integration, gravity can be applied as `F_g = mass * gravity` before `Integrate`, preserving the existing force-accumulator model and ensuring all masses receive the same gravitational acceleration.
+
 ## Aircraft architecture
 
 Current hierarchy:
@@ -71,11 +75,14 @@ AircraftRoot              <- gameplay/simulation transform
 |- Aircraft
 |- AircraftController
 |- KineticBody
+|- AircraftKinetics
 |- ThirdPersonCameraAnchor
 `- Body                   <- visual/presentation transform
    |- Base
    `- Wing
 ```
+
+`AircraftControlInput` and `EvadeRoll` were extracted into `AircraftControlInput.h`.
 
 AircraftController produces semantic `AircraftControlInput`:
 - pitch [-1,+1]
@@ -86,32 +93,49 @@ AircraftController produces semantic `AircraftControlInput`:
 
 Root is simulation/gameplay orientation. Body is presentation-only for fake visual effects such as the 360-degree evade spin.
 
-## Aircraft linear aerodynamics — current
+## Aircraft physics refactor — IMPLEMENTED, one lifecycle cleanup pending
 
-Old scalar-speed/direct-position movement is removed. Aircraft currently owns the first physical translation/aerodynamics implementation and resolves sibling KineticBody.
+Commit `bb4d10445b311901e395e8bf88659b5f2114f01b` extracted thrust, directional drag, and AoA calculation from `Aircraft` into `AircraftKinetics : Component`.
 
-Current tuning values:
+Current flow:
+
+AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
+
+`Aircraft::OnFixedUpdate()` still performs TEMP direct kinematic orientation first, then explicitly calls `m_aircraftKinetics->Apply(m_controlInput)`. This explicit call intentionally preserves ordering so aerodynamic calculations use the freshly updated aircraft orientation and do not depend on sibling FixedUpdate order.
+
+`AircraftKinetics` now owns:
+- KineticBody dependency
 - `m_maxThrust = 20`
 - `m_forwardDrag = 1`
 - `m_sideDrag = 3`
 - `m_verticalDrag = 2`
 - `m_airBrakePower = 4`
-- temporary `m_rotationSpeed`
+- thrust calculation
+- world velocity projection onto aircraft Forward/Right/Up
+- directional quadratic drag
+- current AoA calculation
 
-Current force flow in `Aircraft::OnFixedUpdate()`:
-- TEMP direct kinematic orientation using `FixedDeltaTime`
-- thrust along aircraft world Forward
-- read KineticBody world velocity
-- project velocity onto aircraft Forward/Right/Up to get signed forward/side/vertical speeds
-- calculate separate quadratic drag per axis: `-axis * coefficient * speed * abs(speed)`
-- sum drag; TEMP air-brake multiplier scales total drag
-- submit forces to KineticBody
+Behavior appears preserved after the refactor.
 
-Directional aerodynamic resistance milestone is complete. A previous bug used `GetForward()` for all three axes; predicted terminal speed exposed the error. This reinforced validating physics with expected numeric behavior.
+Important pending fix before building more physics: `AircraftKinetics` currently resolves its `KineticBody*` in OnStart, but `Aircraft::OnFixedUpdate()` may call `AircraftKinetics::Apply()` before AircraftKinetics itself has reached OnStart because component starts are sequential. Move the mandatory KineticBody lookup to OnInitialize (or otherwise guarantee readiness before Apply). Also change `Apply(AircraftControlInput&)` to `Apply(const AircraftControlInput&)` because it does not modify the input.
+
+Naming note: `AircraftKinetics` is workable, but `AircraftPhysics` would be semantically broader/clearer as lift, stall, angular dynamics, torque and other aircraft-specific physics grow. Renaming is optional; avoid churn unless desired.
+
+## Directional drag — COMPLETE
+
+Aircraft physics uses signed projections:
+- forwardSpeed = dot(velocity, aircraftForward)
+- sideSpeed = dot(velocity, aircraftRight)
+- verticalSpeed = dot(velocity, aircraftUp)
+
+Per-axis quadratic resistance:
+`-axis * coefficient * speed * abs(speed)`
+
+Directional resistance milestone is complete. A previous bug used GetForward for all three axes; predicted terminal speed exposed the error and reinforced validating physics with expected numbers.
+
+Air brake still temporarily multiplies all directional drag. Later model it as a separate aerodynamic contribution.
 
 ## Angle of Attack — COMPLETE / validated
-
-AoA experiment was implemented in `Aircraft::OnFixedUpdate()` in commit `b9c149406aeb32ffb51c074678da7affb9477544`.
 
 Current formula:
 
@@ -119,7 +143,7 @@ Current formula:
 angleOfAttack = -atan2(verticalSpeed, forwardSpeed);
 ```
 
-The experiment converts the result to degrees for observation. Sign convention:
+Sign convention:
 - nose above flight path -> positive AoA
 - nose below flight path -> negative AoA
 
@@ -127,29 +151,15 @@ Sanity checks passed:
 - straight flight -> AoA ~0
 - quick pitch up -> positive AoA
 - quick dive -> negative AoA
-- aggressive orientation changes can produce |AoA| > 90 degrees when `forwardSpeed < 0`; this is valid raw geometry, not something to clamp. Stall/lift response will later determine aerodynamic behavior at high AoA.
+- aggressive orientation changes can produce |AoA| > 90 degrees when forwardSpeed < 0; valid raw geometry, not something to clamp
 
-No lift force has been added yet.
+Current refactor still converts AoA to degrees inside AircraftKinetics and discards it. Before lift, keep AoA internally in radians and convert to degrees only for debug/UI.
 
-Important conceptual distinction:
+Conceptual distinction:
 - aircraft-relative air velocity = aircraft velocity - air velocity
 - current air velocity is assumed zero, so relative velocity numerically equals world velocity
 - relative wind points opposite relative velocity
 - AoA is measured in the aircraft Forward-Up plane; sideslip/beta is separate and not implemented yet
-
-## NEXT IMMEDIATE STEP — extract AircraftPhysics
-
-The aerodynamic subsystem is now large enough to justify a separate `AircraftPhysics : Component` before adding lift.
-
-Target responsibility split:
-- `AircraftController`: hardware/player input -> semantic AircraftControlInput
-- `Aircraft`: aircraft/gameplay state, temporary direct orientation handling, evade/presentation behavior; should stop owning aerodynamic force equations
-- `AircraftPhysics`: KineticBody dependency, thrust, relative-air calculations, Forward/Right/Up projections, directional drag, AoA, and future lift/stall/aerodynamic forces
-- `KineticBody`: generic force accumulation and integration only
-
-Need deliberately design how `AircraftPhysics` receives throttle/airBrake/control state from `Aircraft` without coupling it directly to input hardware. Preserve the flow Controller -> Aircraft -> AircraftPhysics -> KineticBody.
-
-Do the extraction as a behavior-preserving refactor first. Do not add lift in the same step.
 
 ## Temporary aircraft technical debt
 
@@ -157,7 +167,8 @@ Do the extraction as a behavior-preserving refactor first. Do not add lift in th
 - Evade visual Body spin remains in LateUpdate.
 - Evade root lateral displacement bypasses KineticBody; temporary.
 - Aircraft Body lookup assumes child index 0; later explicit wiring/factory/prefab.
-- Air brake currently multiplies all directional drag; later make it a separate aerodynamic drag contribution.
+- Air brake currently multiplies all directional drag; later separate contribution.
+- Direct call to AircraftKinetics::Apply bypasses normal Component enabled/update dispatch; decide later whether Apply should internally respect enabled/remove state or Aircraft should check it.
 
 ## Camera
 
@@ -174,9 +185,22 @@ PCH is complete and active: project uses `/Yu pch.h`; `pch.cpp` uses `/Yc`. PCH 
 
 `Configs/AppConfig.h` is complete for current needs: title, width, height, VSync, fullscreen flag. `wWinMain` creates the config, window creation and Game receive it by `const AppConfig&`, Game stores an owned value, and Present receives `useVSync`. Fullscreen behavior is not wired yet.
 
+## NEXT IMMEDIATE STEP
+
+1. Fix AircraftKinetics initialization safety (`KineticBody` lookup in OnInitialize) and make Apply take `const AircraftControlInput&`.
+2. Add simple world gravity before lift.
+3. Validate gravity independently with a bare KineticBody and confirm mass-independent acceleration.
+4. Then return to lift using AoA and relative airflow.
+
+Preferred gravity architecture:
+- Kinetics owns world gravity vector, initially `{0,-9.81,0}` if 1 world unit = 1 meter.
+- KineticBody owns `useGravity` (default choice can be deliberate; dynamic-body-style default true is reasonable).
+- Kinetics applies `mass * gravity` to each gravity-enabled body before calling Integrate.
+- Gravity is world-down, never aircraft-local Down.
+
 ## Planned physics progression
 
-After AircraftPhysics extraction:
+After gravity:
 - lift
 - stall behavior / lift coefficient curve
 - sideslip when useful
@@ -185,7 +209,6 @@ After AircraftPhysics extraction:
 - inertia / inertia tensor
 - physical controls + flight stabilization
 - physical/impulse evade behavior when appropriate
-- gravity when useful
 - collision detection/response later
 
 Other major targets: custom HLSL/shaders, real lighting/shadows, particles/trails/explosions/VFX, animation, aircraft AI/missiles, render interpolation, optimization.
