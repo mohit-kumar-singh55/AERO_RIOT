@@ -12,10 +12,10 @@ public:
 	using Component::Component;
 
 	// apply the physics
-	void Apply(AircraftControlInput& ) noexcept;
+	void Apply(const AircraftControlInput&) noexcept;
 
 protected:
-	void OnStart() override;
+	void OnInitialize() override;
 
 private:
 	KineticBody* m_kb = nullptr;

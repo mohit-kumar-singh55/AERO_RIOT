@@ -7,14 +7,14 @@
 
 #include <stdexcept>
 
-void AircraftKinetics::OnStart() {
+void AircraftKinetics::OnInitialize() {
 	m_kb = GetGameObject().GetComponent<KineticBody>();
 
 	if (!m_kb)
 		throw std::runtime_error("AircraftKinetics::OnStart: Cannot find KineticBody component.");
 }
 
-void AircraftKinetics::Apply(AircraftControlInput& controlInput) noexcept {
+void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
 	const auto& transform = GetTransform();
 	// ! apply thrust
 	const Vector3 thrust =

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <SimpleMath.h>
 
 class KineticBody;
 
@@ -28,4 +29,6 @@ public:
 
 private:
 	std::vector<KineticBody*> m_kineticBodies;
+
+	DirectX::SimpleMath::Vector3 m_gravity{ 0.0f, -9.81f, 0.0f };
 };

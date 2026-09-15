@@ -26,6 +26,10 @@ void Kinetics::Integrate(float fixedDeltaTime) noexcept {
 			!body->GetGameObject().IsActiveInHierarchy())
 			continue;
 
+		// apply gravity
+		if (body->GetUseGravity())
+			body->AddForce(body->GetMass() * m_gravity * body->GetGravityScale());
+
 		body->Integrate(fixedDeltaTime);
 	}
 }

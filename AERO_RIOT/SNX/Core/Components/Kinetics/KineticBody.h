@@ -15,10 +15,20 @@ public:
 	[[nodiscard]]
 	float GetMass() const noexcept { return m_mass; }
 
-	void SetMass(float mass) {
+	void SetMass(const float mass) noexcept {
 		m_mass = mass < MIN_MASS ? MIN_MASS : mass;
 		m_inverseMass = 1.0f / m_mass;
 	}
+
+	[[nodiscard]]
+	bool GetUseGravity() const noexcept { return m_useGravity; }
+
+	void SetUseGravity(const bool useGravity) noexcept { m_useGravity = useGravity; }
+
+	[[nodiscard]]
+	float GetGravityScale() const noexcept { return m_gravityScale; }
+
+	void SetGravityScale(const float gravityScale) noexcept { m_gravityScale = gravityScale; }
 
 	[[nodiscard]]
 	Vector3 GetLinearVelocity() const noexcept {
@@ -44,6 +54,9 @@ protected:
 private:
 	float m_mass = 1.0f;
 	float m_inverseMass = 1.0f;
+
+	bool m_useGravity = true;
+	float m_gravityScale = 1.0f;	// gravity multiplier
 
 	Vector3 m_linearVelocity = Vector3::Zero;
 	Vector3 m_linearAcceleration = Vector3::Zero;
