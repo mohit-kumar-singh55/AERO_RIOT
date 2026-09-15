@@ -93,11 +93,9 @@ AircraftKinetics owns:
 - aircraft-basis velocity decomposition
 - directional quadratic drag
 - AoA calculation
-- future lift/stall calculations
+- lift / future stall calculations
 
-Mandatory KineticBody lookup now occurs in OnInitialize. Apply receives `const AircraftControlInput&`.
-
-Minor cleanup still pending: AircraftKinetics::OnInitialize exception text still says `OnStart`.
+Mandatory KineticBody lookup occurs in OnInitialize. Apply receives `const AircraftControlInput&`.
 
 ## Directional drag — COMPLETE
 
@@ -134,23 +132,42 @@ Sanity checks passed, including |AoA| > 90 degrees when forwardSpeed becomes neg
 
 Current air velocity is assumed zero, so aircraft-relative air velocity numerically equals KineticBody world velocity. Relative wind points opposite relative velocity. Sideslip/beta is separate and not implemented yet.
 
-## NEXT IMMEDIATE STEP — lift
+## Basic lift — COMPLETE / first model validated
 
-Gravity now gives lift a meaningful opposing force. Next teach and implement a first lift model inside AircraftKinetics while preserving the current learning progression.
+Implemented in commit `8bf52d823fdfb9b630849843ad5207ae50acd26e`.
 
-Start with the standard structure:
+Current first lift model:
+- `pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2`
+- low-speed guard at approximately 0.01 m/s pitch-plane speed
+- AoA stays in radians
+- `Cl = liftSlope * AoA`
+- `Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl`
+- pitch-plane velocity = Forward * forwardSpeed + Up * verticalSpeed
+- lift direction = normalize(Right x pitchVelocity)
+- signed Cl naturally reverses lift for negative AoA
 
-`Lift = 0.5 * rho * V^2 * S * Cl(alpha)`
+Current tuning:
+- airDensity = 1.225
+- wingArea = 2.0
+- liftSlope = 4.0 per radian
 
-Need to decide deliberately:
-- which airspeed magnitude is used for the first model
-- air density / scaling for game units
-- wing reference area
-- first simple lift-coefficient curve vs AoA
-- lift direction in world space
-- low-speed guard
+Observed behavior: compared with gravity-only flight, the aircraft drops much more slowly once lift is enabled. It can also begin converting a fall into forward motion even with no throttle. This is expected from the current unlimited linear `Cl = slope * AoA` model: during a near-vertical fall AoA approaches about +90 degrees, producing an unrealistically huge Cl instead of a stall; lift direction is then largely forward. This behavior is the motivation for the next stall-aware lift curve.
 
-Do not jump straight to a complex stall model. First make lift understandable, observable, and able to oppose gravity at plausible forward speed; then add stall behavior as the following step.
+## NEXT IMMEDIATE STEP — stall-aware lift coefficient curve
+
+Replace the unlimited linear Cl model with a simple, understandable curve:
+- small AoA: Cl grows approximately linearly
+- near a chosen stall angle: Cl reaches a peak
+- beyond stall: Cl decreases rather than continuing to grow without bound
+- preserve AoA sign so negative AoA produces mirrored negative lift behavior
+
+Do not clamp raw AoA. Shape Cl(AoA), not AoA itself.
+
+Validate with observable cases:
+- low/moderate AoA gives increasing lift
+- around stall angle gives peak lift
+- very high AoA (e.g. near 90 degrees) no longer generates enormous forward "lift"
+- aircraft falling with no throttle should no longer get unrealistic strong forward acceleration from the linear Cl model
 
 ## Temporary technical debt
 
@@ -160,6 +177,7 @@ Do not jump straight to a complex stall model. First make lift understandable, o
 - Aircraft Body lookup assumes child index 0
 - direct Aircraft -> AircraftKinetics Apply bypasses normal enabled/update dispatch; revisit when useful
 - air brake is not yet a separate aerodynamic surface/force
+- no induced drag yet
 - no render interpolation
 
 ## Camera
@@ -172,7 +190,6 @@ PCH complete and active. AppConfig complete for current needs: title, width, hei
 
 ## Planned physics progression
 
-- lift
 - stall / lift coefficient curve
 - sideslip when useful
 - angular velocity
