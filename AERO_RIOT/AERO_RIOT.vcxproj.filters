@@ -166,6 +166,9 @@
       <Filter>SNX\Core\Kinetics</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Game\Gameplay\Aircraft\AircraftKinetics.cpp">
+      <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -259,6 +262,12 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Configs\AppConfig.h">
       <Filter>Configs</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Aircraft\AircraftControlInput.h">
+      <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Aircraft\AircraftKinetics.h">
+      <Filter>Game\Gameplay\Aircraft</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

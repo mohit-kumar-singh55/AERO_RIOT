@@ -1,10 +1,10 @@
 #include "pch.h"
 
 #include "Aircraft.h"
+#include "AircraftKinetics.h"
 
 #include <SNX/Core/Components/Transform.h>
 #include <SNX/Core/Object/GameObject.h>
-#include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Time.h>
 
 void Aircraft::OnInitialize() {
@@ -17,10 +17,10 @@ void Aircraft::OnInitialize() {
 }
 
 void Aircraft::OnStart() {
-	m_kb = GetGameObject().GetComponent<KineticBody>();
+	m_aircraftKinetics = GetGameObject().GetComponent<AircraftKinetics>();
 
-	if (!m_kb)
-		throw std::runtime_error("Aircraft::OnStart: Cannot find KineticBody component.");
+	if (!m_aircraftKinetics)
+		throw std::runtime_error("Aircraft::OnStart: Cannot find AircraftKinetics component.");
 }
 
 void Aircraft::OnFixedUpdate() {
@@ -38,52 +38,7 @@ void Aircraft::OnFixedUpdate() {
 		});
 	// ? *********************
 
-	// ! apply thrust
-	const Vector3 thrust =
-		transform.GetForward()
-		* m_maxThrust
-		* m_controlInput.throttle;
-
-	m_kb->AddForce(thrust);
-
-	// ! calc. directional aerodynamic drag
-	const Vector3 velocity = m_kb->GetLinearVelocity();
-
-	const Vector3 aircraftForward = transform.GetForward();
-	const Vector3 aircraftRight = transform.GetRight();
-	const Vector3 aircraftUp = transform.GetUp();
-
-	const float forwardSpeed = velocity.Dot(aircraftForward);
-	const float sideSpeed = velocity.Dot(aircraftRight);
-	const float verticalSpeed = velocity.Dot(aircraftUp);
-
-	const Vector3 forwardDrag =
-		-aircraftForward
-		* m_forwardDrag
-		* forwardSpeed
-		* std::abs(forwardSpeed);
-
-	const Vector3 sideDrag =
-		-aircraftRight
-		* m_sideDrag
-		* sideSpeed
-		* std::abs(sideSpeed);
-
-	const Vector3 verticalDrag =
-		-aircraftUp
-		* m_verticalDrag
-		* verticalSpeed
-		* std::abs(verticalSpeed);
-
-	Vector3 totalDrag = forwardDrag + sideDrag + verticalDrag;
-
-	// ? temp: apply airbrake
-	totalDrag *= 1.0f + m_controlInput.airBrake * m_airBrakePower;
-
-	float angleOfAttack = -std::atan2(verticalSpeed, forwardSpeed);
-	angleOfAttack = DirectX::XMConvertToDegrees(angleOfAttack);
-
-	m_kb->AddForce(totalDrag);
+	m_aircraftKinetics->Apply(m_controlInput);
 }
 
 void Aircraft::OnLateUpdate() {

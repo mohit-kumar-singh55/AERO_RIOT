@@ -1,36 +1,13 @@
 #pragma once
 
+#include "AircraftControlInput.h"
+
 #include <SNX/Core/Object/Component.h>
 
 #include <SimpleMath.h>
 
-#include <algorithm>
-
 class KineticBody;
-
-enum class EvadeRoll { None, Left = -1, Right = 1 };
-
-struct AircraftControlInput final {
-	// -1 ... +1
-	float pitch = 0;
-	float turn = 0;
-
-	// 0 ... 1
-	float throttle = 0;
-	float airBrake = 0;
-
-	EvadeRoll evadeRoll = EvadeRoll::None;
-
-	[[nodiscard]]
-	AircraftControlInput& GetNormalized() & noexcept [[msvc::lifetimebound]] {
-		pitch = std::clamp(pitch, -1.0f, 1.0f);
-		turn = std::clamp(turn, -1.0f, 1.0f);
-		throttle = std::clamp(throttle, 0.0f, 1.0f);
-		airBrake = std::clamp(airBrake, 0.0f, 1.0f);
-
-		return *this;
-	}
-};
+class AircraftKinetics;
 
 class Aircraft final : public Component {
 public:
@@ -53,16 +30,8 @@ private:
 
 private:
 	AircraftControlInput m_controlInput;
-	Transform* m_aircraftBody = nullptr;		// visual child
-	KineticBody* m_kb = nullptr;
-
-	// configurable
-	float m_maxThrust = 20.0f;
-	// directional aerodynamic drag coefficient
-	float m_forwardDrag = 1.0f;
-	float m_sideDrag = 3.0f;
-	float m_verticalDrag = 2.0f;
-	float m_airBrakePower = 4.0f;	// additional drag
+	Transform* m_aircraftBody = nullptr;		// visual child	
+	AircraftKinetics* m_aircraftKinetics = nullptr;
 
 	float m_rotationSpeed = 60.0f;	// degree/s
 

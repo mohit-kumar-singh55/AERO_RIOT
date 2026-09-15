@@ -175,6 +175,7 @@
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Game\Gameplay\Aircraft\Aircraft.cpp" />
     <ClCompile Include="Game\Gameplay\Aircraft\AircraftController.cpp" />
+    <ClCompile Include="Game\Gameplay\Aircraft\AircraftKinetics.cpp" />
     <ClCompile Include="Game\Gameplay\Cameras\AircraftCameraController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
@@ -208,7 +209,9 @@
     <ClInclude Include="Configs\AppConfig.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Game\Gameplay\Aircraft\Aircraft.h" />
+    <ClInclude Include="Game\Gameplay\Aircraft\AircraftControlInput.h" />
     <ClInclude Include="Game\Gameplay\Aircraft\AircraftController.h" />
+    <ClInclude Include="Game\Gameplay\Aircraft\AircraftKinetics.h" />
     <ClInclude Include="Game\Gameplay\Cameras\AircraftCameraController.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Scenes\MainScene.h" />

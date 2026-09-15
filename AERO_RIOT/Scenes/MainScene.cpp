@@ -13,6 +13,7 @@
 
 #include <Game/Gameplay/Aircraft/Aircraft.h>
 #include <Game/Gameplay/Aircraft/AircraftController.h>
+#include <Game/Gameplay/Aircraft/AircraftKinetics.h>
 #include <Game/Gameplay/Cameras/AircraftCameraController.h>
 
 #include <DirectXColors.h>
@@ -45,6 +46,7 @@ void MainScene::OnLoad() {
 	aircraftRoot.AddComponent<Aircraft>();
 	aircraftRoot.AddComponent<AircraftController>();
 	m_kb = &aircraftRoot.AddComponent<KineticBody>();
+	aircraftRoot.AddComponent<AircraftKinetics>();
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();
