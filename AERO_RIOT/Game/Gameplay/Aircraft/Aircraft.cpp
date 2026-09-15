@@ -80,6 +80,9 @@ void Aircraft::OnFixedUpdate() {
 	// ? temp: apply airbrake
 	totalDrag *= 1.0f + m_controlInput.airBrake * m_airBrakePower;
 
+	float angleOfAttack = -std::atan2(verticalSpeed, forwardSpeed);
+	angleOfAttack = DirectX::XMConvertToDegrees(angleOfAttack);
+
 	m_kb->AddForce(totalDrag);
 }
 

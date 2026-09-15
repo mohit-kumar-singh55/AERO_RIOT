@@ -173,6 +173,16 @@ void MainScene::OnRenderUI() {
 			20.0f,
 			140.0f
 		),
-		DirectX::Colors::Green
+		DirectX::Colors::Magenta
 	);
+
+	//GetContext().font.DrawString(
+	//	&GetContext().spriteBatch,
+	//	std::to_wstring(DirectX::XMConvertToDegrees(m_kb->angle)).c_str(),
+	//	DirectX::SimpleMath::Vector2(
+	//		20.0f,
+	//		180.0f
+	//	),
+	//	DirectX::Colors::DeepPink
+	//);
 }
