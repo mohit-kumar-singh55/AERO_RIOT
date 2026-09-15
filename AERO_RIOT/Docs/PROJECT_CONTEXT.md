@@ -8,9 +8,7 @@ Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect latest `master
 
 AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn C++, DirectX/DirectXTK, engine architecture, custom physics/aerodynamics, HLSL/shaders, rendering, lighting/shadows, VFX, animation, cameras, AI, and optimization.
 
-Rule: the game drives engine development. Do not build a whole engine upfront.
-
-The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not give full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical. For hard physics/math/rendering/HLSL/memory topics, teach theory first.
+Rule: the game drives engine development. The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not give full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical. For hard physics/math/rendering/HLSL/memory topics, teach theory first.
 
 ## Core engine architecture
 
@@ -25,7 +23,7 @@ Fixed simulation order:
 
 Current fixed step: 1/60 s.
 
-Important lifecycle rule: GameObject FixedUpdate starts each component immediately before that component's own OnFixedUpdate. Do not assume all sibling OnStart calls happened first. Cross-component dependencies needed by first FixedUpdate should be resolved in OnInitialize or otherwise explicitly guaranteed.
+Important lifecycle rule: GameObject FixedUpdate starts each component immediately before that component's own OnFixedUpdate. Cross-component dependencies needed by first FixedUpdate should be resolved in OnInitialize or otherwise explicitly guaranteed.
 
 ## Transform conventions
 
@@ -49,13 +47,11 @@ Validated experiments: one-shot force, continuous force, linear drag, quadratic 
 
 ### Gravity — COMPLETE
 
-Implemented in commit `aaa67bdcbeb737344583043f6c930986baaa46a1`.
+Implemented in `aaa67bdcbeb737344583043f6c930986baaa46a1`.
 
 - Kinetics owns world gravity `{0,-9.81,0}`.
-- KineticBody has `useGravity` (default true) and `gravityScale` (default 1).
-- Before integration, Kinetics applies `mass * gravity * gravityScale` to gravity-enabled bodies.
-- Because Integrate divides force by mass, gravitational acceleration is mass-independent.
-- Gravity is world-space down, not aircraft-local down.
+- KineticBody has `useGravity` default true and `gravityScale` default 1.
+- Before integration, Kinetics applies `mass * gravity * gravityScale`.
 - User tested independent free fall and aircraft sinking successfully.
 
 ## Aircraft architecture
@@ -80,22 +76,21 @@ Current flow:
 
 AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
 
-Aircraft performs temporary direct kinematic orientation first, then explicitly calls AircraftKinetics::Apply(controlInput). This explicit orchestration avoids sibling FixedUpdate ordering dependencies and ensures aerodynamic forces use the updated orientation.
+Aircraft performs temporary direct kinematic orientation first, then explicitly calls AircraftKinetics::Apply(controlInput), preserving ordering without relying on sibling FixedUpdate order.
 
 ### AircraftKinetics refactor — COMPLETE
 
 AircraftKinetics owns:
-- KineticBody dependency
+- KineticBody dependency resolved in OnInitialize
 - max thrust
-- forward/side/vertical drag coefficients
+- directional drag coefficients
 - temporary air-brake drag multiplier
-- thrust calculation
+- thrust
 - aircraft-basis velocity decomposition
-- directional quadratic drag
-- AoA calculation
-- lift / future stall calculations
+- AoA
+- lift / stall calculations
 
-Mandatory KineticBody lookup occurs in OnInitialize. Apply receives `const AircraftControlInput&`.
+Apply receives `const AircraftControlInput&`.
 
 ## Directional drag — COMPLETE
 
@@ -118,7 +113,7 @@ Air brake still temporarily multiplies all directional drag; later make it a sep
 
 ## Angle of Attack — COMPLETE / validated
 
-Current raw formula:
+Raw formula:
 
 ```cpp
 angleOfAttack = -atan2(verticalSpeed, forwardSpeed);
@@ -128,46 +123,70 @@ Sign convention:
 - nose above flight path -> positive AoA
 - nose below flight path -> negative AoA
 
-Sanity checks passed, including |AoA| > 90 degrees when forwardSpeed becomes negative during extreme orientation changes. Do not clamp raw AoA. Keep AoA in radians for physics; convert to degrees only for debug/UI.
+Do not clamp raw AoA. Keep radians for physics; convert to degrees only for debug/UI. Current air velocity is assumed zero. Sideslip/beta not implemented.
 
-Current air velocity is assumed zero, so aircraft-relative air velocity numerically equals KineticBody world velocity. Relative wind points opposite relative velocity. Sideslip/beta is separate and not implemented yet.
+## Basic lift — COMPLETE
 
-## Basic lift — COMPLETE / first model validated
-
-Implemented in commit `8bf52d823fdfb9b630849843ad5207ae50acd26e`.
+Implemented in `8bf52d823fdfb9b630849843ad5207ae50acd26e`.
 
 Current first lift model:
-- `pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2`
-- low-speed guard at approximately 0.01 m/s pitch-plane speed
-- AoA stays in radians
-- `Cl = liftSlope * AoA`
-- `Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl`
+- pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2
+- low-speed guard ~0.01 m/s pitch-plane speed
+- Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl
 - pitch-plane velocity = Forward * forwardSpeed + Up * verticalSpeed
 - lift direction = normalize(Right x pitchVelocity)
-- signed Cl naturally reverses lift for negative AoA
+- signed Cl reverses lift for negative AoA
 
 Current tuning:
 - airDensity = 1.225
 - wingArea = 2.0
 - liftSlope = 4.0 per radian
 
-Observed behavior: compared with gravity-only flight, the aircraft drops much more slowly once lift is enabled. It can also begin converting a fall into forward motion even with no throttle. This is expected from the current unlimited linear `Cl = slope * AoA` model: during a near-vertical fall AoA approaches about +90 degrees, producing an unrealistically huge Cl instead of a stall; lift direction is then largely forward. This behavior is the motivation for the next stall-aware lift curve.
+Unlimited linear `Cl = liftSlope * AoA` correctly demonstrated the need for stall: near vertical fall gave huge Cl and unrealistic forward lift.
 
-## NEXT IMMEDIATE STEP — stall-aware lift coefficient curve
+## Stall curve — IMPLEMENTED BUT BUG FOUND
 
-Replace the unlimited linear Cl model with a simple, understandable curve:
-- small AoA: Cl grows approximately linearly
-- near a chosen stall angle: Cl reaches a peak
-- beyond stall: Cl decreases rather than continuing to grow without bound
-- preserve AoA sign so negative AoA produces mirrored negative lift behavior
+Commit `dd45b14bba0c7950b14694e298c1e0503c8cd839` added `CalculateLiftCoefficient(angleOfAttack)` with:
+- linear Cl up to stall angle 15 degrees
+- linear falloff to zero by 90 degrees
+- Cl = 0 for |AoA| >= 90 degrees
 
-Do not clamp raw AoA. Shape Cl(AoA), not AoA itself.
+The sign-preserving post-stall structure is conceptually correct, but `m_maxLiftCoef` is implemented incorrectly as mutable history/state:
 
-Validate with observable cases:
-- low/moderate AoA gives increasing lift
-- around stall angle gives peak lift
-- very high AoA (e.g. near 90 degrees) no longer generates enormous forward "lift"
-- aircraft falling with no throttle should no longer get unrealistic strong forward acceleration from the linear Cl model
+```cpp
+if (absAoA <= m_stallAngle)
+    return m_maxLiftCoef = m_liftSlope * angleOfAttack;
+```
+
+Then post-stall uses the last stored value. This means peak Cl depends on the previous frame's AoA and may be tiny/zero when entering stall.
+
+Correct design: maximum lift coefficient is derived from configuration every time (or as immutable/precomputed config):
+
+`maxLiftCoef = liftSlope * stallAngle`
+
+This is a positive magnitude. For |AoA| <= stallAngle return `liftSlope * angleOfAttack`. For stallAngle < |AoA| < 90 degrees, compute falloff using abs(AoA), multiply by positive maxLiftCoef, then restore the sign from AoA. Remove `m_maxLiftCoef` as changing state.
+
+Important test distinction:
+- Starting from rest with zero throttle: falling almost straight is expected once deep-stall Cl approaches zero; there is no forward energy source.
+- Starting from powered forward flight, then releasing throttle: aircraft should retain inertia and may glide while speed/AoA permit lift, then descend/stall as energy decays.
+
+## NEXT IMMEDIATE STEP
+
+Fix stall curve so maxLiftCoef is deterministic (`liftSlope * stallAngle`) rather than previous-frame state. Then validate numerically/debug:
+- 0 deg -> Cl 0
+- 5 deg -> ~0.349
+- 10 deg -> ~0.698
+- 15 deg -> ~1.047 peak
+- 30 deg -> ~0.838
+- 60 deg -> ~0.419
+- 90 deg -> 0
+- negative angles mirror the sign
+
+Then test two distinct flight cases:
+1. start from rest with no throttle -> mostly fall; no magical forward acceleration
+2. build forward speed with throttle, release throttle -> preserve inertia/glide temporarily, then lose energy and descend
+
+After stall curve is validated, continue to angular velocity / torque / inertia or revisit aerodynamic drag/induced drag as justified by flight behavior.
 
 ## Temporary technical debt
 
@@ -187,19 +206,6 @@ Separate chase camera with right-stick spherical freelook + delayed recenter. Ca
 ## Build / app infrastructure
 
 PCH complete and active. AppConfig complete for current needs: title, width, height, VSync, fullscreen flag; fullscreen behavior itself is not wired yet.
-
-## Planned physics progression
-
-- stall / lift coefficient curve
-- sideslip when useful
-- angular velocity
-- torque
-- inertia / inertia tensor
-- physical controls + stabilization
-- physical evade behavior
-- collision detection/response later
-
-Other targets: HLSL/shaders, lighting/shadows, particles/trails/explosions/VFX, animation, AI/missiles, render interpolation, optimization.
 
 ## Repository
 
