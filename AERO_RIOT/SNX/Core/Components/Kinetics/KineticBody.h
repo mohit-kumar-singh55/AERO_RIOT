@@ -45,6 +45,15 @@ public:
 
 	//void AddForceAtPoint(Vector3 point, ForceMode mode = ForceMode::Explosive);
 
+	[[nodiscard]]
+	Vector3 GetAngularVelocity() const noexcept {
+		return m_angularVelocity;
+	}
+
+	void SetAngularVelocity(Vector3 velocity) noexcept {
+		m_angularVelocity = velocity;
+	}
+
 protected:
 	void OnInitialize() override;
 	void OnDestroy() override;
@@ -61,6 +70,8 @@ private:
 	Vector3 m_linearVelocity = Vector3::Zero;
 	Vector3 m_linearAcceleration = Vector3::Zero;
 	Vector3 m_accumulatedForce = Vector3::Zero;
+
+	Vector3 m_angularVelocity = Vector3::Zero;	// radians/sec on respective axis
 
 	// minimum mass value
 	static constexpr float MIN_MASS = 0.0001f;

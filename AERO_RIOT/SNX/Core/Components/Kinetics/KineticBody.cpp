@@ -38,4 +38,14 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 
 	// clear the accumulated forces
 	m_accumulatedForce = Vector3::Zero;
+
+	// angular
+	float angularVelocitySquared = m_angularVelocity.Dot(m_angularVelocity);
+	if (angularVelocitySquared >= 0.01f * 0.01f) {
+		float angularSpeed = std::sqrt(angularVelocitySquared);
+		float angle = angularSpeed * fixedDeltaTime;
+		Vector3 rotationAxis = m_angularVelocity / angularSpeed;	// normalize
+		Quaternion deltaRotation = Quaternion::CreateFromAxisAngle(rotationAxis, angle);
+		transform.SetRotation(Quaternion::Concatenate(deltaRotation, transform.GetRotation()));
+	}
 }
