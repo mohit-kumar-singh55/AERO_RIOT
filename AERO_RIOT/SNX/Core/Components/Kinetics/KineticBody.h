@@ -13,17 +13,17 @@ public:
 	using Component::Component;
 
 	[[nodiscard]]
+	bool GetUseGravity() const noexcept { return m_useGravity; }
+
+	void SetUseGravity(const bool useGravity) noexcept { m_useGravity = useGravity; }
+
+	[[nodiscard]]
 	float GetMass() const noexcept { return m_mass; }
 
 	void SetMass(const float mass) noexcept {
 		m_mass = mass < MIN_MASS ? MIN_MASS : mass;
 		m_inverseMass = 1.0f / m_mass;
 	}
-
-	[[nodiscard]]
-	bool GetUseGravity() const noexcept { return m_useGravity; }
-
-	void SetUseGravity(const bool useGravity) noexcept { m_useGravity = useGravity; }
 
 	[[nodiscard]]
 	float GetGravityScale() const noexcept { return m_gravityScale; }
@@ -46,12 +46,24 @@ public:
 	//void AddForceAtPoint(Vector3 point, ForceMode mode = ForceMode::Explosive);
 
 	[[nodiscard]]
+	float GetMomentOfInertia() const noexcept { return m_momentOfInertia; }
+
+	void SetMomentOfInertia(const float moi) noexcept {
+		m_momentOfInertia = moi < MIN_MOI ? MIN_MOI : moi;
+		m_inverseMomentOfInertia = 1.0f / m_momentOfInertia;
+	}
+
+	[[nodiscard]]
 	Vector3 GetAngularVelocity() const noexcept {
 		return m_angularVelocity;
 	}
 
 	void SetAngularVelocity(Vector3 velocity) noexcept {
 		m_angularVelocity = velocity;
+	}
+
+	void AddTorque(Vector3 torque) {
+		m_accumulatedTorque += torque;
 	}
 
 protected:
@@ -61,20 +73,26 @@ protected:
 	void Integrate(float fixedDeltaTime) noexcept;
 
 private:
-	float m_mass = 1.0f;
-	float m_inverseMass = 1.0f;
-
 	bool m_useGravity = true;
 	float m_gravityScale = 1.0f;	// gravity multiplier
+
+	float m_mass = 1.0f;
+	float m_inverseMass = 1.0f;
 
 	Vector3 m_linearVelocity = Vector3::Zero;
 	Vector3 m_linearAcceleration = Vector3::Zero;
 	Vector3 m_accumulatedForce = Vector3::Zero;
 
+	float m_momentOfInertia = 1.0f;
+	float m_inverseMomentOfInertia = 1.0f;
+
 	Vector3 m_angularVelocity = Vector3::Zero;	// radians/sec on respective axis
+	Vector3 m_angularAcceleration = Vector3::Zero;
+	Vector3 m_accumulatedTorque = Vector3::Zero;
 
 	// minimum mass value
 	static constexpr float MIN_MASS = 0.0001f;
+	static constexpr float MIN_MOI = 0.0001f;	// moment of inertia
 
 	// it will call the Integrate method to apply physics
 	friend class Kinetics;

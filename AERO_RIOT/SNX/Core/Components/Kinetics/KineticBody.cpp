@@ -27,6 +27,7 @@ void KineticBody::OnDestroy() {
 }
 
 void KineticBody::Integrate(float fixedDeltaTime) noexcept {
+	// ! linear
 	m_linearAcceleration = m_accumulatedForce * m_inverseMass;
 	m_linearVelocity += m_linearAcceleration * fixedDeltaTime;
 
@@ -36,10 +37,10 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	position += m_linearVelocity * fixedDeltaTime;
 	GetTransform().SetPosition(position);
 
-	// clear the accumulated forces
-	m_accumulatedForce = Vector3::Zero;
+	// ! angular
+	m_angularAcceleration = m_accumulatedTorque * m_inverseMomentOfInertia;
+	m_angularVelocity += m_angularAcceleration * fixedDeltaTime;
 
-	// angular
 	float angularVelocitySquared = m_angularVelocity.Dot(m_angularVelocity);
 	if (angularVelocitySquared >= 0.001f * 0.001f) {
 		float angularSpeed = std::sqrt(angularVelocitySquared);
@@ -48,4 +49,8 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 		Quaternion deltaRotation = Quaternion::CreateFromAxisAngle(rotationAxis, angle);
 		transform.SetRotation(Quaternion::Concatenate(deltaRotation, transform.GetRotation()));
 	}
+
+	// clear the accumulated forces
+	m_accumulatedForce = Vector3::Zero;
+	m_accumulatedTorque = Vector3::Zero;
 }
