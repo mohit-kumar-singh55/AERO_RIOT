@@ -25,7 +25,7 @@ Transform conventions:
 - local Forward = (0,0,-1), Right = (1,0,0), Up = (0,1,0)
 - Transform::GetForward/Right/Up return world-space directions
 - Transform normalizes stored rotations
-- Transform::RotateEulerDegrees uses different quaternion composition order for Local vs World rotation; this matters for angular velocity integration
+- Transform::RotateEulerDegrees uses different quaternion composition order for Local vs World rotation; keep angular-velocity space/composition consistent
 
 ## Kinetics / KineticBody
 Kinetics is scene-local and owns non-owning KineticBody pointers.
@@ -34,7 +34,7 @@ KineticBody currently has:
 - mass / inverse mass
 - linear velocity, linear acceleration, accumulated force
 - useGravity + gravityScale
-- angular velocity (new, experimental)
+- angular velocity
 - Transform remains position/orientation source of truth
 
 Linear integration uses semi-implicit Euler:
@@ -103,46 +103,50 @@ Stall curve is validated:
 
 Observed behavior is plausible: no-throttle spawn mostly falls; powered flight followed by throttle release glides/descends temporarily before losing energy.
 
-## Angular dynamics — CURRENT MILESTONE
+## Angular velocity integration — COMPLETE for current milestone
 Commit `f5596a0b27d4dc6d9e18c1e51b5ccdc6dc8e5a16` added the first angular-velocity-only experiment.
 
-Current implementation:
+Current conceptual implementation:
 - `Vector3 m_angularVelocity`, units rad/s
+- world-space angular velocity for this first implementation
 - magnitude from dot(omega,omega)
-- if above threshold, compute angularSpeed = |omega|
+- if above numerical threshold, compute angularSpeed = |omega|
 - axis = omega / angularSpeed
 - angleThisStep = angularSpeed * fixedDt
 - delta quaternion from axis-angle
-- compose delta with current world rotation and write through Transform::SetRotation
+- compose with current world rotation and write through Transform::SetRotation
+- Transform normalizes the stored quaternion
 
-A debug cube with omega = (0, pi/2, 0) rotates continuously and visually confirms basic angular integration/timing.
+Validation:
+- debug cube rotates continuously at the expected rate
+- a pre-rotated cube was tested with omega around global Y and confirmed to rotate around GLOBAL Y, validating the chosen world-space quaternion composition
+- zero-speed threshold was reduced from 0.01^2 to 0.001^2 so slow angular motion is not cut off too aggressively
 
-### Review findings before marking angular velocity complete
-1. `m_angularVelocity` was defined conceptually as WORLD-space, but the current quaternion composition order in KineticBody matches Transform's LOCAL rotation composition convention. Identity-orientation Y rotation cannot reveal this because local/world Y initially coincide. Use Transform's world-space composition convention and verify with a pre-rotated cube where local Y differs from global Y.
-2. Current angular zero check uses 0.01 rad/s, which is a gameplay-sized deadzone (~0.57 deg/s), not a numerical epsilon. Replace it with a much smaller numerical threshold so legitimate slow angular velocity does not freeze.
-3. MainScene currently calls `m_kb->SetUseGravity(false)` on the aircraft for the angular debug experiment. Remove/restore it after the test or later flight behavior is invalid.
-4. Remove the temporary rotating debug cube once this isolated test is complete.
+Debug-test state intentionally retained for now:
+- rotating test cube remains in MainScene until torque/inertia work is also tested
+- `m_kb->SetUseGravity(false)` on the aircraft is intentional during the current rotational debug phase; do NOT treat this as an accidental regression or remove it unless the user decides to restore flight testing
 
-Transform already normalizes rotations, so KineticBody does not need duplicate explicit quaternion normalization unless that architecture changes later.
+The latest user adjustments above may be local if not yet pushed; inspect latest `master` before assuming the repository already contains every small validation tweak.
 
-## NEXT IMMEDIATE STEP
-Fix and validate angular velocity space/composition:
-- keep angular velocity WORLD-space for this first implementation
-- use the same quaternion composition convention as Transform's world-space rotation path
-- start the debug cube with a non-identity orientation, then set omega around global Y and confirm it rotates around global Y rather than its tilted local Y
-- reduce the zero-speed check to a true numerical epsilon
-- restore aircraft gravity/remove temporary test state
+## NEXT IMMEDIATE STEP — torque + scalar inertia
+Add the rotational equivalent of the existing linear force system, deliberately using a simple scalar moment of inertia first before a tensor.
 
-After this passes, angular velocity integration is COMPLETE.
+Conceptual rotational integration:
+- accumulated torque `tau`
+- scalar moment of inertia `I`
+- angular acceleration `alpha = tau / I`
+- angular velocity `omega += alpha * dt`
+- orientation integrates from omega using the already validated quaternion path
+- accumulated torque clears once per fixed step
 
-Then teach/implement the next rotational layer:
-- accumulated torque
-- angular acceleration
-- simple scalar inertia first
-- alpha = torque / I
-- omega += alpha * dt
-- clear accumulated torque
-- validate with isolated rotational experiments before full inertia tensor or aircraft control torques
+Keep torque/world-space conventions consistent with the current world-space angular velocity experiment.
+
+Validate with the existing debug cube before touching aircraft controls:
+- one torque impulse for one fixed step -> angular velocity changes once, then remains constant
+- same continuous torque every fixed step -> angular speed increases steadily
+- larger scalar inertia under same torque -> slower angular acceleration
+
+Only after scalar torque/inertia is understood and validated should we move to per-axis/diagonal inertia or a full inertia tensor, then replace direct aircraft pitch/turn/bank with physical control torques and stabilization.
 
 ## Temporary technical debt
 - normal aircraft pitch/turn/bank still directly mutates Transform
