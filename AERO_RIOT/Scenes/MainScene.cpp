@@ -115,6 +115,7 @@ void MainScene::OnLoad() {
 	);
 	auto& kb = cube.AddComponent<KineticBody>();
 	kb.SetUseGravity(false);
+	cube.GetTransform().SetEulerDegrees({ 45.0f,0.0f,-15.0f });
 	kb.SetAngularVelocity({ 0.0f,DirectX::g_XMHalfPi.f[0],0.0f });
 
 	m_kb->SetUseGravity(false);
