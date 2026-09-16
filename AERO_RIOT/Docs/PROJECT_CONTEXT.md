@@ -121,7 +121,7 @@ Debug-test state intentionally retained:
 - rotating test cube remains until torque/inertia testing is finished
 - `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
 
-## Torque + scalar inertia — IMPLEMENTED, final scalar-inertia check pending
+## Torque + scalar inertia — COMPLETE / validated
 Commit `3081c8e09ddc6ab9328dea9539a19e535c9e2f5b` added:
 - scalar `m_momentOfInertia` + inverse value
 - `m_angularAcceleration`
@@ -131,23 +131,28 @@ Commit `3081c8e09ddc6ab9328dea9539a19e535c9e2f5b` added:
 - `omega += alpha * dt`
 - accumulated torque clear at end of Integrate
 
-The implementation structure matches the linear force system. Multiple AddTorque calls in one fixed step intentionally sum before integration; the current three debug calls sum to one equivalent world-space torque `(10,12,6)` for that frame.
+Behavior validated:
+- multiple AddTorque calls in one fixed step accumulate into one net torque before integration
+- a one-frame torque changes angular velocity once; with no damping, that angular velocity persists afterward
+- same one-frame torque with I=2 vs I=4 behaves as expected; larger inertia produces proportionally smaller angular-velocity change
 
-One-frame torque behavior is understood and observed correctly: torque changes angular velocity once, then with zero subsequent torque the body keeps rotating at that angular velocity because there is no angular damping yet.
+Scalar inertia is intentionally only a learning/intermediate model. It treats rotational resistance as identical around every axis.
 
-Before marking scalar inertia fully validated, perform one deterministic comparison:
-- same one-frame torque with I=2
-- repeat from same initial state with I=4
-- delta omega for I=4 should be exactly half of I=2
+## NEXT IMMEDIATE STEP — body-space diagonal inertia
+Move from scalar inertia to per-axis principal inertia because an aircraft should resist roll, pitch, and yaw differently.
 
-## NEXT IMMEDIATE STEP
-After the I=2 vs I=4 comparison passes, mark torque + scalar inertia complete.
+Key coordinate-space issue to teach before implementation:
+- diagonal inertia belongs naturally to the rigid body's LOCAL/body principal axes
+- current accumulated torque, angular acceleration, and angular velocity are WORLD-space
+- therefore world torque must be transformed into body/local space before applying inverse inertia component-wise, then the resulting local angular acceleration must be transformed back to world space before updating world-space angular velocity
 
-Then move to per-axis / diagonal inertia, because an aircraft should resist roll, pitch, and yaw differently. Teach the coordinate-space issue before implementation: inertia belongs naturally to body/local principal axes, while current torque and angular velocity are world-space. Do not jump directly to a full arbitrary inertia tensor or aircraft control torques without understanding the local<->world conversion.
+Conceptual path:
+`world torque -> body/local torque -> component-wise inverse inertia -> local angular acceleration -> world angular acceleration -> world angular velocity`
 
-Later progression:
-- diagonal/body-space inertia
-- angular damping / aerodynamic rotational damping as needed
+Do not jump directly to a full arbitrary inertia tensor. First implement and validate diagonal body-space inertia with a pre-rotated debug body so local and world axes differ.
+
+After diagonal inertia:
+- consider angular damping / aerodynamic rotational damping as needed
 - aircraft control torques
 - stabilization / bank behavior
 - then revisit camera Up behavior
