@@ -125,11 +125,11 @@ Sign convention:
 
 Do not clamp raw AoA. Keep radians for physics; convert to degrees only for debug/UI. Current air velocity is assumed zero. Sideslip/beta not implemented.
 
-## Basic lift — COMPLETE
+## Lift + stall — COMPLETE / validated
 
-Implemented in `8bf52d823fdfb9b630849843ad5207ae50acd26e`.
+Basic lift implemented in `8bf52d823fdfb9b630849843ad5207ae50acd26e`.
 
-Current first lift model:
+Current lift model:
 - pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2
 - low-speed guard ~0.01 m/s pitch-plane speed
 - Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl
@@ -141,38 +141,18 @@ Current tuning:
 - airDensity = 1.225
 - wingArea = 2.0
 - liftSlope = 4.0 per radian
+- stallAngle = 15 degrees
 
-Unlimited linear `Cl = liftSlope * AoA` correctly demonstrated the need for stall: near vertical fall gave huge Cl and unrealistic forward lift.
+Unlimited linear `Cl = liftSlope * AoA` first demonstrated the need for stall: near-vertical fall produced unrealistically huge Cl and forward lift.
 
-## Stall curve — IMPLEMENTED BUT BUG FOUND
+Stall curve added in `dd45b14bba0c7950b14694e298c1e0503c8cd839`, then corrected in `eb7eb76925e97970eb2d122f6360797d4bea2e12` so peak lift is deterministic rather than previous-frame state.
 
-Commit `dd45b14bba0c7950b14694e298c1e0503c8cd839` added `CalculateLiftCoefficient(angleOfAttack)` with:
-- linear Cl up to stall angle 15 degrees
-- linear falloff to zero by 90 degrees
-- Cl = 0 for |AoA| >= 90 degrees
+Current `CalculateLiftCoefficient` behavior:
+- |AoA| <= 15 deg: `Cl = liftSlope * AoA`
+- 15 deg < |AoA| < 90 deg: peak `Cl = liftSlope * stallAngle`, then linear falloff toward zero while preserving AoA sign
+- |AoA| >= 90 deg: `Cl = 0`
 
-The sign-preserving post-stall structure is conceptually correct, but `m_maxLiftCoef` is implemented incorrectly as mutable history/state:
-
-```cpp
-if (absAoA <= m_stallAngle)
-    return m_maxLiftCoef = m_liftSlope * angleOfAttack;
-```
-
-Then post-stall uses the last stored value. This means peak Cl depends on the previous frame's AoA and may be tiny/zero when entering stall.
-
-Correct design: maximum lift coefficient is derived from configuration every time (or as immutable/precomputed config):
-
-`maxLiftCoef = liftSlope * stallAngle`
-
-This is a positive magnitude. For |AoA| <= stallAngle return `liftSlope * angleOfAttack`. For stallAngle < |AoA| < 90 degrees, compute falloff using abs(AoA), multiply by positive maxLiftCoef, then restore the sign from AoA. Remove `m_maxLiftCoef` as changing state.
-
-Important test distinction:
-- Starting from rest with zero throttle: falling almost straight is expected once deep-stall Cl approaches zero; there is no forward energy source.
-- Starting from powered forward flight, then releasing throttle: aircraft should retain inertia and may glide while speed/AoA permit lift, then descend/stall as energy decays.
-
-## NEXT IMMEDIATE STEP
-
-Fix stall curve so maxLiftCoef is deterministic (`liftSlope * stallAngle`) rather than previous-frame state. Then validate numerically/debug:
+Expected values with current tuning:
 - 0 deg -> Cl 0
 - 5 deg -> ~0.349
 - 10 deg -> ~0.698
@@ -180,23 +160,37 @@ Fix stall curve so maxLiftCoef is deterministic (`liftSlope * stallAngle`) rathe
 - 30 deg -> ~0.838
 - 60 deg -> ~0.419
 - 90 deg -> 0
-- negative angles mirror the sign
+- negative angles mirror sign
 
-Then test two distinct flight cases:
-1. start from rest with no throttle -> mostly fall; no magical forward acceleration
-2. build forward speed with throttle, release throttle -> preserve inertia/glide temporarily, then lose energy and descend
+Behavior validation passed qualitatively:
+- from rest with zero throttle, aircraft mostly falls and no longer gains unrealistic forward acceleration from huge deep-stall lift
+- after building forward speed and releasing throttle, inertia/lift produce temporary glide/descent before energy is lost
 
-After stall curve is validated, continue to angular velocity / torque / inertia or revisit aerodynamic drag/induced drag as justified by flight behavior.
+## NEXT IMMEDIATE STEP — angular dynamics foundation
+
+Translation/aerodynamics are now physical enough that the largest remaining mismatch is rotation: normal pitch/turn/bank still directly mutates Transform.
+
+Next progression:
+1. teach angular velocity and angular acceleration
+2. teach torque as rotational analogue of force
+3. introduce inertia, starting with a deliberately simple representation before full tensor complexity
+4. extend KineticBody/Kinetics with angular state and torque accumulation
+5. integrate orientation using quaternions during the fixed physics step
+6. validate with isolated rotational experiments
+7. only then replace temporary direct aircraft rotation with physical control torque / stabilization
+
+Do not jump directly to full aircraft control torques before generic angular integration is understood and tested.
 
 ## Temporary technical debt
 
-- normal pitch/turn/bank directly mutates Transform; later angular velocity/torque/inertia
+- normal pitch/turn/bank directly mutates Transform; next major physics target
 - evade root displacement bypasses KineticBody
 - evade Body spin is presentation-only
 - Aircraft Body lookup assumes child index 0
 - direct Aircraft -> AircraftKinetics Apply bypasses normal enabled/update dispatch; revisit when useful
 - air brake is not yet a separate aerodynamic surface/force
 - no induced drag yet
+- sideslip/beta not modeled yet
 - no render interpolation
 
 ## Camera
