@@ -25,23 +25,30 @@ Transform conventions:
 - local Forward = (0,0,-1), Right = (1,0,0), Up = (0,1,0)
 - Transform::GetForward/Right/Up return world-space directions
 - Transform normalizes stored rotations
-- Transform::RotateEulerDegrees uses different quaternion composition order for Local vs World rotation; keep angular-velocity space/composition consistent
+- current angular velocity/torque convention is WORLD-space
 
 ## Kinetics / KineticBody
-Kinetics is scene-local and owns non-owning KineticBody pointers.
+Kinetics is scene-local and stores non-owning KineticBody pointers.
 
 KineticBody currently has:
 - mass / inverse mass
 - linear velocity, linear acceleration, accumulated force
 - useGravity + gravityScale
-- angular velocity
+- scalar moment of inertia / inverse scalar inertia
+- angular velocity, angular acceleration, accumulated torque
 - Transform remains position/orientation source of truth
 
-Linear integration uses semi-implicit Euler:
+Linear integration:
 - a = F * inverseMass
 - v += a * dt
 - x += v * dt
-- clear accumulated force
+
+Angular integration:
+- alpha = accumulatedTorque * inverseMomentOfInertia
+- omega += alpha * dt
+- orientation integrates from omega using axis-angle quaternion for omega*dt
+
+After integration, accumulated force and accumulated torque are cleared. Linear/angular velocities persist.
 
 Gravity is COMPLETE:
 - Kinetics owns world gravity {0,-9.81,0}
@@ -84,10 +91,9 @@ AoA:
 - nose below flight path -> negative AoA
 - raw AoA is not clamped
 
-Lift model:
+Lift:
 - pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2
 - Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl
-- pitchVelocity = Forward * forwardSpeed + Up * verticalSpeed
 - liftDirection = normalize(Right x pitchVelocity)
 
 Current tuning:
@@ -103,50 +109,48 @@ Stall curve is validated:
 
 Observed behavior is plausible: no-throttle spawn mostly falls; powered flight followed by throttle release glides/descends temporarily before losing energy.
 
-## Angular velocity integration — COMPLETE for current milestone
-Commit `f5596a0b27d4dc6d9e18c1e51b5ccdc6dc8e5a16` added the first angular-velocity-only experiment.
-
-Current conceptual implementation:
-- `Vector3 m_angularVelocity`, units rad/s
-- world-space angular velocity for this first implementation
-- magnitude from dot(omega,omega)
-- if above numerical threshold, compute angularSpeed = |omega|
-- axis = omega / angularSpeed
-- angleThisStep = angularSpeed * fixedDt
-- delta quaternion from axis-angle
-- compose with current world rotation and write through Transform::SetRotation
-- Transform normalizes the stored quaternion
+## Angular velocity integration — COMPLETE
+Commit `f5596a0b27d4dc6d9e18c1e51b5ccdc6dc8e5a16` added world-space angular velocity integration.
 
 Validation:
-- debug cube rotates continuously at the expected rate
-- a pre-rotated cube was tested with omega around global Y and confirmed to rotate around GLOBAL Y, validating the chosen world-space quaternion composition
-- zero-speed threshold was reduced from 0.01^2 to 0.001^2 so slow angular motion is not cut off too aggressively
+- debug cube rotates continuously at expected rate
+- pre-rotated cube + omega around global Y rotates around GLOBAL Y
+- angular zero threshold reduced to 0.001^2
 
-Debug-test state intentionally retained for now:
-- rotating test cube remains in MainScene until torque/inertia work is also tested
-- `m_kb->SetUseGravity(false)` on the aircraft is intentional during the current rotational debug phase; do NOT treat this as an accidental regression or remove it unless the user decides to restore flight testing
+Debug-test state intentionally retained:
+- rotating test cube remains until torque/inertia testing is finished
+- `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
 
-The latest user adjustments above may be local if not yet pushed; inspect latest `master` before assuming the repository already contains every small validation tweak.
+## Torque + scalar inertia — IMPLEMENTED, final scalar-inertia check pending
+Commit `3081c8e09ddc6ab9328dea9539a19e535c9e2f5b` added:
+- scalar `m_momentOfInertia` + inverse value
+- `m_angularAcceleration`
+- `m_accumulatedTorque`
+- `AddTorque()` accumulator
+- `alpha = torque / I`
+- `omega += alpha * dt`
+- accumulated torque clear at end of Integrate
 
-## NEXT IMMEDIATE STEP — torque + scalar inertia
-Add the rotational equivalent of the existing linear force system, deliberately using a simple scalar moment of inertia first before a tensor.
+The implementation structure matches the linear force system. Multiple AddTorque calls in one fixed step intentionally sum before integration; the current three debug calls sum to one equivalent world-space torque `(10,12,6)` for that frame.
 
-Conceptual rotational integration:
-- accumulated torque `tau`
-- scalar moment of inertia `I`
-- angular acceleration `alpha = tau / I`
-- angular velocity `omega += alpha * dt`
-- orientation integrates from omega using the already validated quaternion path
-- accumulated torque clears once per fixed step
+One-frame torque behavior is understood and observed correctly: torque changes angular velocity once, then with zero subsequent torque the body keeps rotating at that angular velocity because there is no angular damping yet.
 
-Keep torque/world-space conventions consistent with the current world-space angular velocity experiment.
+Before marking scalar inertia fully validated, perform one deterministic comparison:
+- same one-frame torque with I=2
+- repeat from same initial state with I=4
+- delta omega for I=4 should be exactly half of I=2
 
-Validate with the existing debug cube before touching aircraft controls:
-- one torque impulse for one fixed step -> angular velocity changes once, then remains constant
-- same continuous torque every fixed step -> angular speed increases steadily
-- larger scalar inertia under same torque -> slower angular acceleration
+## NEXT IMMEDIATE STEP
+After the I=2 vs I=4 comparison passes, mark torque + scalar inertia complete.
 
-Only after scalar torque/inertia is understood and validated should we move to per-axis/diagonal inertia or a full inertia tensor, then replace direct aircraft pitch/turn/bank with physical control torques and stabilization.
+Then move to per-axis / diagonal inertia, because an aircraft should resist roll, pitch, and yaw differently. Teach the coordinate-space issue before implementation: inertia belongs naturally to body/local principal axes, while current torque and angular velocity are world-space. Do not jump directly to a full arbitrary inertia tensor or aircraft control torques without understanding the local<->world conversion.
+
+Later progression:
+- diagonal/body-space inertia
+- angular damping / aerodynamic rotational damping as needed
+- aircraft control torques
+- stabilization / bank behavior
+- then revisit camera Up behavior
 
 ## Temporary technical debt
 - normal aircraft pitch/turn/bank still directly mutates Transform
