@@ -1,20 +1,16 @@
 # AERO_RIOT — Project Context
 
-Last updated: 2026-09-15
+Last updated: 2026-09-16
 
 Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect latest `master` before assuming this file is perfectly current.
 
-## Project / learning workflow
+## Learning workflow
+AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn engine architecture, custom physics/aerodynamics, rendering/HLSL, VFX, cameras, AI, and optimization.
 
-AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn C++, DirectX/DirectXTK, engine architecture, custom physics/aerodynamics, HLSL/shaders, rendering, lighting/shadows, VFX, animation, cameras, AI, and optimization.
+The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical. Teach hard physics/math/rendering concepts before implementation. The game drives engine development; do not build systems without a concrete need.
 
-Rule: the game drives engine development. The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not give full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical. For hard physics/math/rendering/HLSL/memory topics, teach theory first.
-
-## Core engine architecture
-
-Ownership/lifecycle:
-
-Game -> SceneManager -> Scene -> GameObjectManager -> GameObject -> Component
+## Core engine / lifecycle
+Ownership: Game -> SceneManager -> Scene -> GameObjectManager -> GameObject -> Component.
 
 Fixed simulation order:
 1. Scene OnFixedUpdate()
@@ -23,41 +19,42 @@ Fixed simulation order:
 
 Current fixed step: 1/60 s.
 
-Important lifecycle rule: GameObject FixedUpdate starts each component immediately before that component's own OnFixedUpdate. Cross-component dependencies needed by first FixedUpdate should be resolved in OnInitialize or otherwise explicitly guaranteed.
+Important lifecycle rule: GameObject starts each component immediately before that component's own update. Cross-component dependencies needed during first FixedUpdate should be resolved in OnInitialize or explicitly guaranteed.
 
-## Transform conventions
-
-- canonical local Forward = (0,0,-1)
-- Right = (1,0,0)
-- Up = (0,1,0)
-- Transform::GetForward/Right/Up return world-space basis directions.
-- local visual roll delta uses canonical Vector3::Forward; world thrust uses Transform::GetForward().
+Transform conventions:
+- local Forward = (0,0,-1), Right = (1,0,0), Up = (0,1,0)
+- Transform::GetForward/Right/Up return world-space directions
+- Transform normalizes stored rotations
+- Transform::RotateEulerDegrees uses different quaternion composition order for Local vs World rotation; this matters for angular velocity integration
 
 ## Kinetics / KineticBody
+Kinetics is scene-local and owns non-owning KineticBody pointers.
 
-Kinetics is scene-local and holds non-owning KineticBody pointers. KineticBody owns mass/inverse mass, linear velocity, linear acceleration, accumulated force, gravity flags, and uses Transform as position source of truth.
+KineticBody currently has:
+- mass / inverse mass
+- linear velocity, linear acceleration, accumulated force
+- useGravity + gravityScale
+- angular velocity (new, experimental)
+- Transform remains position/orientation source of truth
 
-Semi-implicit Euler:
+Linear integration uses semi-implicit Euler:
 - a = F * inverseMass
-- v += a * fixedDt
-- x += v * fixedDt
+- v += a * dt
+- x += v * dt
 - clear accumulated force
 
-Validated experiments: one-shot force, continuous force, linear drag, quadratic drag, and mass-independent gravity.
-
-### Gravity — COMPLETE
-
-Implemented in `aaa67bdcbeb737344583043f6c930986baaa46a1`.
-
-- Kinetics owns world gravity `{0,-9.81,0}`.
-- KineticBody has `useGravity` default true and `gravityScale` default 1.
-- Before integration, Kinetics applies `mass * gravity * gravityScale`.
-- User tested independent free fall and aircraft sinking successfully.
+Gravity is COMPLETE:
+- Kinetics owns world gravity {0,-9.81,0}
+- before integration it applies mass * gravity * gravityScale to gravity-enabled bodies
+- mass-independent free fall was tested successfully
 
 ## Aircraft architecture
+Current flow:
+AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
+
+Aircraft still performs temporary direct pitch/turn/bank first, then explicitly calls AircraftKinetics::Apply(controlInput). AircraftKinetics owns thrust, directional drag, airflow decomposition, AoA, lift, and stall calculations.
 
 Current hierarchy:
-
 ```text
 AircraftRoot
 |- Aircraft
@@ -70,36 +67,8 @@ AircraftRoot
    `- Wing
 ```
 
-AircraftControlInput and EvadeRoll live in `AircraftControlInput.h`.
-
-Current flow:
-
-AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
-
-Aircraft performs temporary direct kinematic orientation first, then explicitly calls AircraftKinetics::Apply(controlInput), preserving ordering without relying on sibling FixedUpdate order.
-
-### AircraftKinetics refactor — COMPLETE
-
-AircraftKinetics owns:
-- KineticBody dependency resolved in OnInitialize
-- max thrust
-- directional drag coefficients
-- temporary air-brake drag multiplier
-- thrust
-- aircraft-basis velocity decomposition
-- AoA
-- lift / stall calculations
-
-Apply receives `const AircraftControlInput&`.
-
-## Directional drag — COMPLETE
-
-Signed velocity components:
-- forwardSpeed = dot(relativeVelocity, aircraftForward)
-- sideSpeed = dot(relativeVelocity, aircraftRight)
-- verticalSpeed = dot(relativeVelocity, aircraftUp)
-
-Current quadratic axis resistance:
+## Aerodynamics — COMPLETE for current milestone
+Directional drag uses signed projections onto aircraft Forward/Right/Up and per-axis quadratic drag:
 `-axis * coefficient * speed * abs(speed)`
 
 Current tuning:
@@ -107,101 +76,86 @@ Current tuning:
 - forwardDrag = 1
 - sideDrag = 3
 - verticalDrag = 2
-- airBrakePower = 4
+- airBrakePower = 4 (TEMP multiplier over total drag)
 
-Air brake still temporarily multiplies all directional drag; later make it a separate contribution.
-
-## Angle of Attack — COMPLETE / validated
-
-Raw formula:
-
-```cpp
-angleOfAttack = -atan2(verticalSpeed, forwardSpeed);
-```
-
-Sign convention:
+AoA:
+`angleOfAttack = -atan2(verticalSpeed, forwardSpeed)`
 - nose above flight path -> positive AoA
 - nose below flight path -> negative AoA
+- raw AoA is not clamped
 
-Do not clamp raw AoA. Keep radians for physics; convert to degrees only for debug/UI. Current air velocity is assumed zero. Sideslip/beta not implemented.
-
-## Lift + stall — COMPLETE / validated
-
-Basic lift implemented in `8bf52d823fdfb9b630849843ad5207ae50acd26e`.
-
-Current lift model:
+Lift model:
 - pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2
-- low-speed guard ~0.01 m/s pitch-plane speed
 - Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl
-- pitch-plane velocity = Forward * forwardSpeed + Up * verticalSpeed
-- lift direction = normalize(Right x pitchVelocity)
-- signed Cl reverses lift for negative AoA
+- pitchVelocity = Forward * forwardSpeed + Up * verticalSpeed
+- liftDirection = normalize(Right x pitchVelocity)
 
 Current tuning:
 - airDensity = 1.225
 - wingArea = 2.0
-- liftSlope = 4.0 per radian
-- stallAngle = 15 degrees
+- liftSlope = 4.0 / rad
+- stallAngle = 15 deg
 
-Unlimited linear `Cl = liftSlope * AoA` first demonstrated the need for stall: near-vertical fall produced unrealistically huge Cl and forward lift.
+Stall curve is validated:
+- |AoA| <= 15 deg: Cl = liftSlope * AoA
+- 15 < |AoA| < 90 deg: peak Cl = liftSlope * stallAngle, linearly decays toward zero, sign restored from AoA
+- |AoA| >= 90 deg: Cl = 0
 
-Stall curve added in `dd45b14bba0c7950b14694e298c1e0503c8cd839`, then corrected in `eb7eb76925e97970eb2d122f6360797d4bea2e12` so peak lift is deterministic rather than previous-frame state.
+Observed behavior is plausible: no-throttle spawn mostly falls; powered flight followed by throttle release glides/descends temporarily before losing energy.
 
-Current `CalculateLiftCoefficient` behavior:
-- |AoA| <= 15 deg: `Cl = liftSlope * AoA`
-- 15 deg < |AoA| < 90 deg: peak `Cl = liftSlope * stallAngle`, then linear falloff toward zero while preserving AoA sign
-- |AoA| >= 90 deg: `Cl = 0`
+## Angular dynamics — CURRENT MILESTONE
+Commit `f5596a0b27d4dc6d9e18c1e51b5ccdc6dc8e5a16` added the first angular-velocity-only experiment.
 
-Expected values with current tuning:
-- 0 deg -> Cl 0
-- 5 deg -> ~0.349
-- 10 deg -> ~0.698
-- 15 deg -> ~1.047 peak
-- 30 deg -> ~0.838
-- 60 deg -> ~0.419
-- 90 deg -> 0
-- negative angles mirror sign
+Current implementation:
+- `Vector3 m_angularVelocity`, units rad/s
+- magnitude from dot(omega,omega)
+- if above threshold, compute angularSpeed = |omega|
+- axis = omega / angularSpeed
+- angleThisStep = angularSpeed * fixedDt
+- delta quaternion from axis-angle
+- compose delta with current world rotation and write through Transform::SetRotation
 
-Behavior validation passed qualitatively:
-- from rest with zero throttle, aircraft mostly falls and no longer gains unrealistic forward acceleration from huge deep-stall lift
-- after building forward speed and releasing throttle, inertia/lift produce temporary glide/descent before energy is lost
+A debug cube with omega = (0, pi/2, 0) rotates continuously and visually confirms basic angular integration/timing.
 
-## NEXT IMMEDIATE STEP — angular dynamics foundation
+### Review findings before marking angular velocity complete
+1. `m_angularVelocity` was defined conceptually as WORLD-space, but the current quaternion composition order in KineticBody matches Transform's LOCAL rotation composition convention. Identity-orientation Y rotation cannot reveal this because local/world Y initially coincide. Use Transform's world-space composition convention and verify with a pre-rotated cube where local Y differs from global Y.
+2. Current angular zero check uses 0.01 rad/s, which is a gameplay-sized deadzone (~0.57 deg/s), not a numerical epsilon. Replace it with a much smaller numerical threshold so legitimate slow angular velocity does not freeze.
+3. MainScene currently calls `m_kb->SetUseGravity(false)` on the aircraft for the angular debug experiment. Remove/restore it after the test or later flight behavior is invalid.
+4. Remove the temporary rotating debug cube once this isolated test is complete.
 
-Translation/aerodynamics are now physical enough that the largest remaining mismatch is rotation: normal pitch/turn/bank still directly mutates Transform.
+Transform already normalizes rotations, so KineticBody does not need duplicate explicit quaternion normalization unless that architecture changes later.
 
-Next progression:
-1. teach angular velocity and angular acceleration
-2. teach torque as rotational analogue of force
-3. introduce inertia, starting with a deliberately simple representation before full tensor complexity
-4. extend KineticBody/Kinetics with angular state and torque accumulation
-5. integrate orientation using quaternions during the fixed physics step
-6. validate with isolated rotational experiments
-7. only then replace temporary direct aircraft rotation with physical control torque / stabilization
+## NEXT IMMEDIATE STEP
+Fix and validate angular velocity space/composition:
+- keep angular velocity WORLD-space for this first implementation
+- use the same quaternion composition convention as Transform's world-space rotation path
+- start the debug cube with a non-identity orientation, then set omega around global Y and confirm it rotates around global Y rather than its tilted local Y
+- reduce the zero-speed check to a true numerical epsilon
+- restore aircraft gravity/remove temporary test state
 
-Do not jump directly to full aircraft control torques before generic angular integration is understood and tested.
+After this passes, angular velocity integration is COMPLETE.
+
+Then teach/implement the next rotational layer:
+- accumulated torque
+- angular acceleration
+- simple scalar inertia first
+- alpha = torque / I
+- omega += alpha * dt
+- clear accumulated torque
+- validate with isolated rotational experiments before full inertia tensor or aircraft control torques
 
 ## Temporary technical debt
-
-- normal pitch/turn/bank directly mutates Transform; next major physics target
+- normal aircraft pitch/turn/bank still directly mutates Transform
 - evade root displacement bypasses KineticBody
 - evade Body spin is presentation-only
 - Aircraft Body lookup assumes child index 0
-- direct Aircraft -> AircraftKinetics Apply bypasses normal enabled/update dispatch; revisit when useful
-- air brake is not yet a separate aerodynamic surface/force
-- no induced drag yet
-- sideslip/beta not modeled yet
+- direct Aircraft -> AircraftKinetics Apply bypasses normal Component enabled dispatch
+- air brake is not a separate aerodynamic contribution
+- no induced drag
+- sideslip/beta not modeled
 - no render interpolation
-
-## Camera
-
-Separate chase camera with right-stick spherical freelook + delayed recenter. Camera currently uses world Up. After physical bank/stabilization, revisit bank readability and world-Up vs target-Up vs blended/stabilized camera Up.
-
-## Build / app infrastructure
-
-PCH complete and active. AppConfig complete for current needs: title, width, height, VSync, fullscreen flag; fullscreen behavior itself is not wired yet.
+- camera still uses world Up; revisit after physical bank/stabilization
 
 ## Repository
-
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
