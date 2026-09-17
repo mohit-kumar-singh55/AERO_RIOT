@@ -1,161 +1,120 @@
 # AERO_RIOT — Project Context
 
-Last updated: 2026-09-16
+Last updated: 2026-09-17
 
 Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect latest `master` before assuming this file is perfectly current.
 
 ## Learning workflow
 AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn engine architecture, custom physics/aerodynamics, rendering/HLSL, VFX, cameras, AI, and optimization.
 
-The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical. Teach hard physics/math/rendering concepts before implementation. The game drives engine development; do not build systems without a concrete need.
+The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical. Teach hard physics/math/rendering concepts before implementation. The game drives engine development.
 
 ## Core engine / lifecycle
 Ownership: Game -> SceneManager -> Scene -> GameObjectManager -> GameObject -> Component.
 
 Fixed simulation order:
 1. Scene OnFixedUpdate()
-2. GameObjectManager FixedUpdate() — gameplay/components submit forces
-3. Kinetics Integrate(FixedDeltaTime) — world physics consumes forces
+2. GameObjectManager FixedUpdate() — gameplay/components submit forces/torques
+3. Kinetics Integrate(FixedDeltaTime) — world physics consumes them
 
 Current fixed step: 1/60 s.
-
-Important lifecycle rule: GameObject starts each component immediately before that component's own update. Cross-component dependencies needed during first FixedUpdate should be resolved in OnInitialize or explicitly guaranteed.
 
 Transform conventions:
 - local Forward = (0,0,-1), Right = (1,0,0), Up = (0,1,0)
 - Transform::GetForward/Right/Up return world-space directions
 - Transform normalizes stored rotations
-- current angular velocity/torque convention is WORLD-space
+- current angular velocity and accumulated torque convention is WORLD-space
 
 ## Kinetics / KineticBody
-Kinetics is scene-local and stores non-owning KineticBody pointers.
-
-KineticBody currently has:
+Current linear state:
 - mass / inverse mass
 - linear velocity, linear acceleration, accumulated force
 - useGravity + gravityScale
-- scalar moment of inertia / inverse scalar inertia
-- angular velocity, angular acceleration, accumulated torque
-- Transform remains position/orientation source of truth
 
 Linear integration:
 - a = F * inverseMass
 - v += a * dt
 - x += v * dt
 
-Angular integration:
-- alpha = accumulatedTorque * inverseMomentOfInertia
+Current angular state:
+- per-axis moment of inertia Vector3 in BODY/LOCAL principal axes
+- inverse per-axis inertia Vector3
+- world-space angular velocity
+- world-space angular acceleration
+- world-space accumulated torque
+
+Angular velocity integration is COMPLETE:
+- omega is rad/s, world-space
+- angleThisStep = |omega| * dt
+- axis = normalize(omega)
+- orientation integrates via axis-angle quaternion
+- pre-rotated cube confirmed global-Y omega rotates around GLOBAL Y
+- near-zero threshold is 0.001^2
+
+Torque + scalar inertia milestone is COMPLETE / validated:
+- AddTorque accumulates until integration
+- alpha = torque / I
 - omega += alpha * dt
-- orientation integrates from omega using axis-angle quaternion for omega*dt
+- accumulated torque clears once per fixed step
+- one-frame torque changes omega once and rotation persists without damping
+- I=2 vs I=4 produced the expected 2:1 angular-acceleration response
 
-After integration, accumulated force and accumulated torque are cleared. Linear/angular velocities persist.
+## Body-space diagonal inertia — IMPLEMENTED, ONE BUG FOUND
+Commit `146b4026da29dba4a355e068bc6d6309151fc545` changed scalar inertia to Vector3 and added the correct coordinate-space structure:
 
-Gravity is COMPLETE:
-- Kinetics owns world gravity {0,-9.81,0}
-- before integration it applies mass * gravity * gravityScale to gravity-enabled bodies
-- mass-independent free fall was tested successfully
+`world torque -> inverse world rotation -> local torque -> apply per-axis inverse inertia -> local angular acceleration -> world rotation -> world angular acceleration -> world angular velocity`
 
-## Aircraft architecture
+The world/local conversion itself is correct.
+
+However, current code calculates local angular acceleration with `m_momentOfInertia` instead of `m_inverseMomentOfInertia`:
+
+```cpp
+localAngularAcc.x = localTorque.x * m_momentOfInertia.x;
+localAngularAcc.y = localTorque.y * m_momentOfInertia.y;
+localAngularAcc.z = localTorque.z * m_momentOfInertia.z;
+```
+
+This is physically reversed. It must conceptually be `alpha = torque / I`, i.e. component-wise multiplication by inverse inertia. With I=(1,2,4), a given local torque should produce acceleration ratios 1, 1/2, 1/4, not 1,2,4.
+
+Current setter already computes `m_inverseMomentOfInertia = 1.0f / m_momentOfInertia`, so the intended inverse values are available.
+
+Validation after the fix:
+- keep the body pre-rotated so local and world axes differ
+- use I=(1,2,4)
+- apply equal torque magnitude around one BODY axis at a time
+- expected angular-acceleration magnitudes: local X = 4, local Y = 2, local Z = 1 for torque magnitude 4
+- those ratios should stay tied to BODY axes regardless of world orientation
+
+Do not mark diagonal inertia complete until the inverse-inertia fix and this body-axis validation pass.
+
+## Aircraft architecture / aerodynamics
 Current flow:
 AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
 
-Aircraft still performs temporary direct pitch/turn/bank first, then explicitly calls AircraftKinetics::Apply(controlInput). AircraftKinetics owns thrust, directional drag, airflow decomposition, AoA, lift, and stall calculations.
+Aircraft still temporarily mutates Transform directly for normal pitch/turn/bank, then calls AircraftKinetics::Apply(controlInput). This is the major behavior to replace after generic rotational physics is solid.
 
-Current hierarchy:
-```text
-AircraftRoot
-|- Aircraft
-|- AircraftController
-|- KineticBody
-|- AircraftKinetics
-|- ThirdPersonCameraAnchor
-`- Body
-   |- Base
-   `- Wing
-```
-
-## Aerodynamics — COMPLETE for current milestone
-Directional drag uses signed projections onto aircraft Forward/Right/Up and per-axis quadratic drag:
-`-axis * coefficient * speed * abs(speed)`
-
-Current tuning:
-- maxThrust = 20
-- forwardDrag = 1
-- sideDrag = 3
-- verticalDrag = 2
-- airBrakePower = 4 (TEMP multiplier over total drag)
-
-AoA:
-`angleOfAttack = -atan2(verticalSpeed, forwardSpeed)`
-- nose above flight path -> positive AoA
-- nose below flight path -> negative AoA
-- raw AoA is not clamped
-
-Lift:
-- pitchSpeedSquared = forwardSpeed^2 + verticalSpeed^2
-- Lift = 0.5 * airDensity * pitchSpeedSquared * wingArea * Cl
-- liftDirection = normalize(Right x pitchVelocity)
-
-Current tuning:
-- airDensity = 1.225
-- wingArea = 2.0
-- liftSlope = 4.0 / rad
-- stallAngle = 15 deg
-
-Stall curve is validated:
-- |AoA| <= 15 deg: Cl = liftSlope * AoA
-- 15 < |AoA| < 90 deg: peak Cl = liftSlope * stallAngle, linearly decays toward zero, sign restored from AoA
-- |AoA| >= 90 deg: Cl = 0
-
-Observed behavior is plausible: no-throttle spawn mostly falls; powered flight followed by throttle release glides/descends temporarily before losing energy.
-
-## Angular velocity integration — COMPLETE
-Commit `f5596a0b27d4dc6d9e18c1e51b5ccdc6dc8e5a16` added world-space angular velocity integration.
-
-Validation:
-- debug cube rotates continuously at expected rate
-- pre-rotated cube + omega around global Y rotates around GLOBAL Y
-- angular zero threshold reduced to 0.001^2
+Aerodynamics milestone is COMPLETE for now:
+- directional quadratic drag on Forward/Right/Up projections
+- gravity
+- AoA = -atan2(verticalSpeed, forwardSpeed)
+- lift = 0.5 * rho * Vpitch^2 * S * Cl
+- stall curve: linear to 15 deg, then falloff to zero by 90 deg
+- observed powered-flight/glide behavior is plausible
 
 Debug-test state intentionally retained:
-- rotating test cube remains until torque/inertia testing is finished
+- rotating/torque debug cube remains until rotational physics tests are complete
 - `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
 
-## Torque + scalar inertia — COMPLETE / validated
-Commit `3081c8e09ddc6ab9328dea9539a19e535c9e2f5b` added:
-- scalar `m_momentOfInertia` + inverse value
-- `m_angularAcceleration`
-- `m_accumulatedTorque`
-- `AddTorque()` accumulator
-- `alpha = torque / I`
-- `omega += alpha * dt`
-- accumulated torque clear at end of Integrate
+## NEXT IMMEDIATE STEP
+Fix diagonal inertia to use inverse inertia component-wise, then validate body-axis response on the pre-rotated cube.
 
-Behavior validated:
-- multiple AddTorque calls in one fixed step accumulate into one net torque before integration
-- a one-frame torque changes angular velocity once; with no damping, that angular velocity persists afterward
-- same one-frame torque with I=2 vs I=4 behaves as expected; larger inertia produces proportionally smaller angular-velocity change
-
-Scalar inertia is intentionally only a learning/intermediate model. It treats rotational resistance as identical around every axis.
-
-## NEXT IMMEDIATE STEP — body-space diagonal inertia
-Move from scalar inertia to per-axis principal inertia because an aircraft should resist roll, pitch, and yaw differently.
-
-Key coordinate-space issue to teach before implementation:
-- diagonal inertia belongs naturally to the rigid body's LOCAL/body principal axes
-- current accumulated torque, angular acceleration, and angular velocity are WORLD-space
-- therefore world torque must be transformed into body/local space before applying inverse inertia component-wise, then the resulting local angular acceleration must be transformed back to world space before updating world-space angular velocity
-
-Conceptual path:
-`world torque -> body/local torque -> component-wise inverse inertia -> local angular acceleration -> world angular acceleration -> world angular velocity`
-
-Do not jump directly to a full arbitrary inertia tensor. First implement and validate diagonal body-space inertia with a pre-rotated debug body so local and world axes differ.
-
-After diagonal inertia:
-- consider angular damping / aerodynamic rotational damping as needed
+After diagonal inertia is complete, likely next progression:
+- angular damping / aerodynamic rotational damping as needed
 - aircraft control torques
 - stabilization / bank behavior
-- then revisit camera Up behavior
+- revisit camera Up behavior after physical bank
+
+Full arbitrary inertia tensor / gyroscopic term `omega x (I omega)` is deliberately postponed until justified.
 
 ## Temporary technical debt
 - normal aircraft pitch/turn/bank still directly mutates Transform
@@ -167,7 +126,7 @@ After diagonal inertia:
 - no induced drag
 - sideslip/beta not modeled
 - no render interpolation
-- camera still uses world Up; revisit after physical bank/stabilization
+- camera still uses world Up
 
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
