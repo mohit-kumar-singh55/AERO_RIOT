@@ -33,107 +33,76 @@ Current linear state:
 - useGravity + gravityScale
 - generic scalar linear damping
 
-Linear integration:
-- optional damping contributes a force first
-- a = F * inverseMass
-- v += a * dt
-- x += v * dt
-
 Current angular state:
 - per-axis moment of inertia Vector3 in BODY/LOCAL principal axes
 - inverse per-axis inertia Vector3
-- world-space angular velocity
-- world-space angular acceleration
-- world-space accumulated torque
+- world-space angular velocity / acceleration / accumulated torque
 - generic angular damping using body-space coefficients
 
-## Rotational physics milestones
-Angular velocity integration — COMPLETE / validated:
-- omega in rad/s, world-space
-- orientation integrates by axis-angle quaternion from `|omega| * dt`
-- pre-rotated cube confirmed global-Y omega rotates around GLOBAL Y
-- near-zero threshold is 0.001^2
+Rotational physics is COMPLETE / validated for the current simplified model:
+- angular velocity integration by axis-angle quaternion
+- torque accumulation
+- scalar and body-space diagonal inertia
+- world torque -> local torque -> inverse inertia -> local alpha -> world alpha -> world omega
+- generic angular damping opposes local angular velocity
+- full gyroscopic coupling / arbitrary inertia tensor intentionally postponed
 
-Torque + scalar inertia — COMPLETE / validated:
-- AddTorque accumulates until integration
-- alpha = torque / I
-- omega += alpha * dt
-- accumulated torque clears once per fixed step
-- one-frame torque changes omega once and rotation persists without damping
-- I=2 vs I=4 produced expected 2:1 angular-acceleration response
-
-Body-space diagonal inertia — COMPLETE / validated:
-- `m_momentOfInertia` and inverse are Vector3 in BODY/LOCAL axes
-- path: world torque -> local torque -> component-wise inverse inertia -> local angular acceleration -> world angular acceleration -> world angular velocity
-- validated with pre-rotated cube and I=(1,2,4); local Z rotates much more slowly under comparable torque
-- full gyroscopic coupling / arbitrary inertia tensor is deliberately postponed
-
-## Generic damping — COMPLETE / validated
-Angular damping:
-- fixed in `9ea75dc95b386d679c28508551cb597f841065af` to damp angular VELOCITY rather than angular acceleration
-- body-space damping coefficients
-- local damping torque = `-localAngularVelocity * angularDamping`
-- damping torque is transformed back to world space and added to accumulated torque, so inertia still governs response
-- OFF: one-frame torque leaves persistent angular velocity
-- ON: angular velocity decays toward zero
-
-Linear damping:
-- commit `015edae0b7b948f45396a2407d301e9474bec15a` added `m_useLinearDamping`, scalar `m_linearDamping`, and damping-force integration
-- commit `194a254b31288f294ec3e4c26956c623a45e0263` added GetLinearDamping / SetLinearDamping
-- damping force: `F_damping = -linearVelocity * mass * linearDamping`
-- because normal integration multiplies by inverseMass, damping acceleration is `a_damping = -linearVelocity * linearDamping`; decay behavior is therefore independent of mass
-- damping flows through AddForce rather than directly modifying velocity
-
-Engine policy decision:
-- generic bodies USE linear and angular damping by default
-- current default coefficients are nonzero (linear 1.0, angular Vector3::One)
-- specialized bodies may explicitly disable either damping
-- aircraft disables both generic linear and angular damping in AircraftKinetics to avoid double-counting its aerodynamic resistance
-
-API note:
-- current SetLinearDamping uses `std::abs`, so negative input becomes positive; acceptable for now, though clamping negative values to 0 would make configuration mistakes more obvious
-- angular damping components are not yet clamped non-negative; optional hardening later
+Generic damping is COMPLETE / validated:
+- linear damping force: `F = -v * mass * linearDamping`, giving mass-independent decay `a = -v * linearDamping`
+- angular damping torque: `tau_local = -omega_local * angularDamping`
+- generic bodies use both dampings by default
+- aircraft explicitly disables generic linear/angular damping in AircraftKinetics to avoid double-counting aerodynamic resistance
+- SetLinearDamping clamps negative values to zero as of commit `9bfab98c8a2742b634fa329dcfe739b6e97746ca`
 
 ## Aircraft architecture / aerodynamics
 Current flow:
 AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
 
-Aircraft still temporarily mutates Transform directly for normal pitch/turn/bank, then calls AircraftKinetics::Apply(controlInput). This is now the major behavior to replace.
-
-Aerodynamics milestone is COMPLETE for now:
+Aerodynamics already implemented:
+- thrust
 - directional quadratic drag on Forward/Right/Up projections
 - gravity
 - AoA = -atan2(verticalSpeed, forwardSpeed)
 - lift = 0.5 * rho * Vpitch^2 * S * Cl
-- stall curve: linear to 15 deg, then falloff to zero by 90 deg
-- observed powered-flight/glide behavior is plausible
+- stall curve linear to 15 deg, then falloff to zero by 90 deg
 
-Generic vs aircraft-specific resistance:
-- generic KineticBody damping is engine/gameplay resistance and is enabled by default for ordinary bodies
-- AircraftKinetics already owns directional quadratic aerodynamic drag
-- aircraft generic linear/angular damping is explicitly disabled
-- aircraft aerodynamic angular damping will later depend on airflow / dynamic pressure
+Aircraft generic linear/angular damping is disabled; aircraft-specific aerodynamic angular damping will live in AircraftKinetics.
 
-Debug-test state intentionally retained:
-- rotating/torque debug cube remains for rotational-physics tests until no longer needed
-- `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
+## Physical aircraft control torques — IN PROGRESS
+Commit `ce88a7242077c68b169b189f54d158d3a77cfb17` begins replacing direct Transform rotation with torque-based control.
+
+Current implementation:
+- old direct pitch/turn/bank Transform rotation in Aircraft::OnFixedUpdate is commented out
+- AircraftKinetics::Apply builds BODY-space pitch torque on local X only
+- local pitch torque is transformed by aircraft world rotation into WORLD-space
+- resulting world torque is passed to KineticBody::AddTorque
+- separate tuning fields exist for pitch/yaw/roll torque; yaw/roll remain zero for now
+
+Axis mapping:
+- pitch -> local X
+- yaw -> local Y
+- roll -> local Z / forward axis sign handled carefully because Forward is -Z
+
+Current pitch-sign issue:
+- AircraftController currently assigns `controlInput.pitch = rotVal.y`
+- for aircraft-style controls, pulling the stick back/down should pitch the nose UP
+- define semantic control input as `pitch +1 = nose up`, `pitch -1 = nose down`
+- therefore raw stick Y should be inverted once in AircraftController: conceptually `pitch = -rawLeftStickY`
+- do NOT hide this inversion in AircraftKinetics; physics should consume semantic pitch input
+
+Current behavior after torque conversion:
+- pitch torque/body->world conversion works structurally
+- without aircraft-specific angular damping, holding pitch continuously increases angular velocity
+- after releasing the stick, nonzero angular velocity persists, so the aircraft keeps rotating; this is expected, not a physics bug
 
 ## NEXT IMMEDIATE STEP
-Move to physical aircraft control torques:
-- replace temporary direct aircraft pitch/turn/bank Transform rotation
-- choose body-axis torque mapping for pitch/yaw/roll
-- tune per-axis inertia and control authority
-- validate control response without generic damping on the aircraft
-
-Then:
-- add aircraft-specific aerodynamic angular damping in AircraftKinetics
-- add stabilization / bank behavior
-- revisit camera Up behavior after physical bank
-
-Full arbitrary inertia tensor / gyroscopic term remains postponed until justified.
+1. Fix pitch input sign in AircraftController so stick back/down = nose up.
+2. Validate with short pitch taps, including while aircraft is banked/pre-rotated, to confirm torque follows BODY X rather than global X.
+3. Add aircraft-specific aerodynamic angular damping while pitch is still the only active control torque.
+4. Then add yaw and roll torques and tune per-axis authority/inertia.
+5. Add stabilization / bank behavior and revisit camera Up after physical bank.
 
 ## Temporary technical debt
-- normal aircraft pitch/turn/bank still directly mutates Transform
 - evade root displacement bypasses KineticBody
 - evade Body spin is presentation-only
 - Aircraft Body lookup assumes child index 0
@@ -143,6 +112,8 @@ Full arbitrary inertia tensor / gyroscopic term remains postponed until justifie
 - sideslip/beta not modeled
 - no render interpolation
 - camera still uses world Up
+- debug rotating cube remains until rotational tests are no longer useful
+- `m_kb->SetUseGravity(false)` on aircraft is intentional during rotational debugging
 
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
