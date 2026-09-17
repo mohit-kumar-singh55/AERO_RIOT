@@ -26,7 +26,7 @@ public:
 	float GetLinearDamping() const noexcept { return m_linearDamping; }
 
 	void SetLinearDamping(float linearDamping) noexcept {
-		m_linearDamping = std::abs(linearDamping);	// negative not allowed
+		m_linearDamping = std::max(0.0f, linearDamping);	// negative not allowed
 	}
 
 	[[nodiscard]]
