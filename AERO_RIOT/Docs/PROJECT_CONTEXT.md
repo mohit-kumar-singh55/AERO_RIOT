@@ -59,33 +59,23 @@ Torque + scalar inertia milestone is COMPLETE / validated:
 - one-frame torque changes omega once and rotation persists without damping
 - I=2 vs I=4 produced the expected 2:1 angular-acceleration response
 
-## Body-space diagonal inertia — IMPLEMENTED, ONE BUG FOUND
-Commit `146b4026da29dba4a355e068bc6d6309151fc545` changed scalar inertia to Vector3 and added the correct coordinate-space structure:
+## Body-space diagonal inertia — COMPLETE / validated
+Commit `146b4026da29dba4a355e068bc6d6309151fc545` changed scalar inertia to Vector3 and added body-space inertia handling. Commit `0c483d3c3b5d00e1b42c450015265e6ae57a9b46` fixed the local angular-acceleration calculation to use inverse inertia.
 
-`world torque -> inverse world rotation -> local torque -> apply per-axis inverse inertia -> local angular acceleration -> world rotation -> world angular acceleration -> world angular velocity`
+Current path:
+`world torque -> inverse world rotation -> local torque -> component-wise inverse inertia -> local angular acceleration -> world rotation -> world angular acceleration -> world angular velocity`
 
-The world/local conversion itself is correct.
+Key properties:
+- `m_momentOfInertia` is BODY/LOCAL-space principal-axis inertia
+- `m_inverseMomentOfInertia` is computed component-wise
+- accumulated torque remains WORLD-space
+- local torque is obtained using inverse body/world rotation
+- local angular acceleration uses `torque * inverseInertia`
+- local angular acceleration is transformed back to WORLD-space before updating world angular velocity
 
-However, current code calculates local angular acceleration with `m_momentOfInertia` instead of `m_inverseMomentOfInertia`:
+Validated with a pre-rotated debug cube and non-uniform inertia `I=(1,2,4)`. Rotation around local Z is much slower than X/Y under comparable torque, matching the expected larger Z inertia. Body-axis behavior remains tied to the object's local axes rather than global XYZ.
 
-```cpp
-localAngularAcc.x = localTorque.x * m_momentOfInertia.x;
-localAngularAcc.y = localTorque.y * m_momentOfInertia.y;
-localAngularAcc.z = localTorque.z * m_momentOfInertia.z;
-```
-
-This is physically reversed. It must conceptually be `alpha = torque / I`, i.e. component-wise multiplication by inverse inertia. With I=(1,2,4), a given local torque should produce acceleration ratios 1, 1/2, 1/4, not 1,2,4.
-
-Current setter already computes `m_inverseMomentOfInertia = 1.0f / m_momentOfInertia`, so the intended inverse values are available.
-
-Validation after the fix:
-- keep the body pre-rotated so local and world axes differ
-- use I=(1,2,4)
-- apply equal torque magnitude around one BODY axis at a time
-- expected angular-acceleration magnitudes: local X = 4, local Y = 2, local Z = 1 for torque magnitude 4
-- those ratios should stay tied to BODY axes regardless of world orientation
-
-Do not mark diagonal inertia complete until the inverse-inertia fix and this body-axis validation pass.
+This is still a simplified diagonal-inertia model. Full gyroscopic coupling / arbitrary inertia tensor is deliberately postponed. The complete rigid-body relation `tau = I*alpha + omega x (I*omega)` is not yet implemented.
 
 ## Aircraft architecture / aerodynamics
 Current flow:
@@ -102,19 +92,26 @@ Aerodynamics milestone is COMPLETE for now:
 - observed powered-flight/glide behavior is plausible
 
 Debug-test state intentionally retained:
-- rotating/torque debug cube remains until rotational physics tests are complete
+- rotating/torque debug cube remains for the next rotational-physics tests
 - `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
 
 ## NEXT IMMEDIATE STEP
-Fix diagonal inertia to use inverse inertia component-wise, then validate body-axis response on the pre-rotated cube.
+Add a simple angular damping / rotational drag layer before moving aircraft controls onto torque.
 
-After diagonal inertia is complete, likely next progression:
-- angular damping / aerodynamic rotational damping as needed
-- aircraft control torques
-- stabilization / bank behavior
+Reason: current angular velocity persists forever after torque stops, which is correct for an ideal isolated rigid body but not useful for an aircraft in air. The next lesson should distinguish:
+- generic numerical/gameplay angular damping
+- physically motivated aerodynamic rotational damping
+
+Start with a simple controlled damping model and validate it on the debug cube, then use the same rotational state for aircraft control torques.
+
+After damping:
+- replace temporary direct aircraft pitch/turn/bank with control torques
+- choose body-axis torque mapping for pitch/yaw/roll
+- tune per-axis inertia/control authority
+- add stabilization / bank behavior
 - revisit camera Up behavior after physical bank
 
-Full arbitrary inertia tensor / gyroscopic term `omega x (I omega)` is deliberately postponed until justified.
+Full arbitrary inertia tensor / gyroscopic term remains postponed until justified.
 
 ## Temporary technical debt
 - normal aircraft pitch/turn/bank still directly mutates Transform
