@@ -47,12 +47,16 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	Quaternion inverseRotation;
 	worldRotation.Inverse(inverseRotation);
 
+	// apply angular damping
+	if (m_useAngularDamping) {
+		const Vector3 localAngularAcc = Vector3::Transform(m_angularAcceleration, inverseRotation);
+		const Vector3 localDampingTorque = -localAngularAcc * m_angularDamping;
+		const Vector3 worldDampingTorque = Vector3::Transform(localDampingTorque, worldRotation);
+		AddTorque(worldDampingTorque);	// add the damping torque to the accumulated torque
+	}
+
 	const Vector3 localTorque = Vector3::Transform(m_accumulatedTorque, inverseRotation);
-	const Vector3 localAngularAcc{
-		localTorque.x * m_inverseMomentOfInertia.x,
-		localTorque.y * m_inverseMomentOfInertia.y,
-		localTorque.z * m_inverseMomentOfInertia.z,
-	};
+	const Vector3 localAngularAcc = localTorque * m_inverseMomentOfInertia;
 
 	// convert back to world angular acc.
 	m_angularAcceleration = Vector3::Transform(localAngularAcc, worldRotation);

@@ -46,7 +46,17 @@ public:
 	//void AddForceAtPoint(Vector3 point, ForceMode mode = ForceMode::Explosive);
 
 	[[nodiscard]]
+	bool GetUseAngularDamping() const noexcept { return m_useAngularDamping; }
+
+	void SetUseAngularDamping(const bool useAngularDamping) noexcept { m_useAngularDamping = useAngularDamping; }
+
+	[[nodiscard]]
 	Vector3 GetMomentOfInertia() const noexcept { return m_momentOfInertia; }
+
+	[[nodiscard]]
+	Vector3 GetAngularDamping() const noexcept { return m_angularDamping; }
+
+	void SetAngularDamping(const Vector3 angularDamping) noexcept { m_angularDamping = angularDamping; }
 
 	void SetMomentOfInertia(const Vector3 moi) noexcept {
 		m_momentOfInertia.x = moi.x < MIN_MOI ? MIN_MOI : moi.x;
@@ -85,10 +95,15 @@ private:
 	Vector3 m_linearAcceleration = Vector3::Zero;
 	Vector3 m_accumulatedForce = Vector3::Zero;
 
-	// inertia is in local space
+	// local space (body-space)
+	bool m_useAngularDamping = true;
+	Vector3 m_angularDamping = Vector3::One;	// damping coefficients
+
+	// local space (body-space)
 	Vector3 m_momentOfInertia = Vector3::One;
 	Vector3 m_inverseMomentOfInertia = Vector3::One;
 
+	// world-space
 	Vector3 m_angularVelocity = Vector3::Zero;	// radians/sec on respective axis
 	Vector3 m_angularAcceleration = Vector3::Zero;
 	Vector3 m_accumulatedTorque = Vector3::Zero;
