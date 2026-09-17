@@ -67,22 +67,24 @@ Yaw:
 - yaw damping is `-localAngularVelocity.y * yawDamping * dynamicPressure`
 - current test values: yawTorque=10, yawDamping=1
 - gravity is enabled again for aircraft testing
-- yaw implementation itself is structurally correct; no intentional local Z/roll torque is added
+- yaw implementation is structurally correct; no intentional local Z/roll torque is added
 
-## Current yaw/roll observation — DIAGNOSTIC PENDING
-Observed behavior: holding yaw seems correct initially, then after some time the aircraft appears to develop roll/bank.
+## Yaw cross-axis diagnostic — CONFIRMED
+Observed: holding yaw for a while seemed to develop roll/bank.
 
-Do not change physics yet. First isolate the cause:
-1. Start from a fresh scene and temporarily force pitch input/torque contribution to zero while testing yaw.
-2. Hold pure yaw only.
-3. If the apparent roll disappears, the likely cause is small simultaneous pitch input from the same analog stick / combined-axis rotation. DirectXTK uses a circular dead zone, which removes center drift but does not guarantee the perpendicular stick axis is exactly zero while the stick is held sideways.
-4. If roll still appears, inspect/display local angular velocity X/Y/Z, especially Z.
-5. If local omega.z stays near zero while the aircraft looks rolled, investigate orientation representation / camera perception rather than a real roll torque.
-6. If local omega.z actually grows, investigate rotational integration/state before adding roll control.
+Diagnostic result:
+- setting pitch torque to zero makes the apparent roll disappear
+- therefore yaw torque itself is not the source
+- the left stick feeds both pitch and yaw; DirectXTK circular dead zone removes center drift but still allows a small perpendicular Y component while the stick is held mostly sideways
+- with pitchTorque=20 and yawTorque=10, even a small unintended pitch input can accumulate noticeably over time
+- simultaneous pitch+yaw produces a combined rotation/orientation that can visually resemble bank even without explicit local-Z torque
 
-Important: simultaneous pitch + yaw rotations can produce an attitude that looks banked even with no explicit Z torque; body angular velocity components are not the same thing as independent Euler-angle sliders.
+Recommended game-oriented input fix before adding roll:
+- keep circular dead zone for normal stick feel, but add a small per-axis/axial dead zone (or equivalent input shaping) in AircraftController so tiny perpendicular components are zeroed
+- do not snap all diagonal input away; intentional diagonal pitch+yaw should still work
+- tune the axial threshold by feel rather than realism, likely small enough to suppress cross-talk without making the stick feel notchy
 
-Camera note: AircraftCameraController currently calls LookAt with WORLD Up, so the camera itself does not roll with the aircraft. This can make aircraft attitude/bank more visually obvious but does not create physical roll.
+Camera note: AircraftCameraController still uses WORLD Up in LookAt, so the camera does not roll with the aircraft. This can make attitude/bank more visually obvious but does not create physical roll.
 
 ## Aircraft aerodynamic pitch/yaw damping
 Dynamic pressure currently uses translational speed only:
@@ -92,12 +94,13 @@ This is sufficient for the current game model.
 With gravity disabled, a stationary aircraft could receive control torque while q=0 and retain angular velocity. With gravity enabled, the aircraft falls, gains speed, and damping starts working naturally. This is acceptable; do not deepen into rotational surface-airflow simulation unless gameplay justifies it.
 
 ## NEXT IMMEDIATE STEP
-1. Run the pure-yaw diagnostic above before changing the yaw model.
-2. Once yaw behavior is understood, add physical roll torque on local Z.
-3. Add roll aerodynamic damping.
-4. Tune pitch/yaw/roll authority and damping for fun, responsive dogfighting rather than strict realism.
-5. Add stabilization / coordinated bank behavior only where it improves control feel.
-6. Revisit camera Up behavior after physical bank.
+1. Add small per-axis input dead-zone/shaping for left-stick pitch/yaw cross-talk.
+2. Re-test pure yaw with pitch torque restored.
+3. Once yaw remains clean, add physical roll torque on local Z.
+4. Add roll aerodynamic damping.
+5. Tune pitch/yaw/roll authority and damping for fun, responsive dogfighting rather than strict realism.
+6. Add stabilization / coordinated bank behavior only where it improves control feel.
+7. Revisit camera Up behavior after physical bank.
 
 Possible future fidelity upgrades (only if justified by gameplay): airspeed-based control authority curves, rotational-flow damping from omega x r, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
 
