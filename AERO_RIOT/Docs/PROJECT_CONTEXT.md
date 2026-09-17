@@ -9,6 +9,11 @@ AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn 
 
 The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical.
 
+### Game-first design rule
+AERO_RIOT is a GAME, not a full flight simulator. Physics should be believable enough to create satisfying, readable, exciting flight, but realism is not a goal by itself.
+
+At meaningful complexity points, explicitly ask: **"Are we going deeper than the game needs?"** Only add extra physical fidelity if it improves gameplay feel, control, readability, tuning, debugging, or learning value that is worth the complexity. Prefer tuned arcade/physical behavior over simulation detail that adds player stress or implementation burden without clear gameplay payoff.
+
 ## Core engine / lifecycle
 Ownership: Game -> SceneManager -> Scene -> GameObjectManager -> GameObject -> Component.
 Fixed simulation: gameplay/components submit forces/torques, then Kinetics integrates at fixed 1/60 s.
@@ -61,7 +66,7 @@ Current tuning after commit `54208bb0be84aa153b5bd8442efd1af7dbce9466`:
 - pitchDamping = 1
 These are test/tuning values, not final aircraft data.
 
-## Aircraft aerodynamic pitch damping — STRUCTURALLY CORRECT
+## Aircraft aerodynamic pitch damping — WORKING
 Commit `54208bb0be84aa153b5bd8442efd1af7dbce9466` fixed pitch damping to use actual local pitch angular velocity.
 
 Current path:
@@ -69,27 +74,24 @@ Current path:
 
 Dynamic pressure currently uses translational speed only:
 `q = 0.5 * airDensity * linearVelocity.LengthSquared()`.
-This is appropriate for the current simple no-wind model and works while the aircraft is moving.
+This works while the aircraft is moving.
 
-Important limitation exposed by testing:
-- at zero linear velocity, q = 0, so this aerodynamic pitch damping becomes zero
-- the aircraft can still rotate in the current test because pitch control torque is currently available even at zero airspeed
-- therefore a stationary aircraft can acquire angular velocity and keep rotating forever in this temporary model
-- this is not a bug in the corrected damping code; it is a mismatch between simplified aerodynamic damping and speed-independent control torque
-- real rotating geometry in still air would also experience some rotational aerodynamic resistance because different parts sweep through the air, but that requires a more detailed rotational-airflow model than the current translational-q approximation
-
-Do not patch this by re-enabling generic angular damping on the aircraft unless intentionally choosing an arcade baseline. For current learning progression, keep generic aircraft damping disabled so aerodynamic behavior stays visible.
+Testing note:
+- with gravity disabled, a stationary test aircraft can still receive pitch torque while q=0, so it can keep rotating because aero damping is zero
+- once gravity is enabled, the aircraft falls, gains linear velocity, and the current damping starts working naturally even without throttle
+- this behavior is acceptable for the current game model; do NOT add a more detailed rotational-airflow model unless gameplay later justifies it
+- similarly, do not automatically make all control authority fully airspeed-dependent just for realism; only do so if needed for good flight feel
 
 ## NEXT IMMEDIATE STEP
-Decide how aircraft control authority should behave with airspeed before expanding all axes.
-Recommended progression:
-1. Keep current pitch damping model as the moving-aircraft aerodynamic damping foundation.
-2. Make aerodynamic control torque itself depend on airflow/dynamic pressure (or a controlled gameplay curve), so at zero airspeed normal aerodynamic pitch authority becomes weak/zero rather than allowing free in-place rotation.
-3. Validate pitch response across low/medium/high speed.
-4. Then add yaw and roll control torques with per-axis aerodynamic damping.
-5. Add stabilization/bank behavior and revisit camera Up after physical bank.
+Continue the game-oriented control model rather than deepening the simulator model:
+1. Keep current pitch torque + aerodynamic pitch damping foundation.
+2. Add yaw and roll control torques one axis at a time.
+3. Add corresponding per-axis aerodynamic angular damping.
+4. Tune pitch/yaw/roll authority and damping for fun, responsive dogfighting rather than strict realism.
+5. Add stabilization / bank behavior where it improves control feel.
+6. Revisit camera Up behavior after physical bank.
 
-Possible future fidelity upgrade, only if justified: rotational-flow damping based on local surface velocity from angular motion, rather than relying only on center-of-mass translational airspeed.
+Possible future fidelity upgrades (only if justified by gameplay): airspeed-based control authority curves, rotational-flow damping from omega x r, gyroscopic coupling, arbitrary inertia tensor, more detailed aerodynamic surfaces.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
@@ -102,7 +104,6 @@ Possible future fidelity upgrade, only if justified: rotational-flow damping bas
 - no render interpolation
 - camera still uses world Up
 - debug rotating cube remains until no longer useful
-- aircraft gravity is intentionally disabled during current rotational debugging
 
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
