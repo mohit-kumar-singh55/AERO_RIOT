@@ -56,34 +56,40 @@ Input semantics:
 Pitch control torque path is structurally correct:
 `pitch input -> local X torque -> aircraft rotation -> world torque -> KineticBody::AddTorque`.
 
-## Aircraft aerodynamic angular damping — CURRENT REVIEW
-Commit `d4a497f4c5a5dd133ae3fee66ba818219b1b34c4` added dynamic-pressure-based pitch damping attempt.
+Current tuning after commit `54208bb0be84aa153b5bd8442efd1af7dbce9466`:
+- pitchTorque = 20
+- pitchDamping = 1
+These are test/tuning values, not final aircraft data.
 
-Correct part:
-- `dynamicPressure = 0.5 * airDensity * linearVelocity.LengthSquared()` is appropriate for the current no-wind model
-- damping belongs in AircraftKinetics, not generic KineticBody
-- damping torque should be authored in body space then transformed to world before AddTorque
+## Aircraft aerodynamic pitch damping — STRUCTURALLY CORRECT
+Commit `54208bb0be84aa153b5bd8442efd1af7dbce9466` fixed pitch damping to use actual local pitch angular velocity.
 
-Bug found:
-- current damping uses `localTorque.x` (the player control torque) instead of current local pitch angular velocity
-- therefore damping only exists while input torque exists; releasing the stick makes damping zero and the aircraft keeps rotating
-- at speed, the damping term can also directly overpower/reverse the control torque because it is proportional to control torque rather than rotation rate
+Current path:
+`world angular velocity -> inverse aircraft rotation -> local angular velocity -> omegaLocal.x -> damping torque = -omegaLocal.x * pitchDamping * dynamicPressure -> transform to world -> AddTorque`.
 
-Correct conceptual path:
-`world angular velocity -> inverse aircraft rotation -> local angular velocity -> local pitch rate omega.x -> pitch damping torque = -omega.x * pitchDamping * dynamicPressure -> world torque -> AddTorque`.
+Dynamic pressure currently uses translational speed only:
+`q = 0.5 * airDensity * linearVelocity.LengthSquared()`.
+This is appropriate for the current simple no-wind model and works while the aircraft is moving.
 
-No deltaTime should be multiplied into the damping torque; KineticBody integration applies dt later.
+Important limitation exposed by testing:
+- at zero linear velocity, q = 0, so this aerodynamic pitch damping becomes zero
+- the aircraft can still rotate in the current test because pitch control torque is currently available even at zero airspeed
+- therefore a stationary aircraft can acquire angular velocity and keep rotating forever in this temporary model
+- this is not a bug in the corrected damping code; it is a mismatch between simplified aerodynamic damping and speed-independent control torque
+- real rotating geometry in still air would also experience some rotational aerodynamic resistance because different parts sweep through the air, but that requires a more detailed rotational-airflow model than the current translational-q approximation
 
-Current `m_pitchDamping = 5.0f` may be strong depending on speed/inertia. Tune only after the formula is corrected. With explicit Euler integration, very large damping relative to inertia and fixed dt can overshoot/reverse angular velocity.
+Do not patch this by re-enabling generic angular damping on the aircraft unless intentionally choosing an arcade baseline. For current learning progression, keep generic aircraft damping disabled so aerodynamic behavior stays visible.
 
 ## NEXT IMMEDIATE STEP
-1. Fix aerodynamic pitch damping to use local angular velocity X, not local control torque X.
-2. Test while moving: release pitch stick and verify pitch rate decays toward zero.
-3. Test near zero airspeed: aerodynamic damping should become weak/nearly zero.
-4. Tune pitch damping coefficient only after behavior is structurally correct.
-5. Then add yaw and roll control torques and corresponding aerodynamic angular damping.
-6. Later make control authority itself speed-dependent, because current torque-based control still works at zero airspeed.
-7. Add stabilization/bank behavior and revisit camera Up after physical bank.
+Decide how aircraft control authority should behave with airspeed before expanding all axes.
+Recommended progression:
+1. Keep current pitch damping model as the moving-aircraft aerodynamic damping foundation.
+2. Make aerodynamic control torque itself depend on airflow/dynamic pressure (or a controlled gameplay curve), so at zero airspeed normal aerodynamic pitch authority becomes weak/zero rather than allowing free in-place rotation.
+3. Validate pitch response across low/medium/high speed.
+4. Then add yaw and roll control torques with per-axis aerodynamic damping.
+5. Add stabilization/bank behavior and revisit camera Up after physical bank.
+
+Possible future fidelity upgrade, only if justified: rotational-flow damping based on local surface velocity from angular motion, rather than relying only on center-of-mass translational airspeed.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
