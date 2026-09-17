@@ -20,6 +20,17 @@ void AircraftKinetics::OnInitialize() {
 
 void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
 	const auto& transform = GetTransform();
+
+	// ! apply rotation
+	const Vector3 localTorque = {
+		controlInput.pitch * m_pitchTorque,
+		0.0f,
+		0.0f
+	};
+	// convert to world-space
+	const Vector3 worldTorque = Vector3::Transform(localTorque, transform.GetRotation());
+	m_kb->AddTorque(worldTorque);
+
 	// ! apply thrust
 	const Vector3 thrust =
 		transform.GetForward()

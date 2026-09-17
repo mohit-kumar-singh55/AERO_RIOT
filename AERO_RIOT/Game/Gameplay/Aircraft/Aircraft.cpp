@@ -27,16 +27,16 @@ void Aircraft::OnFixedUpdate() {
 	using DirectX::SimpleMath::Vector3;
 
 	// ? temp direct rotation
-	auto& transform = GetTransform();
+	//auto& transform = GetTransform();
 
-	// rotation
-	float speedDelta = m_rotationSpeed * Time::FixedDeltaTime();
-	transform.RotateEulerDegrees({
-		-m_controlInput.pitch * speedDelta,
-		-m_controlInput.turn * speedDelta,
-		-m_controlInput.turn * speedDelta
-		});
-	// ? *********************
+	//// rotation
+	//float speedDelta = m_rotationSpeed * Time::FixedDeltaTime();
+	//transform.RotateEulerDegrees({
+	//	-m_controlInput.pitch * speedDelta,
+	//	-m_controlInput.turn * speedDelta,
+	//	-m_controlInput.turn * speedDelta
+	//	});
+	//// ? *********************
 
 	m_aircraftKinetics->Apply(m_controlInput);
 }

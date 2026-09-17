@@ -36,4 +36,9 @@ private:
 	float m_wingArea = 2.0f;
 	float m_liftSlope = 4.0f;	// per radian
 	float m_stallAngle = DirectX::XMConvertToRadians(15.0f);
+
+	// control torque
+	float m_pitchTorque = 10.0f;
+	float m_yawTorque = 0.0f;
+	float m_rollTorque = 0.0f;
 };
