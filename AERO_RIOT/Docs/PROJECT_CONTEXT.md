@@ -23,12 +23,13 @@ Transform conventions:
 - local Forward = (0,0,-1), Right = (1,0,0), Up = (0,1,0)
 - Transform::GetForward/Right/Up return world-space directions
 - Transform normalizes stored rotations
-- current angular velocity and accumulated torque convention is WORLD-space
+- current linear/angular velocities and accumulated force/torque are WORLD-space
 
 ## Kinetics / KineticBody
 Current linear state:
 - mass / inverse mass
-- linear velocity, linear acceleration, accumulated force
+- world-space linear velocity and acceleration
+- world-space accumulated force
 - useGravity + gravityScale
 
 Linear integration:
@@ -42,80 +43,54 @@ Current angular state:
 - world-space angular velocity
 - world-space angular acceleration
 - world-space accumulated torque
-- optional generic angular damping settings are now being added
+- optional generic angular damping using body-space coefficients
 
-Angular velocity integration is COMPLETE:
-- omega is rad/s, world-space
-- angleThisStep = |omega| * dt
-- axis = normalize(omega)
-- orientation integrates via axis-angle quaternion
+## Rotational physics milestones
+Angular velocity integration — COMPLETE / validated:
+- omega in rad/s, world-space
+- orientation integrates by axis-angle quaternion from `|omega| * dt`
 - pre-rotated cube confirmed global-Y omega rotates around GLOBAL Y
 - near-zero threshold is 0.001^2
 
-Torque + scalar inertia milestone is COMPLETE / validated:
+Torque + scalar inertia — COMPLETE / validated:
 - AddTorque accumulates until integration
 - alpha = torque / I
 - omega += alpha * dt
 - accumulated torque clears once per fixed step
 - one-frame torque changes omega once and rotation persists without damping
-- I=2 vs I=4 produced the expected 2:1 angular-acceleration response
+- I=2 vs I=4 produced expected 2:1 angular-acceleration response
 
-## Body-space diagonal inertia — COMPLETE / validated
-Commit `146b4026da29dba4a355e068bc6d6309151fc545` changed scalar inertia to Vector3 and added body-space inertia handling. Commit `0c483d3c3b5d00e1b42c450015265e6ae57a9b46` fixed local angular acceleration to use inverse inertia.
+Body-space diagonal inertia — COMPLETE / validated:
+- `m_momentOfInertia` and inverse are Vector3 in BODY/LOCAL axes
+- path: world torque -> local torque -> component-wise inverse inertia -> local angular acceleration -> world angular acceleration -> world angular velocity
+- validated with pre-rotated cube and I=(1,2,4); local Z rotates much more slowly under comparable torque
+- full gyroscopic coupling / arbitrary inertia tensor is deliberately postponed
 
-Current path:
-`world torque -> inverse world rotation -> local torque -> component-wise inverse inertia -> local angular acceleration -> world rotation -> world angular acceleration -> world angular velocity`
+Generic angular damping — COMPLETE / validated:
+- initially added in `b67e9f1bf4a029fb1e6be42c2530f58a43ee18b7`
+- fixed in `9ea75dc95b386d679c28508551cb597f841065af` to damp angular VELOCITY rather than angular acceleration
+- body-space damping coefficients
+- conceptual model: local damping torque = `-localAngularVelocity * angularDamping`
+- damping torque is transformed back to world space and added to accumulated torque, so inertia still governs the response
+- OFF: one-frame torque leaves persistent angular velocity
+- ON: angular velocity decays toward zero
+- recommended generic default is no damping / opt-in; aircraft will disable generic angular damping and later use airflow-dependent aerodynamic rotational damping in AircraftKinetics
 
-Key properties:
-- `m_momentOfInertia` is BODY/LOCAL-space principal-axis inertia
-- `m_inverseMomentOfInertia` is computed component-wise
-- accumulated torque remains WORLD-space
-- local torque is obtained using inverse body/world rotation
-- local angular acceleration uses `torque * inverseInertia`
-- local angular acceleration is transformed back to WORLD-space before updating world angular velocity
+## Generic linear damping vs aerodynamic drag — NEXT DESIGN STEP
+There should be a linear-motion counterpart in KineticBody, but call it generic `linear damping` rather than aerodynamic drag.
 
-Validated with a pre-rotated debug cube and non-uniform inertia `I=(1,2,4)`. Rotation around local Z is much slower than X/Y under comparable torque, matching the expected larger Z inertia.
+Generic KineticBody linear damping:
+- engine/gameplay convenience for arbitrary rigid bodies
+- should oppose current linear velocity
+- simplest force model: `F_damping = -k * v`
+- should feed through AddForce / accumulated force so mass still governs acceleration
+- default should be zero / opt-in
+- may be isotropic scalar for simplest generic behavior, or body-space Vector3 if per-axis damping is intentionally desired
 
-This remains a simplified diagonal-inertia model. Full gyroscopic coupling / arbitrary inertia tensor is deliberately postponed. The complete rigid-body relation `tau = I*alpha + omega x (I*omega)` is not yet implemented.
-
-## Generic angular damping — IMPLEMENTED, BUG FOUND IN REVIEW
-Commit `b67e9f1bf4a029fb1e6be42c2530f58a43ee18b7` added:
-- `m_useAngularDamping`
-- body-space `m_angularDamping` coefficients
-- getter/setter API
-- an internal damping torque contribution during KineticBody integration
-
-Architecture decision:
-- KineticBody may provide optional generic angular damping for reusable rigid bodies
-- aircraft will eventually disable generic damping and use aircraft-specific aerodynamic rotational damping in `AircraftKinetics`
-- generic damping coefficients are body-space/per-axis
-
-Intended damping model:
-`localDampingTorque = -localAngularVelocity * dampingCoefficients`
-then transform damping torque back to world space and add it to the normal accumulated torque before the diagonal-inertia calculation.
-
-Current bug in commit `b67e9f1...`:
-- the damping code transforms `m_angularAcceleration` into local space and damps that
-- damping must oppose `m_angularVelocity`, not angular acceleration
-- because of this, the first damping frame can produce zero damping and subsequent behavior reacts to previous acceleration rather than continuously resisting spin
-
-Correct conceptual path:
-`world angular velocity -> inverse rotation -> local angular velocity -> -omegaLocal * dampingCoefficients -> world damping torque -> accumulated torque -> normal inertia/integration path`
-
-The body-space/world-space conversion structure is otherwise appropriate.
-
-For a useful debug test after the fix:
-- apply a one-frame torque to the cube
-- with damping OFF: angular velocity should persist indefinitely
-- reset, repeat with damping ON: angular velocity should decay toward zero
-- with current I=(1,2,4) and damping around 1, decay can take several seconds; this is expected rather than an instant stop
-- larger damping coefficient should stop rotation faster
-- negative damping coefficients should be avoided because they add energy; consider clamping coefficients non-negative later
-
-## Generic vs aircraft-specific damping
-Generic KineticBody damping is an engine/gameplay convenience and may operate even without airflow.
-
-Aircraft aerodynamic angular damping is different and belongs in `AircraftKinetics`. It should eventually depend on relative airflow / dynamic pressure, e.g. stronger at high airspeed and weak near zero airspeed. Generic damping should therefore be disabled on the aircraft once the aircraft-specific model exists.
+Aircraft aerodynamic drag is different and already belongs in AircraftKinetics:
+- current aircraft model uses body-axis signed speed projections and quadratic directional drag
+- depends on aircraft orientation and velocity, and eventually relative airflow / atmospheric properties
+- generic KineticBody linear damping should be disabled for the aircraft once used, to avoid double-counting resistance
 
 ## Aircraft architecture / aerodynamics
 Current flow:
@@ -136,18 +111,16 @@ Debug-test state intentionally retained:
 - `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
 
 ## NEXT IMMEDIATE STEP
-Fix generic angular damping to use local angular velocity rather than local angular acceleration, then validate OFF vs ON behavior with a one-frame torque on the debug cube.
+Decide and implement generic KineticBody linear damping, analogous to generic angular damping but acting on linear velocity through a force contribution.
 
-After generic damping is validated:
-- disable generic angular damping for the aircraft
+Then:
+- disable generic linear/angular damping for the aircraft
 - replace temporary direct aircraft pitch/turn/bank with physical control torques
 - choose body-axis torque mapping for pitch/yaw/roll
 - tune per-axis inertia/control authority
 - add aircraft-specific aerodynamic angular damping in AircraftKinetics when useful
 - add stabilization / bank behavior
 - revisit camera Up behavior after physical bank
-
-Full arbitrary inertia tensor / gyroscopic term remains postponed until justified.
 
 ## Temporary technical debt
 - normal aircraft pitch/turn/bank still directly mutates Transform
