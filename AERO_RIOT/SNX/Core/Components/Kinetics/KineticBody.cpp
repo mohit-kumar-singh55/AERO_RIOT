@@ -49,9 +49,9 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 
 	const Vector3 localTorque = Vector3::Transform(m_accumulatedTorque, inverseRotation);
 	const Vector3 localAngularAcc{
-		localTorque.x * m_momentOfInertia.x,
-		localTorque.y * m_momentOfInertia.y,
-		localTorque.z * m_momentOfInertia.z,
+		localTorque.x * m_inverseMomentOfInertia.x,
+		localTorque.y * m_inverseMomentOfInertia.y,
+		localTorque.z * m_inverseMomentOfInertia.z,
 	};
 
 	// convert back to world angular acc.
