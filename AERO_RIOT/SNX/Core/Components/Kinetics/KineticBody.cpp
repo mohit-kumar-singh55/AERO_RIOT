@@ -38,7 +38,24 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	GetTransform().SetPosition(position);
 
 	// ! angular
-	m_angularAcceleration = m_accumulatedTorque * m_inverseMomentOfInertia;
+	/*
+	* because moi is in local space
+	* we first need to convert torque into local space,
+	* then calc. local angular acc. and convert it back to world space
+	*/
+	Quaternion worldRotation = transform.GetRotation();
+	Quaternion inverseRotation;
+	worldRotation.Inverse(inverseRotation);
+
+	const Vector3 localTorque = Vector3::Transform(m_accumulatedTorque, inverseRotation);
+	const Vector3 localAngularAcc{
+		localTorque.x * m_momentOfInertia.x,
+		localTorque.y * m_momentOfInertia.y,
+		localTorque.z * m_momentOfInertia.z,
+	};
+
+	// convert back to world angular acc.
+	m_angularAcceleration = Vector3::Transform(localAngularAcc, worldRotation);
 	m_angularVelocity += m_angularAcceleration * fixedDeltaTime;
 
 	float angularVelocitySquared = m_angularVelocity.Dot(m_angularVelocity);
@@ -50,7 +67,7 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 		transform.SetRotation(Quaternion::Concatenate(deltaRotation, transform.GetRotation()));
 	}
 
-	// clear the accumulated forces
+	// ! clear the accumulated forces
 	m_accumulatedForce = Vector3::Zero;
 	m_accumulatedTorque = Vector3::Zero;
 }
