@@ -12,7 +12,7 @@ The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN
 ### Game-first design rule
 AERO_RIOT is a GAME, not a full flight simulator. Physics should be believable enough to create satisfying, readable, exciting flight, but realism is not a goal by itself.
 
-At meaningful complexity points, explicitly ask: **"Are we going deeper than the game needs?"** Only add extra physical fidelity if it improves gameplay feel, control, readability, tuning, debugging, or learning value that is worth the complexity. Prefer tuned arcade/physical behavior over simulation detail that adds player stress or implementation burden without clear gameplay payoff.
+At meaningful complexity points, explicitly ask: **"Are we going deeper than the game needs?"** Only add extra physical fidelity if it improves gameplay feel, control, readability, tuning, debugging, or worthwhile learning value. Prefer tuned arcade/physical behavior over simulation detail that adds stress or complexity without clear payoff.
 
 ## Core engine / lifecycle
 Ownership: Game -> SceneManager -> Scene -> GameObjectManager -> GameObject -> Component.
@@ -47,8 +47,6 @@ Generic angular damping: local torque `-omegaLocal * angularDamping` transformed
 - stall curve linear to 15 deg then falloff to zero by 90 deg
 
 ## Physical aircraft control torques — IN PROGRESS
-Commit `ce88a7242077c68b169b189f54d158d3a77cfb17` replaced direct normal pitch rotation with body-space pitch torque in AircraftKinetics.
-
 Control axis mapping:
 - pitch -> local X
 - yaw -> local Y
@@ -56,42 +54,55 @@ Control axis mapping:
 
 Input semantics:
 - `controlInput.pitch +1 = nose up`
-- commit `d4a497f4c5a5dd133ae3fee66ba818219b1b34c4` inverted raw gamepad Y in AircraftController so pulling stick back/down gives positive pitch-up input
+- raw gamepad Y is inverted in AircraftController so pulling stick back/down gives positive pitch-up input
 
-Pitch control torque path is structurally correct:
-`pitch input -> local X torque -> aircraft rotation -> world torque -> KineticBody::AddTorque`.
+Pitch:
+- commit `ce88a7242077c68b169b189f54d158d3a77cfb17` replaced direct pitch Transform rotation with body-space torque
+- current test tuning after `54208bb0be84aa153b5bd8442efd1af7dbce9466`: pitchTorque=20, pitchDamping=1
+- pitch damping uses local angular velocity X and dynamic pressure; structurally correct and working while moving
 
-Current tuning after commit `54208bb0be84aa153b5bd8442efd1af7dbce9466`:
-- pitchTorque = 20
-- pitchDamping = 1
-These are test/tuning values, not final aircraft data.
+Yaw:
+- commit `c1e25aca50b5d3e963a9d929e90c7f76c136d142` added body-space yaw torque and yaw aerodynamic damping
+- yaw control torque is `-controlInput.turn * yawTorque` on local Y
+- yaw damping is `-localAngularVelocity.y * yawDamping * dynamicPressure`
+- current test values: yawTorque=10, yawDamping=1
+- gravity is enabled again for aircraft testing
+- yaw implementation is structurally correct; no intentional local Z/roll torque is added
 
-## Aircraft aerodynamic pitch damping — WORKING
-Commit `54208bb0be84aa153b5bd8442efd1af7dbce9466` fixed pitch damping to use actual local pitch angular velocity.
+## Yaw cross-axis diagnostic — CONFIRMED
+Observed: holding yaw for a while seemed to develop roll/bank.
 
-Current path:
-`world angular velocity -> inverse aircraft rotation -> local angular velocity -> omegaLocal.x -> damping torque = -omegaLocal.x * pitchDamping * dynamicPressure -> transform to world -> AddTorque`.
+Diagnostic result:
+- setting pitch torque to zero makes the apparent roll disappear
+- therefore yaw torque itself is not the source
+- the left stick feeds both pitch and yaw; DirectXTK circular dead zone removes center drift but still allows a small perpendicular Y component while the stick is held mostly sideways
+- with pitchTorque=20 and yawTorque=10, even a small unintended pitch input can accumulate noticeably over time
+- simultaneous pitch+yaw produces a combined rotation/orientation that can visually resemble bank even without explicit local-Z torque
 
+Recommended game-oriented input fix before adding roll:
+- keep circular dead zone for normal stick feel, but add a small per-axis/axial dead zone (or equivalent input shaping) in AircraftController so tiny perpendicular components are zeroed
+- do not snap all diagonal input away; intentional diagonal pitch+yaw should still work
+- tune the axial threshold by feel rather than realism, likely small enough to suppress cross-talk without making the stick feel notchy
+
+Camera note: AircraftCameraController still uses WORLD Up in LookAt, so the camera does not roll with the aircraft. This can make attitude/bank more visually obvious but does not create physical roll.
+
+## Aircraft aerodynamic pitch/yaw damping
 Dynamic pressure currently uses translational speed only:
 `q = 0.5 * airDensity * linearVelocity.LengthSquared()`.
-This works while the aircraft is moving.
+This is sufficient for the current game model.
 
-Testing note:
-- with gravity disabled, a stationary test aircraft can still receive pitch torque while q=0, so it can keep rotating because aero damping is zero
-- once gravity is enabled, the aircraft falls, gains linear velocity, and the current damping starts working naturally even without throttle
-- this behavior is acceptable for the current game model; do NOT add a more detailed rotational-airflow model unless gameplay later justifies it
-- similarly, do not automatically make all control authority fully airspeed-dependent just for realism; only do so if needed for good flight feel
+With gravity disabled, a stationary aircraft could receive control torque while q=0 and retain angular velocity. With gravity enabled, the aircraft falls, gains speed, and damping starts working naturally. This is acceptable; do not deepen into rotational surface-airflow simulation unless gameplay justifies it.
 
 ## NEXT IMMEDIATE STEP
-Continue the game-oriented control model rather than deepening the simulator model:
-1. Keep current pitch torque + aerodynamic pitch damping foundation.
-2. Add yaw and roll control torques one axis at a time.
-3. Add corresponding per-axis aerodynamic angular damping.
-4. Tune pitch/yaw/roll authority and damping for fun, responsive dogfighting rather than strict realism.
-5. Add stabilization / bank behavior where it improves control feel.
-6. Revisit camera Up behavior after physical bank.
+1. Add small per-axis input dead-zone/shaping for left-stick pitch/yaw cross-talk.
+2. Re-test pure yaw with pitch torque restored.
+3. Once yaw remains clean, add physical roll torque on local Z.
+4. Add roll aerodynamic damping.
+5. Tune pitch/yaw/roll authority and damping for fun, responsive dogfighting rather than strict realism.
+6. Add stabilization / coordinated bank behavior only where it improves control feel.
+7. Revisit camera Up behavior after physical bank.
 
-Possible future fidelity upgrades (only if justified by gameplay): airspeed-based control authority curves, rotational-flow damping from omega x r, gyroscopic coupling, arbitrary inertia tensor, more detailed aerodynamic surfaces.
+Possible future fidelity upgrades (only if justified by gameplay): airspeed-based control authority curves, rotational-flow damping from omega x r, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
