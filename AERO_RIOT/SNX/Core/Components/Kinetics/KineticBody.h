@@ -23,6 +23,13 @@ public:
 	void SetUseLinearDamping(const bool useLinearDamping) noexcept { m_useLinearDamping = useLinearDamping; }
 
 	[[nodiscard]]
+	float GetLinearDamping() const noexcept { return m_linearDamping; }
+
+	void SetLinearDamping(float linearDamping) noexcept {
+		m_linearDamping = std::abs(linearDamping);	// negative not allowed
+	}
+
+	[[nodiscard]]
 	float GetMass() const noexcept { return m_mass; }
 
 	void SetMass(const float mass) noexcept {
