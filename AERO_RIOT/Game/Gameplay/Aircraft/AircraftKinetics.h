@@ -39,11 +39,11 @@ private:
 
 	// control torque
 	float m_pitchTorque = 20.0f;
-	float m_yawTorque = 0.0f;
+	float m_yawTorque = 10.0f;
 	float m_rollTorque = 0.0f;
 
 	// angular damping
 	float m_pitchDamping = 1.0f;
-	float m_yawDamping = 0.0f;
+	float m_yawDamping = 1.0f;
 	float m_rollDamping = 0.0f;
 };

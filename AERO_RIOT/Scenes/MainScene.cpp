@@ -121,7 +121,7 @@ void MainScene::OnLoad() {
 	kb.AddTorque({ 4.0f,150.0f,4.0f });
 	kb.AddForce({ 0.0f,0.0f,-200.0f });
 
-	m_kb->SetUseGravity(false);
+	//m_kb->SetUseGravity(false);
 }
 
 void MainScene::OnUnload() {
