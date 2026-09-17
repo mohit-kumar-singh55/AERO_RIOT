@@ -17,4 +17,6 @@ protected:
 
 private:
 	Aircraft* m_aircraft = nullptr;
+
+	float m_stickMinThreshold = 0.08f;
 };

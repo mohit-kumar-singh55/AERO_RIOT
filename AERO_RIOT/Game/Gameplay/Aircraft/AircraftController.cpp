@@ -24,6 +24,12 @@ void AircraftController::OnUpdate() {
 	controlInput.airBrake = input.GetGamePadTrigger(GamePadTrigger::Left);
 
 	auto rotVal = input.GetGamePadStick(GamePadStick::LeftStick);
+
+	if (std::abs(rotVal.x) < m_stickMinThreshold)
+		rotVal.x = 0.0f;
+	if (std::abs(rotVal.y) < m_stickMinThreshold)
+		rotVal.y = 0.0f;
+
 	controlInput.pitch = -rotVal.y;
 	controlInput.turn = rotVal.x;
 
