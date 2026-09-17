@@ -31,7 +31,7 @@ Current linear state:
 - world-space linear velocity and acceleration
 - world-space accumulated force
 - useGravity + gravityScale
-- optional generic linear damping being finalized
+- generic scalar linear damping
 
 Linear integration:
 - optional damping contributes a force first
@@ -45,7 +45,7 @@ Current angular state:
 - world-space angular velocity
 - world-space angular acceleration
 - world-space accumulated torque
-- optional generic angular damping using body-space coefficients
+- generic angular damping using body-space coefficients
 
 ## Rotational physics milestones
 Angular velocity integration — COMPLETE / validated:
@@ -68,44 +68,37 @@ Body-space diagonal inertia — COMPLETE / validated:
 - validated with pre-rotated cube and I=(1,2,4); local Z rotates much more slowly under comparable torque
 - full gyroscopic coupling / arbitrary inertia tensor is deliberately postponed
 
-Generic angular damping — COMPLETE / validated:
+## Generic damping — COMPLETE / validated
+Angular damping:
 - fixed in `9ea75dc95b386d679c28508551cb597f841065af` to damp angular VELOCITY rather than angular acceleration
 - body-space damping coefficients
 - local damping torque = `-localAngularVelocity * angularDamping`
 - damping torque is transformed back to world space and added to accumulated torque, so inertia still governs response
 - OFF: one-frame torque leaves persistent angular velocity
 - ON: angular velocity decays toward zero
-- generic damping is intended as opt-in; aircraft disables it and will later use airflow-dependent aerodynamic rotational damping in AircraftKinetics
 
-## Generic linear damping — IMPLEMENTED, API/default cleanup pending
-Commit `015edae0b7b948f45396a2407d301e9474bec15a` added:
-- `m_useLinearDamping`
-- scalar `m_linearDamping`
-- damping force contribution inside KineticBody::Integrate
-- aircraft explicitly disables both generic linear and angular damping in AircraftKinetics::OnInitialize
+Linear damping:
+- commit `015edae0b7b948f45396a2407d301e9474bec15a` added `m_useLinearDamping`, scalar `m_linearDamping`, and damping-force integration
+- commit `194a254b31288f294ec3e4c26956c623a45e0263` added GetLinearDamping / SetLinearDamping
+- damping force: `F_damping = -linearVelocity * mass * linearDamping`
+- because normal integration multiplies by inverseMass, damping acceleration is `a_damping = -linearVelocity * linearDamping`; decay behavior is therefore independent of mass
+- damping flows through AddForce rather than directly modifying velocity
 
-Current damping force is correct for mass-independent decay behavior:
-`F_damping = -linearVelocity * mass * linearDamping`
-Because normal integration later multiplies by inverseMass, this gives damping acceleration `a_damping = -linearVelocity * linearDamping`.
+Engine policy decision:
+- generic bodies USE linear and angular damping by default
+- current default coefficients are nonzero (linear 1.0, angular Vector3::One)
+- specialized bodies may explicitly disable either damping
+- aircraft disables both generic linear and angular damping in AircraftKinetics to avoid double-counting its aerodynamic resistance
 
-The implementation correctly feeds damping through `AddForce()` rather than modifying velocity directly.
-
-Review cleanup before marking COMPLETE:
-- add public GetLinearDamping / SetLinearDamping API; current coefficient is private and effectively fixed at 1.0 unless source is edited
-- clamp linear damping coefficient to >= 0 so negative damping cannot inject energy
-- current defaults are `useLinearDamping=true`, `linearDamping=1`, `useAngularDamping=true`, `angularDamping=Vector3::One`; preferred engine baseline is opt-in/no artificial damping by default: linear OFF/0 and angular OFF/Zero
-- optionally clamp angular damping components to >= 0 as well
-
-Aircraft-specific resistance remains separate:
-- AircraftKinetics already owns directional quadratic aerodynamic drag
-- generic linear/angular damping should remain disabled for aircraft to avoid double-counting
-- aircraft aerodynamic angular damping will later depend on airflow / dynamic pressure
+API note:
+- current SetLinearDamping uses `std::abs`, so negative input becomes positive; acceptable for now, though clamping negative values to 0 would make configuration mistakes more obvious
+- angular damping components are not yet clamped non-negative; optional hardening later
 
 ## Aircraft architecture / aerodynamics
 Current flow:
 AircraftController -> Aircraft -> AircraftKinetics -> KineticBody
 
-Aircraft still temporarily mutates Transform directly for normal pitch/turn/bank, then calls AircraftKinetics::Apply(controlInput). This is the major behavior to replace after generic rotational physics is solid.
+Aircraft still temporarily mutates Transform directly for normal pitch/turn/bank, then calls AircraftKinetics::Apply(controlInput). This is now the major behavior to replace.
 
 Aerodynamics milestone is COMPLETE for now:
 - directional quadratic drag on Forward/Right/Up projections
@@ -115,23 +108,29 @@ Aerodynamics milestone is COMPLETE for now:
 - stall curve: linear to 15 deg, then falloff to zero by 90 deg
 - observed powered-flight/glide behavior is plausible
 
+Generic vs aircraft-specific resistance:
+- generic KineticBody damping is engine/gameplay resistance and is enabled by default for ordinary bodies
+- AircraftKinetics already owns directional quadratic aerodynamic drag
+- aircraft generic linear/angular damping is explicitly disabled
+- aircraft aerodynamic angular damping will later depend on airflow / dynamic pressure
+
 Debug-test state intentionally retained:
-- rotating/torque debug cube remains for rotational-physics tests
+- rotating/torque debug cube remains for rotational-physics tests until no longer needed
 - `m_kb->SetUseGravity(false)` on the aircraft is intentional during rotational debugging
 
 ## NEXT IMMEDIATE STEP
-Finish generic damping API/default cleanup:
-- expose scalar linear damping getter/setter and clamp >= 0
-- make generic linear/angular damping opt-in by default
-- optionally clamp angular damping coefficients >= 0
-
-Then move to physical aircraft control torques:
-- replace temporary direct aircraft pitch/turn/bank
+Move to physical aircraft control torques:
+- replace temporary direct aircraft pitch/turn/bank Transform rotation
 - choose body-axis torque mapping for pitch/yaw/roll
-- tune per-axis inertia/control authority
-- add aircraft-specific aerodynamic angular damping in AircraftKinetics when useful
+- tune per-axis inertia and control authority
+- validate control response without generic damping on the aircraft
+
+Then:
+- add aircraft-specific aerodynamic angular damping in AircraftKinetics
 - add stabilization / bank behavior
 - revisit camera Up behavior after physical bank
+
+Full arbitrary inertia tensor / gyroscopic term remains postponed until justified.
 
 ## Temporary technical debt
 - normal aircraft pitch/turn/bank still directly mutates Transform
