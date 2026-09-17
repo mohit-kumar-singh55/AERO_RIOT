@@ -25,7 +25,7 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	const Vector3 localTorque = {
 		controlInput.pitch * m_pitchTorque,
 		-controlInput.turn * m_yawTorque,
-		0.0f
+		-controlInput.turn * m_rollTorque
 	};
 	// convert to world-space
 	const Vector3 worldTorque = Vector3::Transform(localTorque, transform.GetRotation());
@@ -43,11 +43,11 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	// convert world angular vel. to local-space
 	const Vector3 localAngularVelocity = Vector3::Transform(m_kb->GetAngularVelocity(), localRotation);
 
-	const Vector3 localDampingTorque = {
-		-m_pitchDamping * localAngularVelocity.x * dynamicPressure,
-		-m_yawDamping * localAngularVelocity.y * dynamicPressure,
-		0.0f
-	};
+	const Vector3 localDampingTorque =
+		-Vector3(m_pitchDamping, m_yawDamping, m_rollDamping)
+		* localAngularVelocity
+		* dynamicPressure;
+
 	// convert to world-space
 	const Vector3 worldDampingTorque = Vector3::Transform(localDampingTorque, transform.GetRotation());
 	m_kb->AddTorque(worldDampingTorque);
