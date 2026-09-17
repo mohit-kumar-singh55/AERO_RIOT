@@ -119,6 +119,7 @@ void MainScene::OnLoad() {
 	kb.SetMomentOfInertia({ 1,2,4 });
 	//kb.SetUseAngularDamping(false);
 	kb.AddTorque({ 4.0f,150.0f,4.0f });
+	kb.AddForce({ 0.0f,0.0f,-10.0f });
 
 	m_kb->SetUseGravity(false);
 }
