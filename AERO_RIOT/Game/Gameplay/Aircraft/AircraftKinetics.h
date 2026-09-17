@@ -25,7 +25,7 @@ private:
 	KineticBody* m_kb = nullptr;
 
 	// configurable
-	float m_maxThrust = 20.0f;
+	float m_maxThrust = 100.0f;
 	// directional aerodynamic drag coefficient
 	float m_forwardDrag = 1.0f;
 	float m_sideDrag = 3.0f;

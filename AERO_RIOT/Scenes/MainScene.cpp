@@ -107,21 +107,6 @@ void MainScene::OnLoad() {
 		cubeTrans.SetScale({ 0.2f,4.0f,20.0f });
 		cubeTrans.SetPosition({ (float)(std::rand() % 10) - i,-(float)(std::rand() % 10) + i,-(float)(std::rand() % 20) - i });
 	}
-
-	auto& cube = GetGameObjects().CreateGameObject("DEBUG_CUBE");
-	cube.AddComponent<PrimitiveRenderer>(
-		context.deviceResources.GetContext(),
-		PrimitiveShape::Cube
-	);
-	auto& kb = cube.AddComponent<KineticBody>();
-	kb.SetUseGravity(false);
-	cube.GetTransform().SetEulerDegrees({ 45.0f,0.0f,-15.0f });
-	kb.SetMomentOfInertia({ 1,2,4 });
-	//kb.SetUseAngularDamping(false);
-	kb.AddTorque({ 4.0f,150.0f,4.0f });
-	kb.AddForce({ 0.0f,0.0f,-200.0f });
-
-	//m_kb->SetUseGravity(false);
 }
 
 void MainScene::OnUnload() {
