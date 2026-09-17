@@ -38,71 +38,66 @@ Current simplified rigid-body model supports:
 Generic linear damping: `F = -v * mass * linearDamping`, giving mass-independent `a = -v * linearDamping`.
 Generic angular damping: local torque `-omegaLocal * angularDamping` transformed back to world.
 
-## Aircraft aerodynamics already implemented
+## Aircraft aerodynamics — ACTIVE
+Implemented and currently part of flight behavior:
 - thrust
 - directional quadratic drag on body Forward/Right/Up
 - gravity
 - AoA = -atan2(verticalSpeed, forwardSpeed)
 - lift = 0.5 * rho * Vpitch^2 * S * Cl
-- stall curve linear to 15 deg then falloff to zero by 90 deg
+- stall curve linear up to 15 deg AoA, then lift falls toward zero by 90 deg
 
-## Physical aircraft control torques — IN PROGRESS
+The stall model is not dead code: `CalculateLiftCoefficient(angleOfAttack)` directly feeds the lift-force calculation. It should remain a soft aerodynamic consequence, not be replaced by hard orientation clamps unless gameplay later proves that necessary.
+
+## Physical aircraft controls — WORKING FOUNDATION
 Control axis mapping:
 - pitch -> local X
 - yaw -> local Y
-- roll -> local Z, sign handled carefully because Forward=-Z
+- roll -> local Z (Forward is -Z, so turn-right uses negative Z for right bank)
 
 Input semantics:
 - `controlInput.pitch +1 = nose up`
-- raw gamepad Y is inverted in AircraftController so pulling stick back/down gives positive pitch-up input
+- raw gamepad Y is inverted in AircraftController
+- a small per-axis stick threshold was added in commit `9e8cfba4cd337e3d6ef7ab4d2461ed76eda522b8` to suppress unintended pitch/yaw cross-talk; testing says it feels okay
 
 Pitch:
-- commit `ce88a7242077c68b169b189f54d158d3a77cfb17` replaced direct pitch Transform rotation with body-space torque
-- current test tuning after `54208bb0be84aa153b5bd8442efd1af7dbce9466`: pitchTorque=20, pitchDamping=1
-- pitch damping uses local angular velocity X and dynamic pressure; structurally correct and working while moving
+- torque-based local X control
+- pitchTorque=20, pitchDamping=1 test values
+- aerodynamic damping uses local omega.x * dynamic pressure
 
 Yaw:
-- commit `c1e25aca50b5d3e963a9d929e90c7f76c136d142` added body-space yaw torque and yaw aerodynamic damping
-- yaw control torque is `-controlInput.turn * yawTorque` on local Y
-- yaw damping is `-localAngularVelocity.y * yawDamping * dynamicPressure`
-- current test values: yawTorque=10, yawDamping=1
-- gravity is enabled again for aircraft testing
-- yaw implementation is structurally correct; no intentional local Z/roll torque is added
+- torque-based local Y control: `-turn * yawTorque`
+- yawTorque=10, yawDamping=1 test values
+- previous apparent roll during yaw was confirmed to come from tiny simultaneous pitch input, not yaw physics
 
-## Yaw cross-axis diagnostic — CONFIRMED
-Observed: holding yaw for a while seemed to develop roll/bank.
+Roll:
+- commit `4ab2714dffdfb9fc60be9601ba4b94f124ebf70b` added physical roll torque and damping
+- local Z control: `-turn * rollTorque`
+- current test values rollTorque=20, rollDamping=1
+- damping is now compact per-axis vector math: `-Vector3(pitchDamping,yawDamping,rollDamping) * localAngularVelocity * dynamicPressure`
+- testing reports roll behavior seems structurally okay
 
-Diagnostic result:
-- setting pitch torque to zero makes the apparent roll disappear
-- therefore yaw torque itself is not the source
-- the left stick feeds both pitch and yaw; DirectXTK circular dead zone removes center drift but still allows a small perpendicular Y component while the stick is held mostly sideways
-- with pitchTorque=20 and yawTorque=10, even a small unintended pitch input can accumulate noticeably over time
-- simultaneous pitch+yaw produces a combined rotation/orientation that can visually resemble bank even without explicit local-Z torque
-
-Recommended game-oriented input fix before adding roll:
-- keep circular dead zone for normal stick feel, but add a small per-axis/axial dead zone (or equivalent input shaping) in AircraftController so tiny perpendicular components are zeroed
-- do not snap all diagonal input away; intentional diagonal pitch+yaw should still work
-- tune the axial threshold by feel rather than realism, likely small enough to suppress cross-talk without making the stick feel notchy
-
-Camera note: AircraftCameraController still uses WORLD Up in LookAt, so the camera does not roll with the aircraft. This can make attitude/bank more visually obvious but does not create physical roll.
-
-## Aircraft aerodynamic pitch/yaw damping
 Dynamic pressure currently uses translational speed only:
 `q = 0.5 * airDensity * linearVelocity.LengthSquared()`.
-This is sufficient for the current game model.
+This is sufficient for the current game model. Do not deepen into detailed rotational-flow simulation unless gameplay justifies it.
 
-With gravity disabled, a stationary aircraft could receive control torque while q=0 and retain angular velocity. With gravity enabled, the aircraft falls, gains speed, and damping starts working naturally. This is acceptable; do not deepen into rotational surface-airflow simulation unless gameplay justifies it.
+## NEXT DESIGN MILESTONE — FLIGHT ASSIST / STABILIZATION
+Do NOT hard-clamp aircraft orientation as the primary solution. Pitch/yaw/roll should remain physical enough to allow loops, barrel rolls, evasive maneuvers, etc.
 
-## NEXT IMMEDIATE STEP
-1. Add small per-axis input dead-zone/shaping for left-stick pitch/yaw cross-talk.
-2. Re-test pure yaw with pitch torque restored.
-3. Once yaw remains clean, add physical roll torque on local Z.
-4. Add roll aerodynamic damping.
-5. Tune pitch/yaw/roll authority and damping for fun, responsive dogfighting rather than strict realism.
-6. Add stabilization / coordinated bank behavior only where it improves control feel.
-7. Revisit camera Up behavior after physical bank.
+Game-oriented control intent:
+- keep stall/lift as aerodynamic behavior rather than replacing it with max-angle clamps
+- normal left-stick X should produce a coordinated turn: yaw + bank
+- instead of endlessly accumulating raw roll while turn is held, move toward a target bank angle for normal turning
+- when horizontal turn input returns to zero, aircraft should automatically level its bank so the player can focus on dogfighting rather than manually correcting attitude
+- prefer torque-based stabilization (PD-style controller: angle error + roll-rate damping) over directly snapping/clamping Transform rotation
+- start with ROLL auto-level / target-bank assist only; do not automatically force pitch to horizon yet because that can fight intentional climbs/dives/loops
+- pitch release should currently just stop pitch rate via damping and preserve attitude; revisit weak pitch assist later only if playtesting wants it
+- yaw does not need an orientation clamp
+- special maneuvers (evade roll / future barrel-roll actions) can temporarily override normal bank-assist rules
 
-Possible future fidelity upgrades (only if justified by gameplay): airspeed-based control authority curves, rotational-flow damping from omega x r, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
+Suggested next lesson: design how to calculate signed bank angle relative to world horizon and how a target-bank controller should generate corrective roll torque.
+
+Camera note: AircraftCameraController still uses WORLD Up in LookAt, so the camera does not roll with the aircraft. Revisit after bank-assist feel is established.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
@@ -114,7 +109,9 @@ Possible future fidelity upgrades (only if justified by gameplay): airspeed-base
 - sideslip/beta not modeled
 - no render interpolation
 - camera still uses world Up
-- debug rotating cube remains until no longer useful
+- debug rotating cube remains until rotational tests are no longer useful
+
+Possible future fidelity upgrades only if gameplay needs them: airspeed-based control-authority curves, rotational-flow damping from omega x r, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
 
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
