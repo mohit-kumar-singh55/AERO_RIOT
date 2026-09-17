@@ -27,12 +27,22 @@ void KineticBody::OnDestroy() {
 }
 
 void KineticBody::Integrate(float fixedDeltaTime) noexcept {
-	// ! linear
-	m_linearAcceleration = m_accumulatedForce * m_inverseMass;
-	m_linearVelocity += m_linearAcceleration * fixedDeltaTime;
-
 	auto& transform = GetTransform();
 	auto position = transform.GetPosition();
+
+	// ! linear
+	// apply linear damping
+	if (m_useLinearDamping) {
+		const Vector3 dampingForce =
+			-m_linearVelocity
+			* m_mass
+			* m_linearDamping;
+
+		AddForce(dampingForce);
+	}
+
+	m_linearAcceleration = m_accumulatedForce * m_inverseMass;
+	m_linearVelocity += m_linearAcceleration * fixedDeltaTime;
 
 	position += m_linearVelocity * fixedDeltaTime;
 	GetTransform().SetPosition(position);

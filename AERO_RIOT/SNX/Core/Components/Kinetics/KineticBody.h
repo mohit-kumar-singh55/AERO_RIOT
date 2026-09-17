@@ -18,6 +18,11 @@ public:
 	void SetUseGravity(const bool useGravity) noexcept { m_useGravity = useGravity; }
 
 	[[nodiscard]]
+	bool GetUseLinearDamping() const noexcept { return m_useLinearDamping; }
+
+	void SetUseLinearDamping(const bool useLinearDamping) noexcept { m_useLinearDamping = useLinearDamping; }
+
+	[[nodiscard]]
 	float GetMass() const noexcept { return m_mass; }
 
 	void SetMass(const float mass) noexcept {
@@ -87,6 +92,9 @@ protected:
 private:
 	bool m_useGravity = true;
 	float m_gravityScale = 1.0f;	// gravity multiplier
+
+	bool m_useLinearDamping = true;
+	float m_linearDamping = 1.0f;	// damping coefficient
 
 	float m_mass = 1.0f;
 	float m_inverseMass = 1.0f;

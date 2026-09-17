@@ -12,6 +12,10 @@ void AircraftKinetics::OnInitialize() {
 
 	if (!m_kb)
 		throw std::runtime_error("AircraftKinetics::OnInitialize: Cannot find KineticBody component.");
+
+	// not using the default damping provided by the physics engine
+	m_kb->SetUseLinearDamping(false);
+	m_kb->SetUseAngularDamping(false);
 }
 
 void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
