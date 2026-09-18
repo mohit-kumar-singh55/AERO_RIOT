@@ -95,14 +95,44 @@ Important diagnostic:
 - if it still stalls near vertical, inspect pitch control torque vs aerodynamic pitch damping/dynamic pressure instead
 - stall/lift itself reduces lift and does not directly clamp orientation
 
+## Backflip diagnostic — BANK ASSIST CONFIRMED AS CAUSE
+User implemented the optional bank-angle guard in commit `0c7da1424c1f4caf36740c371d36a1002d089043`:
+- `CalculateBankAngle()` returns `std::nullopt` when projected levelUp length-squared < 0.01
+- PD bank torque is skipped when bank angle is invalid
+- dead `m_rollTorque` field was removed
+
+Diagnostic result:
+- with the entire bank-assist block commented out, backflip works
+- with bank assist enabled, aircraft still gets disturbed/stuck around the vertical/inverted part
+- therefore bank assist, not pitch damping, is the confirmed cause
+
+Why:
+- the vertical singularity is only part of the issue
+- horizon-relative bank has a branch/reference flip when a pure pitch loop passes over the top
+- just before vertical, a pure pitch loop reports bank ~0
+- exactly near vertical, bank is undefined and correctly skipped
+- just after crossing into inverted flight, the same no-roll attitude can be represented as bank ~±pi relative to the world-up level frame
+- with Kp=120 this can create a very large false roll correction
+- trying to make a globally continuous horizon bank reference through vertical/inverted flight would require extra state/reference-frame logic and is deeper than the game currently needs
+
+Game-oriented policy:
+- bank assist should be treated as a NORMAL UPRIGHT-FLIGHT assist, not a universal orientation controller
+- keep `CalculateBankAngle()` geometry-only with its singularity guard
+- in the caller/controller, only enable bank assist while aircraft is in the upright hemisphere, e.g. `aircraftUp.Dot(WorldUp) > 0`
+- when inverted (`upDot <= 0`), skip bank-assist torque entirely
+- the existing near-vertical optional guard handles the boundary region
+- this allows intentional loops/inverted flight without the leveling controller fighting them
+- normal bank target is only 50 deg, so disabling assist beyond 90 deg bank is acceptable for the current game; special maneuvers will explicitly override/disable assist anyway
+- future recovery mode can be added only if gameplay later needs automatic recovery from arbitrary inverted attitudes
+
+Also consider a high max roll-assist torque clamp as a safety guard later. With current Kp=120, a normal 50-deg error gives ~105 controller output, so any cap must be above normal operating torque; do not reuse the old value 20.
+
 ## NEXT IMMEDIATE STEP
-1. Remove dead `m_rollTorque` or repurpose it as a max roll-assist torque.
-2. Make bank-angle calculation explicitly report valid/invalid.
-3. Skip PD bank assist when bank is invalid near vertical.
-4. Retest backflip with bank assist on.
-5. If backflip still sticks, temporarily disable bank assist completely to isolate whether pitch aero damping is the cause.
-6. Only then tune pitch damping/control authority if needed.
-7. Revisit camera Up behavior after flight-assist behavior is stable.
+1. Add an upright-flight condition around the PD bank assist, conceptually `aircraftUp.Dot(Vector3::Up) > 0` in addition to valid bank angle.
+2. Re-test a full backflip while continuously holding pitch.
+3. Verify bank assist resumes naturally once the aircraft returns to the upright hemisphere.
+4. Verify normal left/right turning and release-to-level still feel good.
+5. If successful, consider the first roll-assist milestone complete and then revisit camera Up behavior / next gameplay system.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
