@@ -54,7 +54,15 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 
 	// ! bank-assist (auto-level)
 	auto bank = CalculateBankAngle();
-	if (bank) {
+	/*
+	* skip bank assist if aircraft up is 
+	* perpendicular or opposite to the world up
+	* it is required to stop assist, otherwise
+	* aircraft wouldn't be able to perform backflip
+	*/
+	bool shouldBankAssist = transform.GetUp().Dot(Vector3::Up) > 0;
+
+	if (bank && shouldBankAssist) {
 		float turn = controlInput.turn;
 		float currentBankAngle = *bank;
 		float targetBankAngle = turn * m_maxBankAngle;
