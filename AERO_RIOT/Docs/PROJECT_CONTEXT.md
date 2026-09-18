@@ -75,7 +75,39 @@ Current user decision:
 
 Dead `m_rollTorque` field was removed.
 
-## NEXT FLIGHT-FEEL FEATURE — MINIMUM FORWARD SPEED
+## MINIMUM FORWARD SPEED — IMPLEMENTED, COASTING ISSUE DIAGNOSED
+Commit `40babebeb388f1e8bc737cfb47ad3a6e69520049` added force-based minimum forward speed assist.
+Later commit `cda8efd29f890990ea4777eef475ea7f789e4110`:
+- clamps assist acceleration to [0, maxSpeedAssistAcceleration]
+- current values: minForwardSpeed=12, minSpeedGain=6, maxSpeedAssistAcceleration=8
+- forwardDrag was reduced to 0.2
+
+Observed:
+- zero-throttle total speed ~6.5
+- full-throttle total speed ~22
+- releasing throttle still drops speed extremely quickly
+
+This is mathematically explained by the current quadratic forward drag:
+`Fdrag = -forwardDrag * v * abs(v)`.
+With forwardDrag=0.2 and mass~1:
+- at v=22, drag ~96.8
+- max thrust=100, so full-throttle equilibrium ~sqrt(100/0.2)=22.36
+- zero-throttle max speed-assist force ~8, so equilibrium ~sqrt(8/0.2)=6.32
+- when throttle is released at 22, nearly 97 units of backward force suddenly remain, causing the rapid drop
+
+Core design diagnosis:
+**forward drag is currently doing two separate gameplay jobs: limiting top speed and determining glide/coast decay. These need to be decoupled.**
+
+Recommended next design:
+- lower base forward drag substantially to get satisfying momentum/glide
+- do NOT let low drag make top speed unlimited
+- replace raw constant-thrust top-speed limiting with a game-oriented speed/engine controller or thrust falloff
+- clean arcade option: throttle chooses desired forward speed between min cruise and max cruise; propulsion applies only positive forward acceleration when below desired speed; when above desired speed, no active braking, so low drag creates natural glide
+- this can eventually unify current raw thrust + minimum-speed assist into one propulsion controller
+- do not hard-clamp linear velocity
+- air brake can remain the explicit fast-deceleration control
+
+
 Game goal: even with zero PLAYER throttle input, aircraft should continue moving forward at a minimum cruising speed so dogfights do not stall out into awkward low-speed control.
 
 Do NOT directly clamp/set linear velocity during normal flight. That would snap momentum/direction and fight the force-based physics.
