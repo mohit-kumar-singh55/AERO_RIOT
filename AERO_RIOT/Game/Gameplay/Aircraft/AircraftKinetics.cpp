@@ -158,10 +158,9 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	// ! speed-assist
 	float speedDeficit = m_minForwardSpeed - forwardSpeed;
 	float assistAcceleration = speedDeficit * m_minSpeedGain;
-	if (assistAcceleration < m_maxSpeedAssistAcceleration) {
-		auto speedAssistForce = aircraftForward * assistAcceleration * m_kb->GetMass();
-		m_kb->AddForce(speedAssistForce);
-	}
+	assistAcceleration = std::clamp(assistAcceleration, 0.0f, m_maxSpeedAssistAcceleration);
+	auto speedAssistForce = aircraftForward * assistAcceleration * m_kb->GetMass();
+	m_kb->AddForce(speedAssistForce);
 }
 
 float AircraftKinetics::CalculateLiftCoefficient(const float angleOfAttack) const noexcept {

@@ -57,7 +57,7 @@ private:
 	float m_bankKd = 15.0f;		// controls braking based on roll speed
 
 	// speed assist
-	float m_minForwardSpeed = 15.0f;
-	float m_minSpeedGain = 8.0f;
-	float m_maxSpeedAssistAcceleration = 12.0f;
+	float m_minForwardSpeed = 12.0f;
+	float m_minSpeedGain = 6.0f;
+	float m_maxSpeedAssistAcceleration = 8.0f;
 };
