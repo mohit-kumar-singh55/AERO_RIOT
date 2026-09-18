@@ -24,109 +24,100 @@ Transform conventions:
 - linear/angular velocities and accumulated force/torque are WORLD-space
 
 ## KineticBody status
-Current simplified rigid-body model supports:
-- mass/inverse mass, force accumulation, gravity
-- linear velocity/acceleration/integration
-- body-space diagonal moment of inertia Vector3 + inverse
-- world angular velocity/acceleration/torque accumulation
-- axis-angle quaternion orientation integration
-- generic scalar linear damping and body-space angular damping
-- generic bodies use damping by default
-- aircraft disables both generic dampings
-- full gyroscopic coupling / arbitrary inertia tensor postponed
-
-Generic linear damping: `F = -v * mass * linearDamping`, giving mass-independent `a = -v * linearDamping`.
-Generic angular damping: local torque `-omegaLocal * angularDamping` transformed back to world.
+Current simplified rigid-body model supports mass/inverse mass, force accumulation, gravity, linear integration, body-space diagonal moment of inertia, world angular state, quaternion orientation integration, generic damping, and torque accumulation. Aircraft disables generic damping. Full gyroscopic coupling / arbitrary inertia tensor postponed.
 
 ## Aircraft aerodynamics — ACTIVE
-Implemented and currently part of flight behavior:
+Implemented and active:
 - thrust
-- directional quadratic drag on body Forward/Right/Up
+- directional quadratic drag
 - gravity
-- AoA = -atan2(verticalSpeed, forwardSpeed)
-- lift = 0.5 * rho * Vpitch^2 * S * Cl
-- stall curve linear up to 15 deg AoA, then lift falls toward zero by 90 deg
+- AoA
+- lift
+- stall curve (linear to 15 deg, then falloff toward zero by 90 deg)
 
-The stall model is active: `CalculateLiftCoefficient(angleOfAttack)` directly feeds lift force. Keep it as a soft aerodynamic consequence rather than replacing it with hard orientation clamps unless gameplay later proves that necessary.
+Stall directly feeds lift via `CalculateLiftCoefficient(angleOfAttack)`; keep this as soft aerodynamic consequence rather than hard orientation clamps unless gameplay later proves necessary.
 
 ## Physical aircraft controls — WORKING FOUNDATION
-Control axis mapping:
+Axes:
 - pitch -> local X
 - yaw -> local Y
-- roll -> local Z (Forward is -Z, so turn-right uses negative Z for right bank)
+- roll -> local Z (Forward=-Z; turn-right uses negative Z)
 
-Input semantics:
-- `controlInput.pitch +1 = nose up`
-- raw gamepad Y is inverted in AircraftController
-- small per-axis stick threshold added in commit `9e8cfba4cd337e3d6ef7ab4d2461ed76eda522b8` suppresses unintended pitch/yaw cross-talk
+Input:
+- `pitch +1 = nose up`
+- raw gamepad Y inverted
+- axial stick threshold suppresses unintended pitch/yaw cross-talk
 
-Pitch:
-- torque-based local X control
-- pitchTorque=20, pitchDamping=1 test values
-- aerodynamic damping uses local omega.x * dynamic pressure
+Current test values:
+- pitchTorque=20, yawTorque=10, rollTorque=20
+- pitch/yaw/roll damping=1
+- turn currently drives yaw directly and roll behavior is being replaced by target-bank assistance
 
-Yaw:
-- torque-based local Y control: `-turn * yawTorque`
-- yawTorque=10, yawDamping=1 test values
-- previous apparent roll during yaw was confirmed to come from tiny simultaneous pitch input, not yaw physics
-
-Roll:
-- commit `4ab2714dffdfb9fc60be9601ba4b94f124ebf70b` added physical roll torque and damping
-- local Z control: `-turn * rollTorque`
-- current test values rollTorque=20, rollDamping=1
-- damping uses compact per-axis vector math: `-Vector3(pitchDamping,yawDamping,rollDamping) * localAngularVelocity * dynamicPressure`
-
-Dynamic pressure currently uses translational speed only:
-`q = 0.5 * airDensity * linearVelocity.LengthSquared()`.
-This is sufficient for the current game model.
+Aerodynamic angular damping uses local angular velocity per axis times dynamic pressure. Dynamic pressure uses translational speed only and is sufficient for the current game model.
 
 ## Flight assist / stabilization — CURRENT MILESTONE
-Do NOT hard-clamp aircraft orientation as the primary solution. Pitch/yaw/roll should remain capable of loops, barrel rolls, evasive maneuvers, etc.
+Goal:
+- normal left-stick X chooses turn/bank intent
+- target bank limits normal-turn attitude without hard-clamping aircraft rotation
+- releasing turn input makes target bank zero so aircraft auto-levels
+- torque-based assistance, not direct Transform snapping
+- roll assist first; no forced pitch-to-horizon yet
 
-Game-oriented intent:
-- normal left-stick X produces coordinated yaw + bank
-- instead of endlessly accumulating raw roll, use a target bank angle for normal turning
-- when turn input returns to zero, target bank becomes zero and aircraft auto-levels
-- use torque-based stabilization, not direct Transform snapping/clamping
-- start with roll auto-level / target-bank assist only
-- do not force pitch back to horizon yet; preserve intentional climbs/dives/loops
-- special maneuvers can later override normal bank assist
+### Signed bank angle
+Commit `09e7f1d098a43ea4f9256089941e027f134e2996` added `CalculateBankAngle()`.
 
-### Signed bank angle — IMPLEMENTED
-Commit `09e7f1d098a43ea4f9256089941e027f134e2996` added `AircraftKinetics::CalculateBankAngle()`.
+Formula:
+- project world Up onto plane perpendicular to aircraft Forward
+- compare level reference Up vs aircraft Up around Forward using atan2
+- output principal angle [-pi,+pi]
 
-Current calculation:
-- get aircraft world Forward and Up
-- project world Up onto plane perpendicular to Forward:
-  `levelUp = WorldUp - Forward * dot(Forward, WorldUp)`
-- normalize levelUp
-- signed bank:
-  `atan2(Forward dot (levelUp cross Up), levelUp dot Up)`
+The observed +pi -> -pi wrap is correct.
 
-Observed wrap during full rotation:
-- value reaches just under +pi (~3.1395)
-- then wraps to just over -pi (~-3.1383)
-- this is expected because atan2 returns the principal angle in [-pi, +pi]
-- continuing the same physical roll then moves from -pi back toward 0
+### Bank target / error — IMPLEMENTED
+Commit `796f49782c3062c3d20d10ae0a21a3dd725a4c2a` added:
+- currentBankAngle
+- targetBankAngle (currently sign-only ±50 deg / 0)
+- shortest bankError using `atan2(sin(target-current), cos(target-current))`
+- max bank test value 50 deg
 
-Important remaining guard:
-- when Forward is nearly parallel to WorldUp, projected `levelUp` becomes near-zero and bank is not uniquely defined
-- before Normalize(), check `levelUp.LengthSquared()` against a small threshold
-- if too small, skip bank assist / report no valid bank for that frame rather than normalizing an almost-zero vector
-- do not over-engineer vertical-flight bank handling unless gameplay later needs it
+Debug values confirm bankError signs:
+- as current bank approaches +50 deg, positive error shrinks toward 0
+- after overshoot, error becomes negative
+- when input released, target=0 and bankError becomes the negative of positive bank
+- opposite-turn command produces a large negative shortest error when appropriate
+
+Game-feel improvement to make before/with controller:
+- use analog target: `targetBankAngle = turn * m_maxBankAngle` rather than sign-only ±max, so partial stick requests partial bank.
+
+### Near-vertical bank validity
+Current code avoids normalizing near-zero levelUp, but still continues into atan2. This is not a complete invalid-bank guard.
+When `levelUp.LengthSquared()` is below threshold, bank assist should be skipped for that frame (or helper should report invalid) rather than using the tiny unnormalized vector. Do not over-engineer vertical flight.
+
+### Bank rate
+Bank rate is NOT a new integrated field. It is the current signed roll angular velocity derived from existing `KineticBody::GetAngularVelocity()`.
+- convert world angular velocity to local/body space (already done in AircraftKinetics)
+- local omega.z is angular velocity around +Z
+- our intuitive positive bank/right-bank direction is around -Z
+- therefore use conceptual `bankRate = -localAngularVelocity.z`
+- units: radians/second
+- no extra dt and no finite-difference of bank angle needed
 
 ## NEXT IMMEDIATE STEP
-1. Add the near-vertical guard to `CalculateBankAngle()`.
-2. Then build roll target-bank / auto-level assistance as a PD-style torque controller:
-   - target bank from turn input (0 input -> 0 bank, full turn -> tuned max bank)
-   - bank error = shortest signed angular difference target-current
-   - proportional term pushes toward target angle
-   - derivative term opposes current local roll rate
-   - output is a roll-assist torque added through KineticBody
-3. Tune for dogfight feel, not simulation accuracy.
-4. Revisit camera Up behavior after bank assist feels good.
-
-Camera note: AircraftCameraController still uses WORLD Up in LookAt, so the camera does not roll with the aircraft.
+1. Fix/handle the near-vertical invalid-bank case.
+2. Prefer analog target bank: `turn * maxBankAngle`.
+3. Compute `bankRate = -localAngularVelocity.z`.
+4. Verify signs in debug:
+   - banking right -> bankRate positive
+   - banking left -> bankRate negative
+   - stopped roll -> bankRate near zero
+5. Then form PD command:
+   - proportional: `Kp * bankError`
+   - derivative: `-Kd * bankRate`
+   - resulting positive controller command means "bank right"
+   - convert that semantic command to physical local Z torque with the required sign (right bank -> local -Z)
+6. Replace raw normal roll torque with controller roll torque; yaw remains direct.
+7. Tune for dogfight feel.
+8. Revisit camera Up behavior after bank assist is stable.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
