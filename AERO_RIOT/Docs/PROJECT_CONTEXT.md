@@ -10,14 +10,14 @@ AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn 
 The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical.
 
 ### Game-first design rule
-AERO_RIOT is a GAME, not a full flight simulator. Physics should be believable enough to create satisfying, readable, exciting flight, but realism is not a goal by itself. At meaningful complexity points ask: **"Are we going deeper than the game needs?"**
+AERO_RIOT is a GAME, not a full flight simulator. Physics should be believable enough to create satisfying, readable, exciting flight, but realism is not a goal by itself. Ask periodically: **"Are we going deeper than the game needs?"**
 
 ## Engine / physics conventions
 - Fixed simulation 1/60 s.
 - Forward=(0,0,-1), Right=(1,0,0), Up=(0,1,0).
 - accumulated forces/torques and linear/angular velocities are WORLD-space.
 - body-space diagonal moment of inertia is implemented.
-- aircraft disables generic KineticBody linear/angular damping and uses aircraft-specific aerodynamic behavior.
+- aircraft disables generic KineticBody damping and uses aircraft-specific aero damping.
 
 ## Aircraft aerodynamics — ACTIVE
 Implemented and active:
@@ -28,7 +28,7 @@ Implemented and active:
 - lift
 - stall curve (linear to 15 deg, then falls toward zero by 90 deg)
 
-Stall directly affects lift via `CalculateLiftCoefficient(angleOfAttack)`; keep it as a soft aerodynamic consequence rather than hard orientation clamps unless gameplay later needs otherwise.
+Stall directly affects lift via `CalculateLiftCoefficient(angleOfAttack)`; do not replace it with hard orientation clamps unless gameplay later needs otherwise.
 
 ## Physical controls — WORKING FOUNDATION
 Axes:
@@ -42,86 +42,67 @@ Input:
 - raw gamepad Y inverted
 - axial stick threshold suppresses unwanted cross-axis input
 
-Current test values:
-- pitchTorque=20, yawTorque=10, rollTorque=20
+Current tuning after commit `45d403980db7bc11b4f901f885f40baf42188d70`:
+- pitchTorque=30
+- yawTorque=20
 - pitch/yaw/roll aero damping=1
-- yaw remains direct from turn input
-- normal roll is being transitioned from raw torque to target-bank PD assistance
+- maxBankAngle=50 deg
+- bankKp=120
+- bankKd=15
+- this PD tuning currently feels good to the user
 
-Aerodynamic angular damping uses local angular velocity per axis times dynamic pressure.
+## Roll bank-assist — WORKING
+Normal roll is controlled by target-bank PD assistance rather than raw roll torque.
 
-## Flight assist / stabilization — CURRENT
-Goal:
-- turn input chooses target bank
-- release turn -> target bank 0 -> auto-level
-- torque-based assistance, not Transform snapping/clamping
-- no forced pitch-to-horizon yet
+Current flow:
+- targetBank = turn * maxBankAngle
+- currentBank from horizon-relative signed bank calculation
+- bankError = shortest signed angular difference
+- bankRate = -localAngularVelocity.z
+- rollCommand = Kp*bankError - Kd*bankRate
+- semantic +rollCommand = bank right
+- local roll torque = (0,0,-rollCommand)
+- local torque transformed to WORLD before KineticBody::AddTorque
+- old direct local-Z roll input has been removed
 
-### Signed bank angle
-`CalculateBankAngle()` projects world Up onto plane perpendicular to aircraft Forward and compares it with aircraft Up using atan2. Output wraps in [-pi,+pi], which is expected.
+Current pushed torque path is structurally correct.
 
-Near-vertical note:
-- projected levelUp becomes near-zero when Forward ~ WorldUp
-- current helper still needs a real invalid-bank handling path; simply skipping Normalize() but continuing atan2 is not sufficient
-- skip bank assist for that frame rather than over-engineering vertical handling
+### m_rollTorque status
+`m_rollTorque = 20` remains in AircraftKinetics.h but is currently unused.
+Do not keep it as dead state:
+- either remove it, or preferably repurpose/rename it to `m_maxRollAssistTorque` if adding a PD-output clamp
+- with Kp=120 and a 50-deg error, normal initial PD output is ~105, so a cap of 20 would destroy the current good feel
+- if a cap is added, choose/tune it high enough to preserve normal response while limiting pathological large commands (e.g. around the current normal maximum rather than the old raw-roll value)
 
-### Target / error / rate
-Implemented:
-- analog target bank: `targetBankAngle = turn * maxBankAngle`, max currently 50 deg
-- shortest signed error: `atan2(sin(target-current), cos(target-current))`
-- bankRate = `-localAngularVelocity.z`
-- debug testing confirms signs:
-  - right bank rate positive
-  - left bank rate negative
-  - error crosses through zero correctly
-  - release stick gives target 0 and opposite-signed leveling error
+## Signed bank angle / vertical edge case
+`CalculateBankAngle()` projects world Up onto the plane perpendicular to aircraft Forward and uses atan2 against aircraft Up. Principal-angle wrap [-pi,+pi] is expected.
 
-### PD controller — IMPLEMENTED BUT CURRENT REVIEW FOUND 2 ISSUES
-Commit `19d48de5bb27a7716680b741a8595526cc0dfa8f` added:
-`rollCommand = bankKp * bankError - bankKd * bankRate`
-with test values Kp=1.5, Kd=2.0.
+Current vertical guard is incomplete:
+- code checks `levelUp.LengthSquared() > 0.000001f` before Normalize()
+- but if below threshold, it still continues into atan2 and then the PD controller
+- therefore bank assist is NOT actually skipped while vertical
 
-Important:
-- rollCommand is a SEMANTIC bank-right/bank-left controller output
-- positive rollCommand means "bank right"
-- physical right-bank torque is local -Z
-- therefore local assist torque should use Z = `-rollCommand`
-- AddTorque expects WORLD torque, so local assist torque must be transformed by aircraft rotation before AddTorque
-- current pushed line `AddTorque({0,0,rollCommand})` is wrong because it applies world-Z torque and has the semantic sign reversed for this project
+Needed design:
+- bank-angle calculation needs a validity result, because bank is undefined near vertical and `0` is also a valid bank
+- good options: `std::optional<float>` return, or `bool TryCalculateBankAngle(float& outBank)`
+- when invalid, skip the bank-assist torque for that frame
+- use a gameplay-meaningful vertical cone rather than only an almost-zero numerical epsilon if testing needs it; for example levelUp length-squared around 0.01 corresponds to roughly within 5.7 deg of vertical
 
-Also, the old raw roll torque is still active in localTorque:
-`-controlInput.turn * m_rollTorque`
-This must be removed/zeroed for normal roll once the PD controller owns roll, otherwise raw roll and PD roll are both applied simultaneously.
-
-Debug note:
-- `rollCommand` is not an angle, so do not convert it with XMConvertToDegrees. Print it as a raw controller/torque-like value.
-
-## PD roll controller — TORQUE PATH CORRECT, TUNING CURRENT
-Commit `0b7259093b66776a9a84b804ae68deae8cf33d47` fixed the PD roll torque path:
-- removed raw normal Z roll torque from direct control torque
-- `rollCommand = Kp*bankError - Kd*bankRate`
-- semantic positive rollCommand means bank right
-- local roll torque uses Z = `-rollCommand`
-- local roll torque is transformed to WORLD before `AddTorque`
-- debug now prints rollCommand raw rather than as degrees
-
-Current issue: roll response is very slow, but this is expected from gain scale.
-At full stick from level, max bank error is ~50 deg = 0.873 rad. With Kp=1.5, initial P torque is only ~1.31, far below the previous raw roll torque of 20.
-
-Recommended game-oriented tuning:
-- try Kp around 20 as a first experiment; at 50 deg error this gives ~17.5 controller output
-- keep Kd modest initially, then raise it only if response overshoots/oscillates
-- aero roll damping remains active and already contributes braking
-- reuse/rename the old roll torque concept as a maximum roll-assist torque and clamp PD output to a tuned range (e.g. around the old 20 initially), preventing large torque spikes when bank error is large
-- Kp sets angle-correction strength, Kd sets rate braking; tune for feel, not simulator accuracy
+Important diagnostic:
+- in this simplified diagonal-inertia model, roll-assist torque is local Z and should not directly stop local-X pitch rotation
+- if the aircraft cannot finish a backflip, temporarily disable the entire bank-assist PD section and retest
+- if the backflip returns, vertical bank-assist instability is involved
+- if it still stalls near vertical, inspect pitch control torque vs aerodynamic pitch damping/dynamic pressure instead
+- stall/lift itself reduces lift and does not directly clamp orientation
 
 ## NEXT IMMEDIATE STEP
-1. Add a max roll-assist torque clamp around PD output.
-2. Raise Kp from 1.5 to a meaningful test value around 20 and test response.
-3. Tune Kd based on overshoot / settling.
-4. If response stays sluggish despite adequate Kp, inspect/tune aerodynamic roll damping versus dynamic pressure.
-5. Fix near-vertical invalid-bank handling before relying on assist during vertical flight.
-6. Revisit camera Up behavior after bank assist is stable.
+1. Remove dead `m_rollTorque` or repurpose it as a max roll-assist torque.
+2. Make bank-angle calculation explicitly report valid/invalid.
+3. Skip PD bank assist when bank is invalid near vertical.
+4. Retest backflip with bank assist on.
+5. If backflip still sticks, temporarily disable bank assist completely to isolate whether pitch aero damping is the cause.
+6. Only then tune pitch damping/control authority if needed.
+7. Revisit camera Up behavior after flight-assist behavior is stable.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
