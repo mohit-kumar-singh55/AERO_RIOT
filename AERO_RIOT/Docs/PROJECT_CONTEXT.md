@@ -96,20 +96,32 @@ This must be removed/zeroed for normal roll once the PD controller owns roll, ot
 Debug note:
 - `rollCommand` is not an angle, so do not convert it with XMConvertToDegrees. Print it as a raw controller/torque-like value.
 
+## PD roll controller — TORQUE PATH CORRECT, TUNING CURRENT
+Commit `0b7259093b66776a9a84b804ae68deae8cf33d47` fixed the PD roll torque path:
+- removed raw normal Z roll torque from direct control torque
+- `rollCommand = Kp*bankError - Kd*bankRate`
+- semantic positive rollCommand means bank right
+- local roll torque uses Z = `-rollCommand`
+- local roll torque is transformed to WORLD before `AddTorque`
+- debug now prints rollCommand raw rather than as degrees
+
+Current issue: roll response is very slow, but this is expected from gain scale.
+At full stick from level, max bank error is ~50 deg = 0.873 rad. With Kp=1.5, initial P torque is only ~1.31, far below the previous raw roll torque of 20.
+
+Recommended game-oriented tuning:
+- try Kp around 20 as a first experiment; at 50 deg error this gives ~17.5 controller output
+- keep Kd modest initially, then raise it only if response overshoots/oscillates
+- aero roll damping remains active and already contributes braking
+- reuse/rename the old roll torque concept as a maximum roll-assist torque and clamp PD output to a tuned range (e.g. around the old 20 initially), preventing large torque spikes when bank error is large
+- Kp sets angle-correction strength, Kd sets rate braking; tune for feel, not simulator accuracy
+
 ## NEXT IMMEDIATE STEP
-1. Remove raw normal roll torque from the direct control torque vector; keep pitch X and yaw Y direct.
-2. Convert PD roll command to local torque around -Z:
-   semantic +right -> physical local -Z.
-3. Transform that local assist torque to WORLD using aircraft rotation.
-4. Add world assist torque through KineticBody.
-5. Keep aero roll damping active.
-6. Test:
-   - half stick -> roughly half max bank target
-   - full stick -> ~50 deg target
-   - release -> auto-level toward 0
-   - tune Kp/Kd based on overshoot/response
-7. Fix near-vertical invalid-bank handling before relying on assist during vertical flight.
-8. Revisit camera Up behavior after bank assist is stable.
+1. Add a max roll-assist torque clamp around PD output.
+2. Raise Kp from 1.5 to a meaningful test value around 20 and test response.
+3. Tune Kd based on overshoot / settling.
+4. If response stays sluggish despite adequate Kp, inspect/tune aerodynamic roll damping versus dynamic pressure.
+5. Fix near-vertical invalid-bank handling before relying on assist during vertical flight.
+6. Revisit camera Up behavior after bank assist is stable.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
