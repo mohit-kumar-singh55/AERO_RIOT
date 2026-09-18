@@ -41,8 +41,8 @@ private:
 	float m_stallAngle = DirectX::XMConvertToRadians(15.0f);
 
 	// control torque
-	float m_pitchTorque = 20.0f;
-	float m_yawTorque = 10.0f;
+	float m_pitchTorque = 30.0f;
+	float m_yawTorque = 20.0f;
 	float m_rollTorque = 20.0f;
 
 	// angular damping
@@ -51,6 +51,6 @@ private:
 	float m_rollDamping = 1.0f;
 
 	float m_maxBankAngle = DirectX::XMConvertToRadians(50.0f);
-	float m_bankKp = 1.5f;		// controls how strongly it tries to reach the target angle
-	float m_bankKd = 2.0f;		// controls braking based on roll speed
+	float m_bankKp = 120.0f;		// controls how strongly it tries to reach the target angle
+	float m_bankKd = 15.0f;		// controls braking based on roll speed
 };
