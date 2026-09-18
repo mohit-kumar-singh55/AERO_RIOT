@@ -32,7 +32,7 @@ private:
 	// configurable
 	float m_maxThrust = 100.0f;
 	// directional aerodynamic drag coefficient
-	float m_forwardDrag = 1.0f;
+	float m_forwardDrag = 0.2f;
 	float m_sideDrag = 3.0f;
 	float m_verticalDrag = 2.0f;
 	float m_airBrakePower = 4.0f;	// additional drag
@@ -59,5 +59,5 @@ private:
 	// speed assist
 	float m_minForwardSpeed = 15.0f;
 	float m_minSpeedGain = 8.0f;
-	float m_minMaxSpeedAcceleration = 12.0f;
+	float m_maxSpeedAssistAcceleration = 12.0f;
 };
