@@ -89,6 +89,54 @@ with `q = 0.5*rho*V^2` became numerically unstable under explicit Euler when k=1
 
 Reducing aero damping coefficients into ~0.05–0.1 range stopped value explosion. forwardDrag=1 only masked the bug by keeping speed low.
 
+## CURRENT CORE ISSUE — RAW TORQUE INPUT CAUSES RUNAWAY ANGULAR SPEED
+Further testing showed the problem is not yaw-only. Holding the stick in any direction can make rotation continue accelerating, even with no player throttle. Built-in generic angular damping on/off did not materially solve it.
+
+Latest user tuning (not yet pushed at time of review):
+- bank Kp/Kd reduced to about 40/10 and seemed more stable
+- lower aero damping stopped NaN/explosion
+- still gets continual angular acceleration while stick is held
+
+Root architectural cause:
+- pitch currently uses raw local X torque proportional to stick input
+- yaw currently uses raw local Y torque proportional to turn input
+- holding input therefore continuously applies angular acceleration
+- aero damping is speed-dependent and can become weak at low speed
+- generic damping is not a good primary control solution; even if enabled with coefficient 1, torque 30/20 implies enormous terminal rates (~30 or 20 rad/s with simple linear damping)
+- current repo still disables generic angular damping in AircraftKinetics::OnInitialize; local user experiments may differ
+
+Game-first control redesign:
+**stick should command angular RATE, not raw torque, for pitch/yaw.**
+Use a rate controller:
+- targetPitchRate = pitchInput * maxPitchRate
+- currentPitchRate = localAngularVelocity.x
+- pitchRateError = targetPitchRate - currentPitchRate
+- pitchTorqueCommand = pitchRateKp * pitchRateError, clamped to max pitch torque
+
+Yaw semantic convention:
+- current semantic yaw rate = -localAngularVelocity.y
+- targetYawRate = turnInput * maxYawRate
+- yawRateError = targetYawRate - currentYawRate
+- yawTorqueCommand = yawRateKp * yawRateError
+- physical local Y torque = -yawTorqueCommand
+
+Behavior:
+- hold stick -> rate rises toward finite target and stops accelerating
+- release stick -> target rate becomes zero and controller actively brakes rotation
+- works at low speed even when aero damping is weak
+- physics still uses torque/inertia; controller just decides torque from rate error
+
+Start with a simple P rate controller; no D term yet. This is already equivalent to drive + damping around a target angular velocity.
+
+Roll can remain the existing target-bank PD controller for now. If it later needs the same robustness, use a cascaded bank-angle -> target-roll-rate -> roll-rate controller, but that is deeper than needed today.
+
+During pitch/yaw rate-controller tuning:
+- temporarily keep aero pitch/yaw damping very small or zero to avoid hiding controller behavior
+- generic angular damping is not needed as the main solution
+- add torque clamps to pitch/yaw commands
+- choose gameplay max rates in radians/sec (e.g. around 60–120 deg/s as starting test ranges, tuned independently)
+- after stable controls, reintroduce small aero damping only for feel if desired
+
 ## CURRENT ISSUE — LOW-SPEED / BRAKE YAW RUNAWAY
 After reducing bank PD to ~40/10, overall roll behavior is more stable, but Y-axis rotation can still start accelerating automatically, especially when holding air brake and turning.
 
