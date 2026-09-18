@@ -59,9 +59,7 @@ private:
 
 	// bank assist
 	float m_maxBankAngle = DirectX::XMConvertToRadians(50.0f);
-	//float m_bankKp = 120.0f;		// controls how strongly it tries to reach the target angle
 	float m_bankKp = 40.0f;		// controls how strongly it tries to reach the target angle
-	//float m_bankKd = 15.0f;		// controls braking based on roll speed
 	float m_bankKd = 10.0f;		// controls braking based on roll speed
 
 	// speed assist
