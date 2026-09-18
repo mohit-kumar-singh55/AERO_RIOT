@@ -32,6 +32,7 @@ private:
 	// configurable
 	float m_maxThrust = 100.0f;
 	// directional aerodynamic drag coefficient
+	//float m_forwardDrag = 1.0f;
 	float m_forwardDrag = 0.2f;
 	float m_sideDrag = 3.0f;
 	float m_verticalDrag = 2.0f;
@@ -47,14 +48,19 @@ private:
 	float m_yawTorque = 20.0f;
 
 	// angular damping
-	float m_pitchDamping = 1.0f;
-	float m_yawDamping = 1.0f;
-	float m_rollDamping = 1.0f;
+	//float m_pitchDamping = 1.0f;
+	//float m_yawDamping = 1.0f;
+	//float m_rollDamping = 1.0f;
+	float m_pitchDamping = 0.05f;
+	float m_yawDamping = 0.05;
+	float m_rollDamping = 0.05f;
 
 	// bank assist
 	float m_maxBankAngle = DirectX::XMConvertToRadians(50.0f);
-	float m_bankKp = 120.0f;		// controls how strongly it tries to reach the target angle
-	float m_bankKd = 15.0f;		// controls braking based on roll speed
+	//float m_bankKp = 120.0f;		// controls how strongly it tries to reach the target angle
+	float m_bankKp = 40.0f;		// controls how strongly it tries to reach the target angle
+	//float m_bankKd = 15.0f;		// controls braking based on roll speed
+	float m_bankKd = 10.0f;		// controls braking based on roll speed
 
 	// speed assist
 	float m_minForwardSpeed = 12.0f;

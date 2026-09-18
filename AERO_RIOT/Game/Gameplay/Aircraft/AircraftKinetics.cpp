@@ -16,16 +16,39 @@ void AircraftKinetics::OnInitialize() {
 	// not using the default damping provided by the physics engine
 	m_kb->SetUseLinearDamping(false);
 	m_kb->SetUseAngularDamping(false);
+
+
+	//m_kb->SetAngularDamping({ 0.0f,80.0f,0.0f });
 }
 
 void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
 	const auto& transform = GetTransform();
 
+	Quaternion localRotation;
+	transform.GetRotation().Inverse(localRotation);
+
+	// convert world angular vel. to local-space
+	const Vector3 localAngularVelocity = Vector3::Transform(m_kb->GetAngularVelocity(), localRotation);
+
 	// ! apply rotation
+	float currentPitchRate = localAngularVelocity.x;
+	float currentYawRate = -localAngularVelocity.y;
+
+	float targetPitchRate = controlInput.pitch * 1.1f;
+	float pitchError = targetPitchRate - currentPitchRate;
+
+	float targetYawRate = controlInput.turn * 1.1f;
+	float yawError = targetYawRate - currentYawRate;
+
+	//const Vector3 localTorque = {
+	//	controlInput.pitch * m_pitchTorque,
+	//	-controlInput.turn * m_yawTorque,
+	//	0
+	//};
 	const Vector3 localTorque = {
-		controlInput.pitch * m_pitchTorque,
-		-controlInput.turn * m_yawTorque,
-		0
+	   2.0f * pitchError,
+	   2.0f * yawError,
+	   0
 	};
 	// convert to world-space
 	const Vector3 worldTorque = Vector3::Transform(localTorque, transform.GetRotation());
@@ -37,11 +60,11 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 		* m_airDensity
 		* m_kb->GetLinearVelocity().LengthSquared();
 
-	Quaternion localRotation;
-	transform.GetRotation().Inverse(localRotation);
+	//Quaternion localRotation;
+	//transform.GetRotation().Inverse(localRotation);
 
-	// convert world angular vel. to local-space
-	const Vector3 localAngularVelocity = Vector3::Transform(m_kb->GetAngularVelocity(), localRotation);
+	//// convert world angular vel. to local-space
+	//const Vector3 localAngularVelocity = Vector3::Transform(m_kb->GetAngularVelocity(), localRotation);
 
 	const Vector3 localDampingTorque =
 		-Vector3(m_pitchDamping, m_yawDamping, m_rollDamping)
