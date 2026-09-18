@@ -32,7 +32,6 @@ private:
 	// configurable
 	float m_maxThrust = 100.0f;
 	// directional aerodynamic drag coefficient
-	//float m_forwardDrag = 1.0f;
 	float m_forwardDrag = 0.2f;
 	float m_sideDrag = 3.0f;
 	float m_verticalDrag = 2.0f;
@@ -40,17 +39,20 @@ private:
 
 	float m_airDensity = 1.225f;
 	float m_wingArea = 2.0f;
-	float m_liftSlope = 4.0f;	// per radian
+	float m_liftSlope = 4.0f;		// per radian
 	float m_stallAngle = DirectX::XMConvertToRadians(15.0f);
 
-	// control torque
-	float m_pitchTorque = 30.0f;
-	float m_yawTorque = 20.0f;
+	// rotational settings
+	float m_maxPitchRate = 2.5f;	// radians/sec
+	float m_maxYawRate = 2.5f;		// radians/sec
+
+	float m_pitchRateKp = 5.0f;		// controls how strongly it tries to reach the target angle
+	float m_pitchYawKp = 5.0f;		// controls how strongly it tries to reach the target angle
+
+	float m_maxPitchTorque = 30.0f;
+	float m_maxYawTorque = 20.0f;
 
 	// angular damping
-	//float m_pitchDamping = 1.0f;
-	//float m_yawDamping = 1.0f;
-	//float m_rollDamping = 1.0f;
 	float m_pitchDamping = 0.05f;
 	float m_yawDamping = 0.05;
 	float m_rollDamping = 0.05f;

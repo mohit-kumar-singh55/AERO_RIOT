@@ -16,9 +16,6 @@ void AircraftKinetics::OnInitialize() {
 	// not using the default damping provided by the physics engine
 	m_kb->SetUseLinearDamping(false);
 	m_kb->SetUseAngularDamping(false);
-
-
-	//m_kb->SetAngularDamping({ 0.0f,80.0f,0.0f });
 }
 
 void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
@@ -34,20 +31,15 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	float currentPitchRate = localAngularVelocity.x;
 	float currentYawRate = -localAngularVelocity.y;
 
-	float targetPitchRate = controlInput.pitch * 1.1f;
+	float targetPitchRate = controlInput.pitch * m_maxPitchRate;
 	float pitchError = targetPitchRate - currentPitchRate;
 
-	float targetYawRate = controlInput.turn * 1.1f;
+	float targetYawRate = controlInput.turn * m_maxYawRate;
 	float yawError = targetYawRate - currentYawRate;
 
-	//const Vector3 localTorque = {
-	//	controlInput.pitch * m_pitchTorque,
-	//	-controlInput.turn * m_yawTorque,
-	//	0
-	//};
 	const Vector3 localTorque = {
-	   2.0f * pitchError,
-	   -2.0f * yawError,
+	   std::clamp(m_pitchRateKp * pitchError, -m_maxPitchTorque, m_maxPitchTorque),
+	   -std::clamp(m_pitchYawKp * yawError, -m_maxYawTorque, m_maxYawTorque),
 	   0
 	};
 	// convert to world-space
@@ -59,12 +51,6 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 		0.5f
 		* m_airDensity
 		* m_kb->GetLinearVelocity().LengthSquared();
-
-	//Quaternion localRotation;
-	//transform.GetRotation().Inverse(localRotation);
-
-	//// convert world angular vel. to local-space
-	//const Vector3 localAngularVelocity = Vector3::Transform(m_kb->GetAngularVelocity(), localRotation);
 
 	const Vector3 localDampingTorque =
 		-Vector3(m_pitchDamping, m_yawDamping, m_rollDamping)
