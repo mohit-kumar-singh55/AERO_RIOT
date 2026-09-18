@@ -51,4 +51,6 @@ private:
 	float m_rollDamping = 1.0f;
 
 	float m_maxBankAngle = DirectX::XMConvertToRadians(50.0f);
+	float m_bankKp = 1.5f;		// controls how strongly it tries to reach the target angle
+	float m_bankKd = 2.0f;		// controls braking based on roll speed
 };
