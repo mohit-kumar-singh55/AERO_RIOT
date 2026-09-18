@@ -169,14 +169,44 @@ Alternative future solution if more deterministic arcade control is desired:
 
 Do not hard-clamp angular velocity as the first fix.
 
+## PITCH/YAW RATE CONTROLLERS — IMPLEMENTED AND WORKING
+Commit `257c08eceedcddf01ea53ac55516cfa20a260b0b` replaced raw pitch/yaw torque input with proportional angular-rate control. Commit `f58edc064bb8054dd4f07891457f39e22943c79e` corrected yaw torque sign.
+
+Current hardcoded prototype:
+- currentPitchRate = localAngularVelocity.x
+- currentYawRate = -localAngularVelocity.y
+- targetPitchRate = pitchInput * 1.1 rad/s
+- targetYawRate = turnInput * 1.1 rad/s
+- pitchError = target-current
+- yawError = target-current
+- local torque X = 2.0 * pitchError
+- local torque Y = -2.0 * yawError
+- local torque Z = 0; roll remains bank-angle PD controlled
+
+User testing: seems to work; sustained stick no longer produces unlimited angular acceleration.
+
+Review:
+- architecture/signs are correct
+- hardcoded 1.1 and 2.0 are fine for proof-of-concept but should become named fields
+- existing m_pitchTorque/m_yawTorque fields are now unused; prefer repurposing them as max pitch/yaw torque clamps rather than deleting them
+- add torque clamp after rate-controller output so large opposite-rate errors cannot produce unbounded torque
+- suggested field concepts: maxPitchRate, maxYawRate, pitchRateKp, yawRateKp, maxPitchTorque, maxYawTorque
+- 1.1 rad/s ~= 63 deg/s; tune later for gameplay
+
+Important: aero angular damping is still active at ~0.05 on pitch/yaw/roll. The rate controller itself already contains a damping term:
+`torque = K*(targetRate-currentRate) = K*targetRate - K*currentRate`.
+Therefore pitch/yaw aero damping is no longer required for basic stability and can make control authority strongly speed-dependent. At high speed q becomes large, so even 0.05 aero damping can substantially reduce achieved pitch/yaw rate below the requested target. For consistent arcade controls, next test should set pitch/yaw aero damping to 0 (or extremely small), while keeping the rate controller responsible for stopping rotation. Roll bank PD already contains a derivative/rate term as well.
+
 ## NEXT IMMEDIATE STEP
-1. Add baseline Y-axis angular damping independent of dynamic pressure, preferably via existing KineticBody generic angular damping.
-2. Test low-speed + airbrake + held turn:
-   - should still snap-turn sharply
-   - yaw rate should approach a finite value rather than accelerate forever
-   - releasing stick should stop yaw within a reasonable time
-3. If successful, tune baseYawDamping to preserve the maneuver.
-4. Only then return to propulsion/glide redesign.
+1. Replace hardcoded 1.1 and 2.0 with named pitch/yaw rate-controller fields.
+2. Repurpose old pitch/yaw torque values as maximum controller torque clamps.
+3. Clamp pitch/yaw torque commands before local->world transform.
+4. Temporarily set pitch/yaw aero angular damping to zero and test at both low and high speed.
+5. Verify:
+   - full held stick approaches a finite repeatable rate
+   - release returns rate toward zero
+   - control feel does not change dramatically with airspeed
+6. Once stable, consider rotational control milestone complete and resume propulsion/glide redesign.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
