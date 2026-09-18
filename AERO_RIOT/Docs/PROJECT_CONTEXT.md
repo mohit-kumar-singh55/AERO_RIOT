@@ -2,157 +2,105 @@
 
 Last updated: 2026-09-18
 
-Compact handoff for continuing AERO_RIOT in a fresh chat. Inspect latest `master` before assuming this file is perfectly current.
+Compact handoff for continuing AERO_RIOT. Inspect latest `master` before assuming this file is perfectly current.
 
 ## Learning workflow
-AERO_RIOT is a DirectXTK/C++ 3D fighter-aircraft dogfight project used to learn engine architecture, custom physics/aerodynamics, rendering/HLSL, VFX, cameras, AI, and optimization.
+AERO_RIOT is a DirectXTK/C++ 3D fighter-dogfight game used to learn engine architecture, custom physics/aerodynamics, rendering/HLSL, VFX, cameras, AI, and optimization.
 
-The user manually writes code for learning. Preferred flow: UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE. Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical.
+The user manually writes code to learn. Preferred flow:
+UNDERSTAND -> DESIGN -> IMPLEMENT -> REVIEW -> IMPROVE.
+Do not provide full copy-paste implementations unless explicitly requested, stuck, or the task is mechanical.
 
-### Game-first design rule
-AERO_RIOT is a GAME, not a full flight simulator. Physics should be believable enough to create satisfying, readable, exciting flight, but realism is not a goal by itself. Ask periodically: **"Are we going deeper than the game needs?"**
+### Game-first rule
+AERO_RIOT is a GAME, not a simulator. Physics should feel believable and useful for dogfighting, but gameplay/readability/control take priority over realism.
 
 ## Engine / physics conventions
-- Fixed simulation 1/60 s.
-- Forward=(0,0,-1), Right=(1,0,0), Up=(0,1,0).
-- accumulated forces/torques and linear/angular velocities are WORLD-space.
-- body-space diagonal moment of inertia is implemented.
-- aircraft disables generic KineticBody damping and uses aircraft-specific aero damping.
+- fixed simulation 1/60 s
+- Forward=(0,0,-1), Right=(1,0,0), Up=(0,1,0)
+- accumulated force/torque and linear/angular velocity are WORLD-space
+- body-space diagonal moment of inertia implemented
+- aircraft disables generic KineticBody damping and uses aircraft-specific aero damping
 
 ## Aircraft aerodynamics — ACTIVE
-Implemented and active:
+Implemented:
 - thrust
 - directional quadratic drag
 - gravity
 - AoA
 - lift
-- stall curve (linear to 15 deg, then falls toward zero by 90 deg)
+- stall curve: linear to 15 deg AoA, then lift falls toward zero by 90 deg
 
-Stall directly affects lift via `CalculateLiftCoefficient(angleOfAttack)`; do not replace it with hard orientation clamps unless gameplay later needs otherwise.
+Stall directly affects lift; it does not clamp orientation.
 
-## Physical controls — WORKING FOUNDATION
+## Physical controls
 Axes:
 - pitch -> local X
 - yaw -> local Y
 - roll -> local Z
-- Forward=-Z; semantic right bank corresponds to physical local -Z rotation
+- Forward=-Z; semantic right bank corresponds to local -Z rotation
 
-Input:
-- pitch +1 = nose up
-- raw gamepad Y inverted
-- axial stick threshold suppresses unwanted cross-axis input
-
-Current tuning after commit `45d403980db7bc11b4f901f885f40baf42188d70`:
+Current tuning:
 - pitchTorque=30
 - yawTorque=20
 - pitch/yaw/roll aero damping=1
 - maxBankAngle=50 deg
 - bankKp=120
 - bankKd=15
-- this PD tuning currently feels good to the user
 
-## Roll bank-assist — WORKING
-Normal roll is controlled by target-bank PD assistance rather than raw roll torque.
+Input:
+- pitch +1 = nose up
+- raw gamepad Y inverted
+- axial stick threshold suppresses cross-axis noise
 
-Current flow:
+## Roll bank assist — CURRENT POLICY
+Normal roll is controlled by target-bank PD assistance:
 - targetBank = turn * maxBankAngle
-- currentBank from horizon-relative signed bank calculation
-- bankError = shortest signed angular difference
+- bankError = shortest signed target-current difference
 - bankRate = -localAngularVelocity.z
 - rollCommand = Kp*bankError - Kd*bankRate
-- semantic +rollCommand = bank right
 - local roll torque = (0,0,-rollCommand)
-- local torque transformed to WORLD before KineticBody::AddTorque
-- old direct local-Z roll input has been removed
+- transform local torque to WORLD before AddTorque
 
-Current pushed torque path is structurally correct.
+`CalculateBankAngle()` returns `std::optional<float>` and returns nullopt near the vertical singularity.
 
-### m_rollTorque status
-`m_rollTorque = 20` remains in AircraftKinetics.h but is currently unused.
-Do not keep it as dead state:
-- either remove it, or preferably repurpose/rename it to `m_maxRollAssistTorque` if adding a PD-output clamp
-- with Kp=120 and a 50-deg error, normal initial PD output is ~105, so a cap of 20 would destroy the current good feel
-- if a cap is added, choose/tune it high enough to preserve normal response while limiting pathological large commands (e.g. around the current normal maximum rather than the old raw-roll value)
+Backflip testing showed horizon-relative bank assist fights inverted/over-the-top flight. An upright-only condition fixed backflips but disabled assist above 90 deg bank, and normal input can reach/invert too easily.
 
-## Signed bank angle / vertical edge case
-`CalculateBankAngle()` projects world Up onto the plane perpendicular to aircraft Forward and uses atan2 against aircraft Up. Principal-angle wrap [-pi,+pi] is expected.
+Current user decision:
+- prioritize reliable auto-assist over backflip freedom
+- the upright-only `aircraftUp.Dot(WorldUp) > 0` condition is COMMENTED OUT again
+- bank assist runs whenever bank angle is valid
+- clean backflips are temporarily sacrificed
+- do not deepen the global orientation/recovery math yet
+- later special maneuver / recovery states can explicitly override assist
 
-Current vertical guard is incomplete:
-- code checks `levelUp.LengthSquared() > 0.000001f` before Normalize()
-- but if below threshold, it still continues into atan2 and then the PD controller
-- therefore bank assist is NOT actually skipped while vertical
+Dead `m_rollTorque` field was removed.
 
-Needed design:
-- bank-angle calculation needs a validity result, because bank is undefined near vertical and `0` is also a valid bank
-- good options: `std::optional<float>` return, or `bool TryCalculateBankAngle(float& outBank)`
-- when invalid, skip the bank-assist torque for that frame
-- use a gameplay-meaningful vertical cone rather than only an almost-zero numerical epsilon if testing needs it; for example levelUp length-squared around 0.01 corresponds to roughly within 5.7 deg of vertical
+## NEXT FLIGHT-FEEL FEATURE — MINIMUM FORWARD SPEED
+Game goal: even with zero PLAYER throttle input, aircraft should continue moving forward at a minimum cruising speed so dogfights do not stall out into awkward low-speed control.
 
-Important diagnostic:
-- in this simplified diagonal-inertia model, roll-assist torque is local Z and should not directly stop local-X pitch rotation
-- if the aircraft cannot finish a backflip, temporarily disable the entire bank-assist PD section and retest
-- if the backflip returns, vertical bank-assist instability is involved
-- if it still stalls near vertical, inspect pitch control torque vs aerodynamic pitch damping/dynamic pressure instead
-- stall/lift itself reduces lift and does not directly clamp orientation
+Do NOT directly clamp/set linear velocity during normal flight. That would snap momentum/direction and fight the force-based physics.
 
-## Backflip diagnostic — BANK ASSIST CONFIRMED AS CAUSE
-User implemented the optional bank-angle guard in commit `0c7da1424c1f4caf36740c371d36a1002d089043`:
-- `CalculateBankAngle()` returns `std::nullopt` when projected levelUp length-squared < 0.01
-- PD bank torque is skipped when bank angle is invalid
-- dead `m_rollTorque` field was removed
+Preferred design:
+- keep current player thrust force
+- add a separate automatic minimum-forward-speed assist force
+- use existing forward speed: `forwardSpeed = velocity.Dot(aircraftForward)`
+- if forwardSpeed < minForwardSpeed, compute speed deficit
+- convert deficit into a forward acceleration/force with a proportional gain
+- clamp the assist acceleration/force so a 180-degree orientation change does not instantly reverse velocity
+- use KineticBody mass if converting desired acceleration to force
+- no extra dt in the force formula; KineticBody integration handles dt
+- likely disable or reduce minimum-speed assist while airBrake is intentionally held, otherwise hidden propulsion and airbrake fight each other
 
-Diagnostic result:
-- with the entire bank-assist block commented out, backflip works
-- with bank assist enabled, aircraft still gets disturbed/stuck around the vertical/inverted part
-- therefore bank assist, not pitch damping, is the confirmed cause
+Conceptual flow:
+`speedDeficit = minForwardSpeed - forwardSpeed`
+if deficit > 0:
+`assistAccel = clamp(speedDeficit * minSpeedGain, 0, maxAssistAccel)`
+`assistForce = aircraftForward * assistAccel * mass`
+`AddForce(assistForce)`
 
-Why:
-- the vertical singularity is only part of the issue
-- horizon-relative bank has a branch/reference flip when a pure pitch loop passes over the top
-- just before vertical, a pure pitch loop reports bank ~0
-- exactly near vertical, bank is undefined and correctly skipped
-- just after crossing into inverted flight, the same no-roll attitude can be represented as bank ~±pi relative to the world-up level frame
-- with Kp=120 this can create a very large false roll correction
-- trying to make a globally continuous horizon bank reference through vertical/inverted flight would require extra state/reference-frame logic and is deeper than the game currently needs
+This is a gameplay speed-assist controller, not a realistic engine model.
 
-Game-oriented policy:
-- bank assist should be treated as a NORMAL UPRIGHT-FLIGHT assist, not a universal orientation controller
-- keep `CalculateBankAngle()` geometry-only with its singularity guard
-- in the caller/controller, only enable bank assist while aircraft is in the upright hemisphere, e.g. `aircraftUp.Dot(WorldUp) > 0`
-- when inverted (`upDot <= 0`), skip bank-assist torque entirely
-- the existing near-vertical optional guard handles the boundary region
-- this allows intentional loops/inverted flight without the leveling controller fighting them
-- normal bank target is only 50 deg, so disabling assist beyond 90 deg bank is acceptable for the current game; special maneuvers will explicitly override/disable assist anyway
-- future recovery mode can be added only if gameplay later needs automatic recovery from arbitrary inverted attitudes
-
-Also consider a high max roll-assist torque clamp as a safety guard later. With current Kp=120, a normal 50-deg error gives ~105 controller output, so any cap must be above normal operating torque; do not reuse the old value 20.
-
-## Upright-only bank assist — CURRENT ACCEPTED POLICY
-Commit `a605f4dd4f3ae62ec0932155a2d9d6bba4d08baa` added:
-`transform.GetUp().Dot(Vector3::Up) > 0`
-as an additional condition for bank assist.
-
-Observed behavior:
-- backflips now work
-- bank assist stops once aircraft bank/inversion passes 90 degrees on either side
-- this is expected because the condition only distinguishes upright vs inverted hemisphere; it cannot distinguish "inverted due to pitch loop" from "inverted due to roll"
-
-Game-first decision for now:
-- ACCEPT this limitation for normal flight
-- normal bank target is only 50 degrees, so ordinary assisted turns should stay well inside the upright hemisphere
-- do not add more complicated global orientation math just to auto-recover arbitrary inverted attitudes
-- special maneuvers / future barrel roll / evade roll can explicitly disable or override normal bank assist
-- if later gameplay needs automatic recovery after being knocked past 90 degrees, introduce an explicit flight-assist / maneuver state (normal assisted flight vs acrobatic/recovery mode) rather than trying to infer intent from orientation alone
-- do NOT simply disable bank assist whenever pitch input is strong: dogfighting commonly combines pitch + bank, so that would remove assistance during useful combat turns
-
-The current controller is therefore a NORMAL-FLIGHT ASSIST, not a universal attitude recovery controller.
-
-## NEXT IMMEDIATE STEP
-1. Keep upright-only bank assist as current behavior unless normal playtesting causes accidental >90 degree banks.
-2. Verify normal 50-degree assisted turns and release-to-level remain stable.
-3. Consider first bank-assist milestone complete.
-4. Next likely flight-feel task: revisit camera Up behavior so camera treatment matches physical banking without making aiming/disorientation unpleasant.
-5. Later, special maneuver states can temporarily disable/override assist.
+Note: a pure proportional speed assist plus drag may settle slightly below the nominal target because drag still exists at the target. That is acceptable initially; tune by feel. If exact minimum-speed tracking later matters, add small feed-forward/idle thrust or a richer speed controller instead of directly clamping velocity.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
@@ -162,8 +110,9 @@ The current controller is therefore a NORMAL-FLIGHT ASSIST, not a universal atti
 - air brake still simplified
 - no induced drag / sideslip model / render interpolation
 - camera still uses world Up
+- backflip currently conflicts with always-on horizon-relative bank assist
 
-Possible future fidelity upgrades only if gameplay needs them: airspeed-based control-authority curves, rotational-flow damping, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
+Possible future fidelity only if gameplay needs it: airspeed-based control-authority curves, rotational-flow damping, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
 
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
