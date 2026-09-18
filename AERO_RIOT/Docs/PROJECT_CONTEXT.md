@@ -168,6 +168,32 @@ Immediate diagnostic/fix:
 
 Also note lift scales with V^2 and should be sanity-checked after angular stability is fixed, but the violent rotation/NaN is most directly explained by the angular damping instability.
 
+## POST-NaN ROTATION ISSUE — CURRENT DIAGNOSTIC
+After reducing aero angular damping enough to stop values exploding/NaN at higher speed, the aircraft still rotates violently/automatically.
+
+Important interpretation:
+- NaN instability and violent control response are now separate issues.
+- Bank PD gains (Kp=120, Kd=15) were tuned while aero angular damping was dramatically stronger.
+- Reducing aero damping changes the controlled system; previous bank gains are no longer guaranteed to be appropriate.
+- Given earlier bank-assist behavior, roll PD is the leading suspect.
+
+Next diagnostic must isolate before more tuning:
+1. Use the intended lower forward drag/high-speed setup again (do not hide issue with forwardDrag=1).
+2. Keep reduced aero damping that avoids NaN.
+3. Temporarily disable ONLY the bank-assist PD block.
+4. At ~20-22 speed, make a small turn input then release.
+5. If violent rotation disappears -> bank PD confirmed.
+6. If it remains -> log localAngularVelocity x/y/z to identify pitch/yaw/roll axis before changing more values.
+
+If bank PD is confirmed:
+- add a maximum bank-assist torque clamp
+- retune Kp/Kd for the new damping regime rather than restoring huge aero damping
+- conservative diagnostic region: Kp around 40-60, Kd around 10-15, max bank-assist torque around 40-60; tune by feel
+- full 50-deg error at Kp=40 gives ~35 torque instead of ~105 at Kp=120
+- torque clamp protects against large horizon/bank-angle errors (especially near inverted attitudes)
+
+Do not resume propulsion/glide redesign until high-speed rotational behavior is stable.
+
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
 - evade Body spin presentation-only
