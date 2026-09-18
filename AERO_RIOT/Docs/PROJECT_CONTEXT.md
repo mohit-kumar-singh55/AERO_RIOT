@@ -134,6 +134,40 @@ This is a gameplay speed-assist controller, not a realistic engine model.
 
 Note: a pure proportional speed assist plus drag may settle slightly below the nominal target because drag still exists at the target. That is acceptable initially; tune by feel. If exact minimum-speed tracking later matters, add small feed-forward/idle thrust or a richer speed controller instead of directly clamping velocity.
 
+## HIGH-SPEED ROTATION / NaN DIAGNOSIS — CURRENT PRIORITY
+User lowered forward drag to improve glide, which allowed speed to rise to ~22+. At that speed, even small rotation input became violently unstable and total velocity eventually displayed NaN(ind). User temporarily restored forwardDrag to 1.0, which hides the issue by keeping speed lower.
+
+Root cause identified in aerodynamic angular damping:
+`localDampingTorque = -damping * localAngularVelocity * dynamicPressure`
+with
+`dynamicPressure = 0.5 * rho * V^2`.
+
+KineticBody integrates angular velocity with explicit Euler. With MOI currently default ~1, per-axis damping behaves approximately:
+`omegaNew = omega * (1 - k*q*dt)`.
+
+At V=22, rho=1.225:
+- q ~= 296
+- k=1, dt=1/60
+- multiplier ~= -3.94
+- damping flips sign and amplifies angular velocity each fixed step -> explosive oscillation -> overflow/NaN
+
+At V=10:
+- q ~= 61
+- multiplier with k=1 is ~= -0.02
+- not explosive, but still extremely overdamped and slightly sign-reversing
+
+Therefore forwardDrag=1 is masking the problem, not fixing it.
+
+Immediate diagnostic/fix:
+- reduce aircraft pitch/yaw/roll aero damping coefficients from 1.0 to roughly 0.05–0.1
+- test again with forwardDrag around 0.2 and high speed
+- start around 0.05; at V=22, multiplier becomes ~0.75, giving real decay instead of sign reversal
+- tune upward gradually only if rotation is too loose
+- do not change damping architecture yet; for expected bounded game speed, properly scaled coefficients may be enough
+- if future speeds make stability a recurring issue, add a bounded/exponential damping formulation or equivalent protection so damping cannot numerically reverse/amplify omega in one step
+
+Also note lift scales with V^2 and should be sanity-checked after angular stability is fixed, but the violent rotation/NaN is most directly explained by the angular damping instability.
+
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
 - evade Body spin presentation-only
