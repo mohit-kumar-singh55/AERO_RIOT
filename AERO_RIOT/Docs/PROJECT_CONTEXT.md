@@ -127,12 +127,32 @@ Game-oriented policy:
 
 Also consider a high max roll-assist torque clamp as a safety guard later. With current Kp=120, a normal 50-deg error gives ~105 controller output, so any cap must be above normal operating torque; do not reuse the old value 20.
 
+## Upright-only bank assist — CURRENT ACCEPTED POLICY
+Commit `a605f4dd4f3ae62ec0932155a2d9d6bba4d08baa` added:
+`transform.GetUp().Dot(Vector3::Up) > 0`
+as an additional condition for bank assist.
+
+Observed behavior:
+- backflips now work
+- bank assist stops once aircraft bank/inversion passes 90 degrees on either side
+- this is expected because the condition only distinguishes upright vs inverted hemisphere; it cannot distinguish "inverted due to pitch loop" from "inverted due to roll"
+
+Game-first decision for now:
+- ACCEPT this limitation for normal flight
+- normal bank target is only 50 degrees, so ordinary assisted turns should stay well inside the upright hemisphere
+- do not add more complicated global orientation math just to auto-recover arbitrary inverted attitudes
+- special maneuvers / future barrel roll / evade roll can explicitly disable or override normal bank assist
+- if later gameplay needs automatic recovery after being knocked past 90 degrees, introduce an explicit flight-assist / maneuver state (normal assisted flight vs acrobatic/recovery mode) rather than trying to infer intent from orientation alone
+- do NOT simply disable bank assist whenever pitch input is strong: dogfighting commonly combines pitch + bank, so that would remove assistance during useful combat turns
+
+The current controller is therefore a NORMAL-FLIGHT ASSIST, not a universal attitude recovery controller.
+
 ## NEXT IMMEDIATE STEP
-1. Add an upright-flight condition around the PD bank assist, conceptually `aircraftUp.Dot(Vector3::Up) > 0` in addition to valid bank angle.
-2. Re-test a full backflip while continuously holding pitch.
-3. Verify bank assist resumes naturally once the aircraft returns to the upright hemisphere.
-4. Verify normal left/right turning and release-to-level still feel good.
-5. If successful, consider the first roll-assist milestone complete and then revisit camera Up behavior / next gameplay system.
+1. Keep upright-only bank assist as current behavior unless normal playtesting causes accidental >90 degree banks.
+2. Verify normal 50-degree assisted turns and release-to-level remain stable.
+3. Consider first bank-assist milestone complete.
+4. Next likely flight-feel task: revisit camera Up behavior so camera treatment matches physical banking without making aiming/disorientation unpleasant.
+5. Later, special maneuver states can temporarily disable/override assist.
 
 ## Temporary technical debt
 - evade root displacement bypasses KineticBody
