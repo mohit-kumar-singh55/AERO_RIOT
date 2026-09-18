@@ -73,7 +73,7 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	m_angularVelocity += m_angularAcceleration * fixedDeltaTime;
 
 	float angularVelocitySquared = m_angularVelocity.Dot(m_angularVelocity);
-	if (angularVelocitySquared >= 0.001f * 0.001f) {
+	if (angularVelocitySquared >= 0.000001f) {
 		float angularSpeed = std::sqrt(angularVelocitySquared);
 		float angle = angularSpeed * fixedDeltaTime;
 		Vector3 rotationAxis = m_angularVelocity / angularSpeed;	// normalize

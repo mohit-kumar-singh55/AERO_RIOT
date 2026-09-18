@@ -52,8 +52,20 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	const Vector3 worldDampingTorque = Vector3::Transform(localDampingTorque, transform.GetRotation());
 	m_kb->AddTorque(worldDampingTorque);
 
-	OutputDebugStringW(std::to_wstring(CalculateBankAngle()).c_str());
+	float turn = controlInput.turn;
+	float currentBankAngle = CalculateBankAngle();
+	float targetBankAngle = turn > 0.0f ? m_maxBankAngle : turn < 0.0f ? -m_maxBankAngle : 0.0f;
+	float bankError = std::atan2(
+		std::sin(targetBankAngle - currentBankAngle),
+		std::cos(targetBankAngle - currentBankAngle)
+	);
+
+	OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(currentBankAngle)).c_str());
 	OutputDebugStringW(L"\n");
+	OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(targetBankAngle)).c_str());
+	OutputDebugStringW(L"\n");
+	OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(bankError)).c_str());
+	OutputDebugStringW(L"\n\n");
 
 	// ! apply thrust
 	const Vector3 thrust =
@@ -105,7 +117,7 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	Vector3 liftDir = Vector3::Zero;
 	float pitchSpeedSquared = forwardSpeed * forwardSpeed + verticalSpeed * verticalSpeed;
 
-	if (pitchSpeedSquared <= 0.01f * 0.01)
+	if (pitchSpeedSquared <= 0.000001f)
 		liftForce = 0.0f;
 	else {
 		float angleOfAttack = -std::atan2(verticalSpeed, forwardSpeed);
@@ -156,7 +168,9 @@ float AircraftKinetics::CalculateBankAngle() const noexcept {
 		Vector3::Up
 		- forward
 		* forward.Dot(Vector3::Up);
-	levelUp.Normalize();
+
+	if (levelUp.LengthSquared() > 0.000001f)
+		levelUp.Normalize();
 
 	float bank = std::atan2(
 		forward.Dot(levelUp.Cross(up)),

@@ -49,4 +49,6 @@ private:
 	float m_pitchDamping = 1.0f;
 	float m_yawDamping = 1.0f;
 	float m_rollDamping = 1.0f;
+
+	float m_maxBankAngle = DirectX::XMConvertToRadians(50.0f);
 };
