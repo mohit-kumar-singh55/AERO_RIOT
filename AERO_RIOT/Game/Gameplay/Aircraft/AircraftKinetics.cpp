@@ -52,6 +52,9 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	const Vector3 worldDampingTorque = Vector3::Transform(localDampingTorque, transform.GetRotation());
 	m_kb->AddTorque(worldDampingTorque);
 
+	OutputDebugStringW(std::to_wstring(CalculateBankAngle()).c_str());
+	OutputDebugStringW(L"\n");
+
 	// ! apply thrust
 	const Vector3 thrust =
 		transform.GetForward()
@@ -140,4 +143,25 @@ float AircraftKinetics::CalculateLiftCoefficient(const float angleOfAttack) cons
 
 	// above 90.0f
 	return 0.0f;
+}
+
+float AircraftKinetics::CalculateBankAngle() const noexcept {
+	const auto& transform = GetTransform();
+
+	const auto up = transform.GetUp();
+	const auto forward = transform.GetForward();
+
+	// up dir of the plane we want the aircraft to be leveled to
+	auto levelUp =
+		Vector3::Up
+		- forward
+		* forward.Dot(Vector3::Up);
+	levelUp.Normalize();
+
+	float bank = std::atan2(
+		forward.Dot(levelUp.Cross(up)),
+		levelUp.Dot(up)
+	);
+
+	return bank;
 }

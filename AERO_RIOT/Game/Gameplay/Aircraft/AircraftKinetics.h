@@ -21,6 +21,9 @@ private:
 	[[nodiscard]]
 	float CalculateLiftCoefficient(const float angleOfAttack) const noexcept;
 
+	[[nodiscard]]
+	float CalculateBankAngle() const noexcept;
+
 private:
 	KineticBody* m_kb = nullptr;
 
