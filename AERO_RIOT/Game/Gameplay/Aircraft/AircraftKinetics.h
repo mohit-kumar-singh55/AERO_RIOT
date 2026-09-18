@@ -4,6 +4,8 @@
 
 #include <SNX/Core/Object/Component.h>
 
+#include <optional>
+
 class KineticBody;
 
 // physics component for aircraft
@@ -22,7 +24,7 @@ private:
 	float CalculateLiftCoefficient(const float angleOfAttack) const noexcept;
 
 	[[nodiscard]]
-	float CalculateBankAngle() const noexcept;
+	std::optional<float> CalculateBankAngle() const noexcept;
 
 private:
 	KineticBody* m_kb = nullptr;
@@ -43,7 +45,6 @@ private:
 	// control torque
 	float m_pitchTorque = 30.0f;
 	float m_yawTorque = 20.0f;
-	float m_rollTorque = 20.0f;
 
 	// angular damping
 	float m_pitchDamping = 1.0f;

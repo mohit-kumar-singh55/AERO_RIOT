@@ -53,30 +53,33 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	m_kb->AddTorque(worldDampingTorque);
 
 	// ! bank-assist (auto-level)
-	float turn = controlInput.turn;
-	float currentBankAngle = CalculateBankAngle();
-	float targetBankAngle = turn * m_maxBankAngle;
-	float bankError = std::atan2(
-		std::sin(targetBankAngle - currentBankAngle),
-		std::cos(targetBankAngle - currentBankAngle)
-	);
-	float bankRate = -localAngularVelocity.z;
+	auto bank = CalculateBankAngle();
+	if (bank) {
+		float turn = controlInput.turn;
+		float currentBankAngle = *bank;
+		float targetBankAngle = turn * m_maxBankAngle;
+		float bankError = std::atan2(
+			std::sin(targetBankAngle - currentBankAngle),
+			std::cos(targetBankAngle - currentBankAngle)
+		);
+		float bankRate = -localAngularVelocity.z;
 
-	// PD controller (roll torque to level the aircraft)
-	float rollCommand = m_bankKp * bankError - m_bankKd * bankRate;
-	const Vector3 localRollTorque = { 0.0f,0.0f,-rollCommand };
-	const Vector3 worldRollTorque = Vector3::Transform(localRollTorque, transform.GetRotation());
+		// PD controller (roll torque to level the aircraft)
+		float rollCommand = m_bankKp * bankError - m_bankKd * bankRate;
+		const Vector3 localRollTorque = { 0.0f,0.0f,-rollCommand };
+		const Vector3 worldRollTorque = Vector3::Transform(localRollTorque, transform.GetRotation());
 
-	m_kb->AddTorque(worldRollTorque);
+		m_kb->AddTorque(worldRollTorque);
+	}
 
-	OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(currentBankAngle)).c_str());
-	OutputDebugStringW(L"\n");
-	OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(targetBankAngle)).c_str());
-	OutputDebugStringW(L"\n");
-	OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(bankError)).c_str());
-	OutputDebugStringW(L"\n");
-	OutputDebugStringW(std::to_wstring(rollCommand).c_str());
-	OutputDebugStringW(L"\n\n");
+	//OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(currentBankAngle)).c_str());
+	//OutputDebugStringW(L"\n");
+	//OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(targetBankAngle)).c_str());
+	//OutputDebugStringW(L"\n");
+	//OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(bankError)).c_str());
+	//OutputDebugStringW(L"\n");
+	//OutputDebugStringW(std::to_wstring(rollCommand).c_str());
+	//OutputDebugStringW(L"\n\n");
 
 	// ! apply thrust
 	const Vector3 thrust =
@@ -168,7 +171,7 @@ float AircraftKinetics::CalculateLiftCoefficient(const float angleOfAttack) cons
 	return 0.0f;
 }
 
-float AircraftKinetics::CalculateBankAngle() const noexcept {
+std::optional<float> AircraftKinetics::CalculateBankAngle() const noexcept {
 	const auto& transform = GetTransform();
 
 	const auto up = transform.GetUp();
@@ -180,8 +183,10 @@ float AircraftKinetics::CalculateBankAngle() const noexcept {
 		- forward
 		* forward.Dot(Vector3::Up);
 
-	if (levelUp.LengthSquared() > 0.000001f)
-		levelUp.Normalize();
+	if (levelUp.LengthSquared() < 0.01f)
+		return std::nullopt;
+
+	levelUp.Normalize();
 
 	float bank = std::atan2(
 		forward.Dot(levelUp.Cross(up)),
