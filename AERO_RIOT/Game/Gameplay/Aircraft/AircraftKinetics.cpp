@@ -47,7 +47,7 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	//};
 	const Vector3 localTorque = {
 	   2.0f * pitchError,
-	   2.0f * yawError,
+	   -2.0f * yawError,
 	   0
 	};
 	// convert to world-space
