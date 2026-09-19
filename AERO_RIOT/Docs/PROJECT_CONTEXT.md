@@ -220,6 +220,50 @@ Therefore pitch/yaw aero damping is no longer required for basic stability and c
 
 Possible future fidelity only if gameplay needs it: airspeed-based control-authority curves, rotational-flow damping, gyroscopic coupling, arbitrary inertia tensor, detailed aerodynamic surfaces.
 
+
+## CURRENT HIGH-SPEED LINEAR NaN — LIFT / INTEGRATION RUNAWAY
+Latest code review after commits `3dd4355a...` and `8e179250...`:
+- pitch/yaw rate controllers are structurally correct and working
+- maxPitchRate=maxYawRate=2.5 rad/s
+- pitch/yaw rate Kp=5
+- pitch/yaw torque clamps=30/20
+- bank Kp/Kd=40/10
+- aero angular damping remains 0.05 and user reports current control feel works well
+- minor cleanup: rename `m_pitchYawKp` -> `m_yawRateKp`; comments should say target rate, not angle
+
+Observed speed threshold:
+- maxThrust=100 -> steady ~22.3; hard maneuvers briefly ~23.4; appears safe
+- maxThrust=110 -> equilibrium ~23.45 but speed can creep upward and eventually explode
+- 120 -> ~24.5 then eventually explode
+- 125 -> ~25.0 then eventually explode
+- hard inversion/high AoA near ~25-26 can trigger explosive rotation/linear speed and NaN
+
+Important root cause:
+Current lift parameters are huge relative to default mass=1:
+- wingArea=2
+- liftSlope=4/rad
+- stallAngle=15 deg, so max pre-stall Cl ~= 1.047
+At V=25, q~=382.8 and max lift ~= 0.5*1.225*25^2*2*1.047 ~= 802 force units.
+With mass=1 this is ~802 m/s^2 (~82g), producing ~13.4 m/s perpendicular delta-v in one 1/60 step.
+
+Although lift direction is perpendicular to velocity, explicit Euler velocity integration numerically adds energy:
+|v + a*dt|^2 = |v|^2 + |a*dt|^2 when v·a=0.
+With very large lift acceleration, hard pitching/high AoA therefore increases speed magnitude numerically; higher speed increases V^2 lift, creating positive feedback -> runaway/NaN.
+
+Game-first short stabilization:
+1. Keep maxThrust=100 for now.
+2. Add an emergency aircraft max linear speed around 24 (above normal ~22.3, below observed runaway threshold). Prefer a reusable optional maxLinearSpeed in KineticBody, default unlimited, clamped after velocity integration and before position integration.
+3. Also cap lift acceleration/force so a single fixed step cannot add a huge perpendicular velocity impulse. Use `maxLiftForce = mass * maxLiftAcceleration`; clamp signed liftForce. Start with a gameplay-tuned max lift acceleration roughly 40-60 m/s^2 (about 4-6g), then tune by feel.
+A speed cap is acceptable as a safety net but does not by itself fix oversized lift impulses.
+
+Short glide option (only if desired now):
+- decouple coasting drag from full-throttle drag with a throttle-dependent forward-drag coefficient
+- full throttle keeps current forwardDrag=0.2, preserving ~22.3 top speed
+- zero throttle uses a smaller coast/glide drag (e.g. ~0.04-0.06) so momentum decays slowly
+- concept: effectiveForwardDrag = lerp(coastForwardDrag, normalForwardDrag, throttle)
+- air brake still multiplies drag afterward, so deliberate braking remains strong
+This is intentionally arcade/game-oriented, not physically literal.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
