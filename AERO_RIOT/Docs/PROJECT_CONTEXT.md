@@ -320,6 +320,20 @@ Supported-envelope policy:
 
 After this cleanup, flight physics should be considered feature-complete enough to move on to actual game systems/rendering.
 
+
+## Flight physics freeze — current decision
+The current aircraft configuration is stable and feels acceptable in the intended gameplay range, so keep the existing aerodynamic calculations enabled for now rather than spending more time simplifying them.
+
+If later gameplay requires much higher aircraft speeds, or the flight code becomes too difficult to tune/maintain, revisit this system. At that point:
+- remove calculations that are not meaningfully improving gameplay
+- replace them with simpler bounded/game-oriented forces or controllers
+- prioritize fun, responsiveness, readability, and player experience over simulation fidelity
+- treat the current high-speed stress-test instability as a reason to redesign only if the real game actually needs that speed range
+
+Do not clean up working physics just for theoretical purity while major game systems are still missing.
+
+Next engine/feel milestone: add render interpolation for FixedUpdate-driven physics transforms, then improve/smooth the aircraft camera on top of the interpolated motion.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
