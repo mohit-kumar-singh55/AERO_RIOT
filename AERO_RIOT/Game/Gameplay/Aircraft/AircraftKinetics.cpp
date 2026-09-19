@@ -16,6 +16,7 @@ void AircraftKinetics::OnInitialize() {
 	// not using the default damping provided by the physics engine
 	m_kb->SetUseLinearDamping(false);
 	m_kb->SetUseAngularDamping(false);
+	m_kb->SetMaxLinearVelocity(m_maxLinearVelocity);
 }
 
 void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept {
@@ -112,9 +113,12 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	const float sideSpeed = velocity.Dot(aircraftRight);
 	const float verticalSpeed = velocity.Dot(aircraftUp);
 
+	const float effectiveForwardDrag = std::lerp(m_glideForwardDrag, m_normalForwardDrag, controlInput.throttle);
+
 	const Vector3 forwardDrag =
 		-aircraftForward
-		* m_forwardDrag
+		//* m_normalForwardDrag
+		* effectiveForwardDrag
 		* forwardSpeed
 		* std::abs(forwardSpeed);
 
@@ -155,6 +159,9 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 			* pitchSpeedSquared
 			* m_wingArea
 			* liftCoef;
+
+		float maxLiftForce = m_kb->GetMass() * 40.0f;
+		liftForce = std::clamp(liftForce, -maxLiftForce, maxLiftForce);
 
 		// calc. lift dir
 		const Vector3 pitchVelocity = aircraftForward * forwardSpeed + aircraftUp * verticalSpeed;

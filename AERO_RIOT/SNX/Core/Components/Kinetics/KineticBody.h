@@ -51,6 +51,15 @@ public:
 		m_linearVelocity = velocity;
 	}
 
+	[[nodiscard]]
+	float GetMaxLinearVelocity() const noexcept {
+		return m_maxLinearVelocity;
+	}
+
+	void SetMaxLinearVelocity(float maxLinearVelocity) noexcept {
+		m_maxLinearVelocity = maxLinearVelocity;
+	}
+
 	void AddForce(Vector3 force, ForceMode mode = ForceMode::Force) {
 		m_accumulatedForce += force;
 	}
@@ -109,6 +118,8 @@ private:
 	Vector3 m_linearVelocity = Vector3::Zero;
 	Vector3 m_linearAcceleration = Vector3::Zero;
 	Vector3 m_accumulatedForce = Vector3::Zero;
+
+	float m_maxLinearVelocity = 0.0f;	// default to no limit
 
 	// local space (body-space)
 	bool m_useAngularDamping = true;

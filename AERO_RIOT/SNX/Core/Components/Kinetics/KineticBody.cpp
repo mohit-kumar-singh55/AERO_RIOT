@@ -44,6 +44,12 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	m_linearAcceleration = m_accumulatedForce * m_inverseMass;
 	m_linearVelocity += m_linearAcceleration * fixedDeltaTime;
 
+	// clamp to max linear velocity
+	if (m_maxLinearVelocity > 0.0f) {
+		auto clampedLinearVel = DirectX::XMVector3ClampLength(m_linearVelocity, 0.0f, m_maxLinearVelocity);
+		m_linearVelocity = Vector3(clampedLinearVel);
+	}
+
 	position += m_linearVelocity * fixedDeltaTime;
 	GetTransform().SetPosition(position);
 
