@@ -264,6 +264,62 @@ Short glide option (only if desired now):
 - air brake still multiplies drag afterward, so deliberate braking remains strong
 This is intentionally arcade/game-oriented, not physically literal.
 
+
+## GAME-FIRST FLIGHT SIMPLIFICATION — NEXT MILESTONE
+User stress-tested current model with maxThrust up to 200 and maxLinearVelocity 30-60. At high capped speeds:
+- aircraft/camera visibly jitters
+- static environment cubes also appear to jitter
+- hard rotations can show severe visual oscillation/afterimage-like behavior
+- before lift clamp, braking at max speed could visibly reduce forward motion while total speed UI remained at cap
+
+Interpretation:
+1. Normal intended envelope (maxThrust=100, maxLinearVelocity≈24) currently looks fine.
+2. High-speed environment jitter is strongly consistent with rendering a FixedUpdate-driven aircraft/camera without render interpolation. At 60 units/s and 60 Hz physics, target position advances ~1 unit per physics tick; camera follows the raw target transform in LateUpdate, so static world objects appear to judder. Render interpolation is a later engine task, not required now.
+3. Extreme thrust + hard velocity cap is also pathological: large forces are integrated each step and then velocity magnitude is truncated. Large directional/lift forces can still rotate the velocity vector even while magnitude stays capped.
+4. The project has accumulated more aerodynamic forces than the gameplay requires.
+
+Decision: do ONE short cleanup/simplification pass, then freeze flight physics and move forward.
+
+Target arcade flight model:
+KEEP:
+- KineticBody force/torque integration
+- gravity
+- thrust along aircraft Forward
+- throttle-dependent forward drag for gliding (current glideForwardDrag/normalForwardDrag)
+- air brake as explicit strong forward deceleration
+- minimum forward-speed assist
+- max linear speed as safety envelope (≈24 for now)
+- pitch/yaw angular-rate controllers
+- bank-angle PD assist
+
+REMOVE/DISABLE FOR NOW:
+- AoA lift model
+- stall curve / CalculateLiftCoefficient
+- wingArea/liftSlope/stallAngle/airDensity fields that only support that lift model
+- dynamic-pressure pitch/yaw/roll angular damping; rate controllers and bank D term already stabilize rotation
+- quadratic side/vertical aero drag if it continues to complicate behavior
+
+Replace lift/gravity balancing with a simpler game mechanism:
+- easiest: set aircraft KineticBody gravityScale below 1 (e.g. tune somewhere ~0.3-0.6) rather than adding another upward force
+- this preserves downward gravity but makes altitude loss gentle
+- pitched thrust can still provide climb/descent behavior
+
+To avoid spaceship-like sideways sliding after removing side/vertical quadratic drag, use ONE bounded velocity-alignment force if needed:
+- forwardSpeed = dot(velocity, aircraftForward)
+- lateralVelocity = velocity - aircraftForward * forwardSpeed
+- apply a linear force opposite lateralVelocity, proportional to mass and an alignment gain
+- clamp the alignment acceleration/force
+This is simpler and more numerically predictable than separate V² side/vertical forces.
+
+Supported-envelope policy:
+- maxThrust=100
+- maxLinearVelocity≈24
+- do not spend time making 200 thrust / 60 speed stable now
+- revisit higher-speed smoothness only if gameplay later actually requires it
+- when needed, add render interpolation between previous/current physics transforms for camera/rendering
+
+After this cleanup, flight physics should be considered feature-complete enough to move on to actual game systems/rendering.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
