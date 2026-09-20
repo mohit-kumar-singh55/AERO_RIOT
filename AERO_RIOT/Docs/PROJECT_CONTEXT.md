@@ -334,6 +334,31 @@ Do not clean up working physics just for theoretical purity while major game sys
 
 Next engine/feel milestone: add render interpolation for FixedUpdate-driven physics transforms, then improve/smooth the aircraft camera on top of the interpolated motion.
 
+
+## Physics interpolation architecture — CURRENT DESIGN
+Interpolation should be prepared once per rendered frame after the fixed-step loop and before normal Update/LateUpdate, so the camera can already read the smooth pose.
+
+Minimal current placement:
+- at the beginning of `Scene::Update()`, before `OnUpdate()` and `m_gameObjects.Update()`
+- call a Kinetics interpolation-prep function with `Time::FixedInterpolationAlpha()`
+
+Do NOT pass the fixed accumulator into `KineticBody::Integrate()`; physics integration should continue to depend only on fixedDeltaTime. `Time::FixedInterpolationAlpha()` already exposes the correct render alpha.
+
+Ownership:
+- KineticBody stores previous physics position/rotation
+- Transform remains the source of the current real/simulation pose
+- before each KineticBody integration step, copy current Transform pose into previous pose
+- after all fixed steps, Kinetics loops bodies and asks each to prepare its interpolated render pose using previous + current + alpha
+
+Rendering separation:
+- real getters (`GetPosition/GetRotation/GetWorldMatrix`) remain simulation/gameplay state
+- add render/interpolated getters/matrix for visuals and camera
+- renderers use render world matrix
+- aircraft camera uses target render position/forward/up/right
+- child transforms should build their render world matrix from their normal local transform and the parent's render world matrix, so one interpolated aircraft root smoothly carries Body/Wing children
+
+Important: interpolation never writes back into the real physics Transform.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
