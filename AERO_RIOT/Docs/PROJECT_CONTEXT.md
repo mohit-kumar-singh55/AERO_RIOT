@@ -404,6 +404,20 @@ visual = local * parent render world
 
 Minor API cleanup: SetRenderPose inputs should preferably be const references (or values), not mutable non-const references.
 
+
+## Render-pose implementation review — latest
+Commit `241cd158c234f74c4ca5d4d3281fa5931ca592d6` implemented Transform render pose.
+
+Review:
+- SetRenderPose const-ref signature is good
+- GetRenderWorldMatrix hierarchy logic is conceptually correct
+- CRITICAL: GetRenderWorldMatrix currently returns `const Matrix&` while returning temporary Matrix expressions. This creates a dangling reference / undefined behavior. Change it to return `Matrix` by value in both declaration and definition.
+- GetRenderPosition/GetRenderRotation currently always return m_renderPosition/m_renderRotation. For transforms without their own render pose (e.g. aircraft visual children), that would return zero/identity if called directly. Add fallback behavior:
+  - if m_hasRenderPose -> return stored render value
+  - otherwise derive world render position/rotation from GetRenderWorldMatrix()
+- render hierarchy remains: own render pose = world visual override; otherwise local * parent render world; root fallback = normal world matrix
+- after these fixes, switch MeshRenderer and PrimitiveRenderer to GetRenderWorldMatrix() and visually test interpolation before changing camera.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
