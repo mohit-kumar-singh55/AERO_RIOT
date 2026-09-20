@@ -359,6 +359,28 @@ Rendering separation:
 
 Important: interpolation never writes back into the real physics Transform.
 
+
+## Interpolation implementation review — latest
+Commit `5c5bd49d9f1a85a3a7ad3abb03f1da35177ead92` added the first interpolation data-flow step:
+- KineticBody stores previous position/rotation
+- previous pose is captured at the start of each Integrate()
+- Kinetics has UpdateInterpolation(alpha)
+- Scene::Update() calls it before OnUpdate/GameObject Update
+- KineticBody::UpdateInterpolation(alpha) is intentionally still empty
+
+Review result:
+- overall placement/data flow is correct
+- initialize previous position/rotation from the current Transform in KineticBody::OnInitialize() so newly spawned bodies do not interpolate from zero/identity before their first physics step
+- do not pass accumulator into Integrate(); Time::FixedInterpolationAlpha() remains the correct render-time source
+
+Next implementation:
+- add a separate render/interpolated pose path to Transform; do not overwrite the real simulation pose
+- KineticBody::UpdateInterpolation(alpha) computes position Lerp(previous,current,alpha) and rotation Slerp(previous,current,alpha)
+- write that result into Transform render pose
+- add render getters/matrix separately from GetPosition/GetRotation/GetWorldMatrix
+- child render world matrices should use parent render world matrix so an interpolated physics root carries its visual hierarchy smoothly
+- only after this is working should MeshRenderer/PrimitiveRenderer and the aircraft camera be switched to render-pose getters
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
