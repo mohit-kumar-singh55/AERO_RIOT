@@ -8,7 +8,7 @@ using namespace DirectX::SimpleMath;
 
 enum class ForceMode { Force, Explosive, VelocityChange };
 
-class KineticBody : public Component {
+class KineticBody final : public Component {
 public:
 	using Component::Component;
 

@@ -5,6 +5,7 @@
 #include <vector>
 
 class GameObject;
+class KineticBody;
 
 enum class TransformSpace {
 	Local,
@@ -77,6 +78,16 @@ public:
 	bool SetEulerDegrees(const DirectX::SimpleMath::Vector3& eulerDegrees)  noexcept;
 
 	// --------------------------------------------------
+	// Render Pose
+	// --------------------------------------------------
+
+	[[nodiscard]]
+	DirectX::SimpleMath::Vector3 GetRenderPosition() const noexcept;
+
+	[[nodiscard]]
+	DirectX::SimpleMath::Quaternion GetRenderRotation() const noexcept;
+
+	// --------------------------------------------------
 	// Direction vectors
 	// --------------------------------------------------
 
@@ -113,6 +124,9 @@ public:
 	[[nodiscard]]
 	const DirectX::SimpleMath::Matrix& GetWorldMatrix() const noexcept;
 
+	[[nodiscard]]
+	const DirectX::SimpleMath::Matrix& GetRenderWorldMatrix() const noexcept;
+
 	// --------------------------------------------------
 	// Hierarchy
 	// --------------------------------------------------
@@ -148,6 +162,11 @@ public:
 	const GameObject* GetGameObject() const noexcept { return m_gameObject; }
 
 private:
+	void SetRenderPose(
+		DirectX::SimpleMath::Vector3& renderPosition,
+		DirectX::SimpleMath::Quaternion& renderRotation
+	) noexcept;
+
 	bool TrySetLocalFromMatrix(const DirectX::SimpleMath::Matrix& matrix) noexcept;
 
 	bool TrySetWorldFromMatrix(const DirectX::SimpleMath::Matrix& matrix) noexcept;
@@ -166,9 +185,15 @@ private:
 private:
 	GameObject* m_gameObject = nullptr;
 
+	// real/simulation pose
 	DirectX::SimpleMath::Vector3 m_localPosition = DirectX::SimpleMath::Vector3::Zero;
 	DirectX::SimpleMath::Quaternion m_localRotation = DirectX::SimpleMath::Quaternion::Identity;
 	DirectX::SimpleMath::Vector3 m_localScale = DirectX::SimpleMath::Vector3::One;
+
+	// render pose
+	bool m_hasRenderPose = false;
+	DirectX::SimpleMath::Vector3 m_renderPosition = DirectX::SimpleMath::Vector3::Zero;
+	DirectX::SimpleMath::Quaternion m_renderRotation = DirectX::SimpleMath::Quaternion::Identity;
 
 	Transform* m_parent = nullptr;
 	std::vector<Transform*> m_children;
@@ -187,4 +212,5 @@ private:
 	static constexpr DirectX::SimpleMath::Vector3 Up{ 0.0f,1.0f,0.0f };
 
 	friend class GameObject;
+	friend class KineticBody;
 };

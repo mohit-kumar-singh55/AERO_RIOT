@@ -165,6 +165,10 @@ bool Transform::SetEulerDegrees(const DirectX::SimpleMath::Vector3& eulerDegrees
 	return SetRotation(DirectX::SimpleMath::Quaternion::CreateFromYawPitchRoll(radians));
 }
 
+DirectX::SimpleMath::Vector3 Transform::GetRenderPosition() const noexcept {
+	return DirectX::SimpleMath::Vector3();
+}
+
 // -Z
 DirectX::SimpleMath::Vector3 Transform::GetForward() const noexcept {
 	using namespace DirectX::SimpleMath;
@@ -266,6 +270,10 @@ const DirectX::SimpleMath::Matrix& Transform::GetWorldMatrix() const noexcept {
 	}
 
 	return m_worldMatrix;
+}
+
+const DirectX::SimpleMath::Matrix& Transform::GetRenderWorldMatrix() const noexcept {
+	// TODO: insert return statement here
 }
 
 bool Transform::SetParent(Transform* parent, bool keepWorldTransform) noexcept {

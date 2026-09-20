@@ -19,9 +19,18 @@ void KineticBody::OnInitialize() {
 
 	// register this component to Kinetics class
 	GetScene()->GetKinetics()->RegisterKineticBody(this);
+
+	// init
+	auto& transform = GetTransform();
+	transform.m_hasRenderPose = true;
+
+	m_previousPosition = transform.GetPosition();
+	m_previousRotation = transform.GetRotation();
 }
 
 void KineticBody::OnDestroy() {
+	GetTransform().m_hasRenderPose = false;
+
 	// unregister this component from Kinetics class
 	GetScene()->GetKinetics()->UnregisterKineticBody(this);
 }
@@ -98,5 +107,21 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 }
 
 void KineticBody::UpdateInterpolation(float alpha) noexcept {
-	
+	auto& transform = GetTransform();
+
+	// interpolate between previous pose & current pos
+	Vector3 renderPosition = Vector3::Lerp(
+		m_previousPosition,
+		transform.GetPosition(),
+		alpha
+	);
+
+	Quaternion renderRotation = Quaternion::Slerp(
+		m_previousRotation,
+		transform.GetRotation(),
+		alpha
+	);
+
+	// transfer rendered pose to Transform
+	transform.SetRenderPose(renderPosition, renderRotation);
 }
