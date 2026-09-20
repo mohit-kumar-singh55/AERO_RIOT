@@ -381,6 +381,29 @@ Next implementation:
 - child render world matrices should use parent render world matrix so an interpolated physics root carries its visual hierarchy smoothly
 - only after this is working should MeshRenderer/PrimitiveRenderer and the aircraft camera be switched to render-pose getters
 
+
+## Render-pose Transform review
+Latest render-pose declarations are on the right track. Important invariant:
+- `GetWorldMatrix()` remains completely unchanged and always represents the real simulation/gameplay hierarchy.
+- interpolation must never alter what `GetWorldMatrix()` returns.
+
+Recommended first implementation of `GetRenderWorldMatrix()`:
+- return Matrix by value initially rather than `const Matrix&`; there is no render-matrix cache yet, and returning by value avoids adding render dirty-state/invalidation complexity
+- if `m_hasRenderPose`: build a WORLD render matrix from current world scale + m_renderRotation + m_renderPosition
+- else if parent exists: `GetLocalMatrix() * parent->GetRenderWorldMatrix()`
+- else: normal local/world matrix
+
+Render getters:
+- GetRenderPosition: if own render pose exists, return m_renderPosition; otherwise derive from GetRenderWorldMatrix
+- GetRenderRotation: if own render pose exists, return m_renderRotation; otherwise decompose GetRenderWorldMatrix
+- no local-render fields/getters needed
+
+This creates two separate hierarchies:
+simulation = local * parent simulation world
+visual = local * parent render world
+
+Minor API cleanup: SetRenderPose inputs should preferably be const references (or values), not mutable non-const references.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
