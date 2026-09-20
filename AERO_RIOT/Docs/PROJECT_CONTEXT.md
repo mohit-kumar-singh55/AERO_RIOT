@@ -418,6 +418,25 @@ Review:
 - render hierarchy remains: own render pose = world visual override; otherwise local * parent render world; root fallback = normal world matrix
 - after these fixes, switch MeshRenderer and PrimitiveRenderer to GetRenderWorldMatrix() and visually test interpolation before changing camera.
 
+
+## Interpolation visual test — camera mismatch diagnosed
+After switching MeshRenderer/PrimitiveRenderer to GetRenderWorldMatrix(), the aircraft became visible again after fixing GetRenderWorldMatrix to return by value, but the aircraft appears to jitter.
+
+Cause: renderer now uses the interpolated render pose while AircraftCameraController still follows the raw simulation pose using GetPosition/GetForward/GetUp/GetRight. This creates a frame-varying offset between camera and rendered aircraft:
+- aircraft visual = previous/current interpolation
+- camera target = latest fixed-step Transform
+- relative screen-space aircraft position therefore oscillates across render frames
+
+Next step:
+- switch AircraftCameraController target sampling to render pose
+- use GetRenderPosition()
+- derive forward/right/up from GetRenderRotation(), or add GetRenderForward/GetRenderRight/GetRenderUp helpers to Transform
+- this is still physics interpolation, NOT camera smoothing
+- after camera and aircraft both use the same interpolated pose, test again
+- only then add separate camera follow smoothing/cinematic lag if desired
+
+Minor cleanup: GetRenderWorldMatrix returning `const Matrix` by value works but the const qualifier on a returned value is unnecessary; plain `Matrix` is preferable.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
