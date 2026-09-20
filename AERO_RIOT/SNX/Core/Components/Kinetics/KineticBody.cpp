@@ -29,6 +29,11 @@ void KineticBody::OnDestroy() {
 void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	auto& transform = GetTransform();
 	auto position = transform.GetPosition();
+	auto rotation = transform.GetRotation();
+
+	// ! saving current position and rotation before applying physics
+	m_previousPosition = position;
+	m_previousRotation = rotation;
 
 	// ! linear
 	// apply linear damping
@@ -59,7 +64,7 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 	* we first need to convert torque into local space,
 	* then calc. local angular acc. and convert it back to world space
 	*/
-	Quaternion worldRotation = transform.GetRotation();
+	Quaternion worldRotation = rotation;
 	Quaternion inverseRotation;
 	worldRotation.Inverse(inverseRotation);
 
@@ -84,10 +89,14 @@ void KineticBody::Integrate(float fixedDeltaTime) noexcept {
 		float angle = angularSpeed * fixedDeltaTime;
 		Vector3 rotationAxis = m_angularVelocity / angularSpeed;	// normalize
 		Quaternion deltaRotation = Quaternion::CreateFromAxisAngle(rotationAxis, angle);
-		transform.SetRotation(Quaternion::Concatenate(deltaRotation, transform.GetRotation()));
+		transform.SetRotation(Quaternion::Concatenate(deltaRotation, rotation));
 	}
 
 	// ! clear the accumulated forces
 	m_accumulatedForce = Vector3::Zero;
 	m_accumulatedTorque = Vector3::Zero;
+}
+
+void KineticBody::UpdateInterpolation(float alpha) noexcept {
+	
 }

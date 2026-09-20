@@ -61,6 +61,9 @@ void Scene::FixedUpdate() {
 void Scene::Update() {
 	if (!m_loaded) return;
 
+	// interpolation in physics bodies
+	m_kinetics.UpdateInterpolation(Time::FixedInterpolationAlpha());
+
 	OnUpdate();
 
 	if (ShouldUpdateGameObjects())

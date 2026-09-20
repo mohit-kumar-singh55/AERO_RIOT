@@ -91,9 +91,6 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 		m_kb->AddTorque(worldRollTorque);
 	}
 
-	//OutputDebugStringW(std::to_wstring(DirectX::XMConvertToDegrees(currentBankAngle)).c_str());
-	//OutputDebugStringW(L"\n\n");
-
 	// ! apply thrust
 	const Vector3 thrust =
 		transform.GetForward()

@@ -33,3 +33,17 @@ void Kinetics::Integrate(float fixedDeltaTime) noexcept {
 		body->Integrate(fixedDeltaTime);
 	}
 }
+
+void Kinetics::UpdateInterpolation(float alpha) noexcept {
+	for (const auto body : m_kineticBodies) {
+		// check if inactive or about to be removed
+		if (!body ||
+			!body->IsEnabled() ||
+			body->IsRemoveRequested() ||
+			!body->GetGameObject().IsActiveInHierarchy())
+			continue;
+
+
+		body->UpdateInterpolation(alpha);
+	}
+}

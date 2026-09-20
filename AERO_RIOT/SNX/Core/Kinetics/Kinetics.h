@@ -26,6 +26,7 @@ public:
 
 	// apply physics for this step to all the bodies
 	void Integrate(float fixedDeltaTime) noexcept;
+	void UpdateInterpolation(float alpha) noexcept;
 
 private:
 	std::vector<KineticBody*> m_kineticBodies;

@@ -104,6 +104,7 @@ protected:
 	void OnDestroy() override;
 
 	void Integrate(float fixedDeltaTime) noexcept;
+	void UpdateInterpolation(float alpha) noexcept;
 
 private:
 	bool m_useGravity = true;
@@ -133,6 +134,10 @@ private:
 	Vector3 m_angularVelocity = Vector3::Zero;	// radians/sec on respective axis
 	Vector3 m_angularAcceleration = Vector3::Zero;
 	Vector3 m_accumulatedTorque = Vector3::Zero;
+
+	// for interpolation
+	Vector3 m_previousPosition = Vector3::Zero;
+	Quaternion m_previousRotation = Quaternion::Identity;
 
 	// minimum mass value
 	static constexpr float MIN_MASS = 0.0001f;
