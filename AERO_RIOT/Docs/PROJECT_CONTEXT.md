@@ -264,6 +264,101 @@ Short glide option (only if desired now):
 - air brake still multiplies drag afterward, so deliberate braking remains strong
 This is intentionally arcade/game-oriented, not physically literal.
 
+
+## GAME-FIRST FLIGHT SIMPLIFICATION — NEXT MILESTONE
+User stress-tested current model with maxThrust up to 200 and maxLinearVelocity 30-60. At high capped speeds:
+- aircraft/camera visibly jitters
+- static environment cubes also appear to jitter
+- hard rotations can show severe visual oscillation/afterimage-like behavior
+- before lift clamp, braking at max speed could visibly reduce forward motion while total speed UI remained at cap
+
+Interpretation:
+1. Normal intended envelope (maxThrust=100, maxLinearVelocity≈24) currently looks fine.
+2. High-speed environment jitter is strongly consistent with rendering a FixedUpdate-driven aircraft/camera without render interpolation. At 60 units/s and 60 Hz physics, target position advances ~1 unit per physics tick; camera follows the raw target transform in LateUpdate, so static world objects appear to judder. Render interpolation is a later engine task, not required now.
+3. Extreme thrust + hard velocity cap is also pathological: large forces are integrated each step and then velocity magnitude is truncated. Large directional/lift forces can still rotate the velocity vector even while magnitude stays capped.
+4. The project has accumulated more aerodynamic forces than the gameplay requires.
+
+Decision: do ONE short cleanup/simplification pass, then freeze flight physics and move forward.
+
+Target arcade flight model:
+KEEP:
+- KineticBody force/torque integration
+- gravity
+- thrust along aircraft Forward
+- throttle-dependent forward drag for gliding (current glideForwardDrag/normalForwardDrag)
+- air brake as explicit strong forward deceleration
+- minimum forward-speed assist
+- max linear speed as safety envelope (≈24 for now)
+- pitch/yaw angular-rate controllers
+- bank-angle PD assist
+
+REMOVE/DISABLE FOR NOW:
+- AoA lift model
+- stall curve / CalculateLiftCoefficient
+- wingArea/liftSlope/stallAngle/airDensity fields that only support that lift model
+- dynamic-pressure pitch/yaw/roll angular damping; rate controllers and bank D term already stabilize rotation
+- quadratic side/vertical aero drag if it continues to complicate behavior
+
+Replace lift/gravity balancing with a simpler game mechanism:
+- easiest: set aircraft KineticBody gravityScale below 1 (e.g. tune somewhere ~0.3-0.6) rather than adding another upward force
+- this preserves downward gravity but makes altitude loss gentle
+- pitched thrust can still provide climb/descent behavior
+
+To avoid spaceship-like sideways sliding after removing side/vertical quadratic drag, use ONE bounded velocity-alignment force if needed:
+- forwardSpeed = dot(velocity, aircraftForward)
+- lateralVelocity = velocity - aircraftForward * forwardSpeed
+- apply a linear force opposite lateralVelocity, proportional to mass and an alignment gain
+- clamp the alignment acceleration/force
+This is simpler and more numerically predictable than separate V² side/vertical forces.
+
+Supported-envelope policy:
+- maxThrust=100
+- maxLinearVelocity≈24
+- do not spend time making 200 thrust / 60 speed stable now
+- revisit higher-speed smoothness only if gameplay later actually requires it
+- when needed, add render interpolation between previous/current physics transforms for camera/rendering
+
+After this cleanup, flight physics should be considered feature-complete enough to move on to actual game systems/rendering.
+
+
+## Flight physics freeze — current decision
+The current aircraft configuration is stable and feels acceptable in the intended gameplay range, so keep the existing aerodynamic calculations enabled for now rather than spending more time simplifying them.
+
+If later gameplay requires much higher aircraft speeds, or the flight code becomes too difficult to tune/maintain, revisit this system. At that point:
+- remove calculations that are not meaningfully improving gameplay
+- replace them with simpler bounded/game-oriented forces or controllers
+- prioritize fun, responsiveness, readability, and player experience over simulation fidelity
+- treat the current high-speed stress-test instability as a reason to redesign only if the real game actually needs that speed range
+
+Do not clean up working physics just for theoretical purity while major game systems are still missing.
+
+Next engine/feel milestone: add render interpolation for FixedUpdate-driven physics transforms, then improve/smooth the aircraft camera on top of the interpolated motion.
+
+
+## Physics interpolation architecture — CURRENT DESIGN
+Interpolation should be prepared once per rendered frame after the fixed-step loop and before normal Update/LateUpdate, so the camera can already read the smooth pose.
+
+Minimal current placement:
+- at the beginning of `Scene::Update()`, before `OnUpdate()` and `m_gameObjects.Update()`
+- call a Kinetics interpolation-prep function with `Time::FixedInterpolationAlpha()`
+
+Do NOT pass the fixed accumulator into `KineticBody::Integrate()`; physics integration should continue to depend only on fixedDeltaTime. `Time::FixedInterpolationAlpha()` already exposes the correct render alpha.
+
+Ownership:
+- KineticBody stores previous physics position/rotation
+- Transform remains the source of the current real/simulation pose
+- before each KineticBody integration step, copy current Transform pose into previous pose
+- after all fixed steps, Kinetics loops bodies and asks each to prepare its interpolated render pose using previous + current + alpha
+
+Rendering separation:
+- real getters (`GetPosition/GetRotation/GetWorldMatrix`) remain simulation/gameplay state
+- add render/interpolated getters/matrix for visuals and camera
+- renderers use render world matrix
+- aircraft camera uses target render position/forward/up/right
+- child transforms should build their render world matrix from their normal local transform and the parent's render world matrix, so one interpolated aircraft root smoothly carries Body/Wing children
+
+Important: interpolation never writes back into the real physics Transform.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
