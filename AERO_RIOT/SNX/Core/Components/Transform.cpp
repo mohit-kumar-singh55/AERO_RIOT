@@ -286,21 +286,17 @@ const DirectX::SimpleMath::Matrix& Transform::GetWorldMatrix() const noexcept {
 	return m_worldMatrix;
 }
 
-const DirectX::SimpleMath::Matrix& Transform::GetRenderWorldMatrix() const noexcept {
+const DirectX::SimpleMath::Matrix Transform::GetRenderWorldMatrix() const noexcept {
 	using DirectX::SimpleMath::Matrix;
 
-	Matrix renderMatrix;
-
 	if (m_hasRenderPose)
-		renderMatrix = Matrix::CreateScale(GetScale())
+		return Matrix::CreateScale(GetScale())
 		* Matrix::CreateFromQuaternion(m_renderRotation)
 		* Matrix::CreateTranslation(m_renderPosition);
 	else if (m_parent != nullptr)
-		renderMatrix = GetLocalMatrix() * m_parent->GetRenderWorldMatrix();
+		return GetLocalMatrix() * m_parent->GetRenderWorldMatrix();
 	else
-		renderMatrix = GetWorldMatrix();
-
-	return renderMatrix;
+		return GetWorldMatrix();
 }
 
 bool Transform::SetParent(Transform* parent, bool keepWorldTransform) noexcept {

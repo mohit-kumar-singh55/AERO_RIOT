@@ -125,7 +125,7 @@ public:
 	const DirectX::SimpleMath::Matrix& GetWorldMatrix() const noexcept;
 
 	[[nodiscard]]
-	const DirectX::SimpleMath::Matrix& GetRenderWorldMatrix() const noexcept;
+	const DirectX::SimpleMath::Matrix GetRenderWorldMatrix() const noexcept;
 
 	// --------------------------------------------------
 	// Hierarchy
