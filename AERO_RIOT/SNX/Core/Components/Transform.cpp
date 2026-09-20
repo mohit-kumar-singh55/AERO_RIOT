@@ -166,11 +166,21 @@ bool Transform::SetEulerDegrees(const DirectX::SimpleMath::Vector3& eulerDegrees
 }
 
 DirectX::SimpleMath::Vector3 Transform::GetRenderPosition() const noexcept {
-	return m_renderPosition;
+	return GetRenderWorldMatrix().Translation();
 }
 
 DirectX::SimpleMath::Quaternion Transform::GetRenderRotation() const noexcept {
-	return m_renderRotation;
+	using namespace DirectX::SimpleMath;
+
+	Matrix world = GetRenderWorldMatrix();
+
+	Vector3 scale, translation;
+	Quaternion rotation;
+
+	if (!world.Decompose(scale, rotation, translation))
+		return Quaternion::Identity;
+
+	return NormalizeRotation(rotation);
 }
 
 // -Z
@@ -279,15 +289,18 @@ const DirectX::SimpleMath::Matrix& Transform::GetWorldMatrix() const noexcept {
 const DirectX::SimpleMath::Matrix& Transform::GetRenderWorldMatrix() const noexcept {
 	using DirectX::SimpleMath::Matrix;
 
-	if (m_hasRenderPose) {
-		return Matrix::CreateScale(GetScale())
-			* Matrix::CreateFromQuaternion(m_renderRotation)
-			* Matrix::CreateTranslation(m_renderPosition);
-	}
+	Matrix renderMatrix;
+
+	if (m_hasRenderPose)
+		renderMatrix = Matrix::CreateScale(GetScale())
+		* Matrix::CreateFromQuaternion(m_renderRotation)
+		* Matrix::CreateTranslation(m_renderPosition);
 	else if (m_parent != nullptr)
-		return GetLocalMatrix() * m_parent->GetRenderWorldMatrix();
+		renderMatrix = GetLocalMatrix() * m_parent->GetRenderWorldMatrix();
 	else
-		return GetWorldMatrix();
+		renderMatrix = GetWorldMatrix();
+
+	return renderMatrix;
 }
 
 bool Transform::SetParent(Transform* parent, bool keepWorldTransform) noexcept {

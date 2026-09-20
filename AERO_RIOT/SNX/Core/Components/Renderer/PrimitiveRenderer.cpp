@@ -44,7 +44,7 @@ void PrimitiveRenderer::Draw(const RenderContext& context) {
 	if (!m_primitive || !context.IsValid())
 		return;
 
-	const auto& world = GetTransform().GetWorldMatrix();
+	const auto& world = GetTransform().GetRenderWorldMatrix();
 
 	// ! use a shared custom material when one is supplied
 	if (m_material) {

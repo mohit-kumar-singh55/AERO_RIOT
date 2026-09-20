@@ -97,7 +97,7 @@ void MeshRenderer::Draw(const RenderContext& context) {
 	m_mesh.DrawWithTransform(
 		context.deviceContext,
 		*m_commonStates,
-		GetTransform().GetWorldMatrix(),
+		GetTransform().GetRenderWorldMatrix(),
 		context.view,
 		context.projection
 	);
