@@ -163,8 +163,8 @@ public:
 
 private:
 	void SetRenderPose(
-		DirectX::SimpleMath::Vector3& renderPosition,
-		DirectX::SimpleMath::Quaternion& renderRotation
+		const DirectX::SimpleMath::Vector3& renderPosition,
+		const DirectX::SimpleMath::Quaternion& renderRotation
 	) noexcept;
 
 	bool TrySetLocalFromMatrix(const DirectX::SimpleMath::Matrix& matrix) noexcept;

@@ -166,7 +166,11 @@ bool Transform::SetEulerDegrees(const DirectX::SimpleMath::Vector3& eulerDegrees
 }
 
 DirectX::SimpleMath::Vector3 Transform::GetRenderPosition() const noexcept {
-	return DirectX::SimpleMath::Vector3();
+	return m_renderPosition;
+}
+
+DirectX::SimpleMath::Quaternion Transform::GetRenderRotation() const noexcept {
+	return m_renderRotation;
 }
 
 // -Z
@@ -273,7 +277,17 @@ const DirectX::SimpleMath::Matrix& Transform::GetWorldMatrix() const noexcept {
 }
 
 const DirectX::SimpleMath::Matrix& Transform::GetRenderWorldMatrix() const noexcept {
-	// TODO: insert return statement here
+	using DirectX::SimpleMath::Matrix;
+
+	if (m_hasRenderPose) {
+		return Matrix::CreateScale(GetScale())
+			* Matrix::CreateFromQuaternion(m_renderRotation)
+			* Matrix::CreateTranslation(m_renderPosition);
+	}
+	else if (m_parent != nullptr)
+		return GetLocalMatrix() * m_parent->GetRenderWorldMatrix();
+	else
+		return GetWorldMatrix();
 }
 
 bool Transform::SetParent(Transform* parent, bool keepWorldTransform) noexcept {
@@ -367,6 +381,14 @@ bool Transform::IsChildOf(const Transform* possibleParent) const noexcept {
 	}
 
 	return false;
+}
+
+void Transform::SetRenderPose(
+	const DirectX::SimpleMath::Vector3& renderPosition,
+	const DirectX::SimpleMath::Quaternion& renderRotation
+) noexcept {
+	m_renderPosition = renderPosition;
+	m_renderRotation = renderRotation;
 }
 
 bool Transform::TrySetLocalFromMatrix(const DirectX::SimpleMath::Matrix& matrix) noexcept {
