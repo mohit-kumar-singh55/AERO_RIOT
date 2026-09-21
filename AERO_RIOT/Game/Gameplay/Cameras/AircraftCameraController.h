@@ -24,7 +24,7 @@ private:
 	/// </summary>
 	/// <param name="target"></param>
 	/// <returns></returns>
-	DirectX::SimpleMath::Vector3 GetCameraPosition(const Transform* target) const noexcept;
+	DirectX::SimpleMath::Vector3 GetDesiredCameraPosition(const Transform* target) const noexcept;
 
 	DirectX::SimpleMath::Vector3 GetOrbitCameraOffset() const noexcept;
 
@@ -32,7 +32,7 @@ private:
 	Camera* m_mainCam = nullptr;
 	Transform* m_target = nullptr;
 
-	//DirectX::SimpleMath::Vector3 m_current
+	float m_followSharpness = 5.0f;	// camera follow speed
 
 	float m_orbitYaw = 0.0f;
 	float m_orbitPitch = 0.0f;

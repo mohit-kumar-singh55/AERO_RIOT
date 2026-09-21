@@ -85,9 +85,15 @@ void AircraftCameraController::OnLateUpdate() {
 	// limit the pitch
 	m_orbitPitch = std::clamp(m_orbitPitch, -m_maxOrbitPitch, m_maxOrbitPitch);
 
-	//auto cameraPos = GetCameraPosition(m_target);
+	// lerp camera position
+	// exponential smoothing
+	float t = 1.0f - std::exp(-m_followSharpness * Time::DeltaTime());
 
-	auto cameraPos = Vector3::Lerp(GetTransform().GetPosition(), GetCameraPosition(m_target), Time::DeltaTime() * 5.0f);
+	auto cameraPos = Vector3::Lerp(
+		GetTransform().GetPosition(),
+		GetDesiredCameraPosition(m_target),
+		t
+	);
 
 	auto lookTarget =
 		pivot
@@ -97,7 +103,7 @@ void AircraftCameraController::OnLateUpdate() {
 	//m_mainCam->LookAt(cameraPos, lookTarget, targetUp);
 }
 
-DirectX::SimpleMath::Vector3 AircraftCameraController::GetCameraPosition(const Transform* target) const noexcept {
+DirectX::SimpleMath::Vector3 AircraftCameraController::GetDesiredCameraPosition(const Transform* target) const noexcept {
 	using DirectX::SimpleMath::Vector3;
 
 	auto pivot = target->GetRenderPosition();
