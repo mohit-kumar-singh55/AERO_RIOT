@@ -437,6 +437,25 @@ Next step:
 
 Minor cleanup: GetRenderWorldMatrix returning `const Matrix` by value works but the const qualifier on a returned value is unnecessary; plain `Matrix` is preferable.
 
+
+## Physics interpolation — COMPLETE
+Commit `d15362bcd34d9bba43333085da38ee9c9dbc1698` switched AircraftCameraController to Transform render-pose getters and added GetRenderForward/GetRenderRight/GetRenderUp. GetRenderWorldMatrix now returns Matrix by value.
+
+Verified by user: interpolation is working and the previous aircraft jitter disappeared once both the rendered aircraft and camera followed the same interpolated pose.
+
+Completed pipeline:
+- fixed-step physics owns the real Transform pose
+- KineticBody stores previous physics pose
+- Scene::Update prepares interpolation using Time::FixedInterpolationAlpha()
+- Transform exposes separate render position/rotation/world matrix/directions
+- visual children inherit the parent's render hierarchy
+- MeshRenderer/PrimitiveRenderer draw from GetRenderWorldMatrix()
+- AircraftCameraController follows the target's render pose
+
+Important invariant: simulation getters remain authoritative; render getters are visual-only.
+
+Next: camera smoothing/cinematic follow is now a separate optional presentation layer on top of correct interpolation, or move directly into the next gameplay/rendering system if current camera feel is acceptable.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
