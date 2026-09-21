@@ -219,6 +219,39 @@ DirectX::SimpleMath::Vector3 Transform::GetUp() const noexcept {
 	return up;
 }
 
+DirectX::SimpleMath::Vector3 Transform::GetRenderForward() const noexcept {
+	using namespace DirectX::SimpleMath;
+
+	Vector3 forward = Vector3::Transform(Vector3::Forward, GetRenderRotation());
+
+	if (forward.LengthSquared() > 0.000001f)
+		forward.Normalize();
+
+	return forward;
+}
+
+DirectX::SimpleMath::Vector3 Transform::GetRenderRight() const noexcept {
+	using namespace DirectX::SimpleMath;
+
+	Vector3 right = Vector3::Transform(Vector3::Right, GetRenderRotation());
+
+	if (right.LengthSquared() > 0.000001f)
+		right.Normalize();
+
+	return right;
+}
+
+DirectX::SimpleMath::Vector3 Transform::GetRenderUp() const noexcept {
+	using namespace DirectX::SimpleMath;
+
+	Vector3 up = Vector3::Transform(Vector3::Up, GetRenderRotation());
+
+	if (up.LengthSquared() > 0.000001f)
+		up.Normalize();
+
+	return up;
+}
+
 bool Transform::Translate(
 	const DirectX::SimpleMath::Vector3& translation,
 	TransformSpace space
@@ -286,7 +319,7 @@ const DirectX::SimpleMath::Matrix& Transform::GetWorldMatrix() const noexcept {
 	return m_worldMatrix;
 }
 
-const DirectX::SimpleMath::Matrix Transform::GetRenderWorldMatrix() const noexcept {
+DirectX::SimpleMath::Matrix Transform::GetRenderWorldMatrix() const noexcept {
 	using DirectX::SimpleMath::Matrix;
 
 	if (m_hasRenderPose)

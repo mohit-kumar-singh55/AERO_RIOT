@@ -44,10 +44,10 @@ void AircraftCameraController::OnLateUpdate() {
 
 	using DirectX::SimpleMath::Vector3;
 
-	auto pivot = m_target->GetPosition();
-	auto targetForward = m_target->GetForward();
-	auto targetUp = m_target->GetUp();
-	auto targetRight = m_target->GetRight();
+	auto pivot = m_target->GetRenderPosition();
+	auto targetForward = m_target->GetRenderForward();
+	auto targetUp = m_target->GetRenderUp();
+	auto targetRight = m_target->GetRenderRight();
 
 	auto& input = InputManager::Get();
 
