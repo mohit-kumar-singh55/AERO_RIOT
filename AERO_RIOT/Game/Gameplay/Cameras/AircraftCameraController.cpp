@@ -43,11 +43,6 @@ void AircraftCameraController::OnLateUpdate() {
 
 	using DirectX::SimpleMath::Vector3;
 
-	auto pivot = m_target->GetRenderPosition();
-	auto targetForward = m_target->GetRenderForward();
-	auto targetUp = m_target->GetRenderUp();
-	auto targetRight = m_target->GetRenderRight();
-
 	auto& input = InputManager::Get();
 
 	auto stickVal = input.GetGamePadStick(GamePadStick::RightStick);
@@ -84,6 +79,9 @@ void AircraftCameraController::OnLateUpdate() {
 
 	// limit the pitch
 	m_orbitPitch = std::clamp(m_orbitPitch, -m_maxOrbitPitch, m_maxOrbitPitch);
+
+	auto pivot = m_target->GetRenderPosition();
+	auto targetForward = m_target->GetRenderForward();
 
 	// lerp camera position
 	// exponential smoothing
