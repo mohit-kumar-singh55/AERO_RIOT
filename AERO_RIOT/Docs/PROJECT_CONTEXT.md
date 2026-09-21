@@ -456,6 +456,13 @@ Important invariant: simulation getters remain authoritative; render getters are
 
 Next: camera smoothing/cinematic follow is now a separate optional presentation layer on top of correct interpolation, or move directly into the next gameplay/rendering system if current camera feel is acceptable.
 
+
+## Camera update/smoothing architecture decision
+- Keep AircraftCameraController in LateUpdate, not Update. Interpolation is prepared before Update, but the camera is a dependent/follower and should run after target gameplay/visual updates. Aircraft currently performs PerformEvadeRoll() in Aircraft::OnLateUpdate(), so moving the camera to Update would sample the target before that late visual change and make ordering more brittle.
+- Keep Camera as a low-level rendering/view component (projection, view, LookAt, pose access). Do not bake follow smoothing into Camera itself.
+- Smoothing algorithm can be reusable, but smoothing policy/state/tuning belong in a camera controller/rig. Different cameras may require no smoothing, different axes, different strengths, spring behavior, cutscene snapping, etc.
+- If the same smoothing math is reused later, extract only the generic math helper (e.g. frame-rate-independent exponential damping) or a reusable follow controller once a second real use case exists. Do not generalize prematurely.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
