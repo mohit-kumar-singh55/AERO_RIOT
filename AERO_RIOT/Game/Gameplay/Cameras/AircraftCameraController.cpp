@@ -6,7 +6,6 @@
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
 
-#include <string>
 #include <stdexcept>
 #include <cmath>
 #include <algorithm>
@@ -86,18 +85,9 @@ void AircraftCameraController::OnLateUpdate() {
 	// limit the pitch
 	m_orbitPitch = std::clamp(m_orbitPitch, -m_maxOrbitPitch, m_maxOrbitPitch);
 
-	Vector3 orbitOffset = {
-		m_followDistance * std::sin(m_orbitYaw) * std::cos(m_orbitPitch),
-		m_followDistance * std::sin(m_orbitPitch),
-		m_followDistance * std::cos(m_orbitYaw) * std::cos(m_orbitPitch)
-	};
+	//auto cameraPos = GetCameraPosition(m_target);
 
-	Vector3 offsetFromPivot =
-		targetRight * orbitOffset.x
-		+ targetUp * orbitOffset.y
-		+ targetForward * orbitOffset.z;
-
-	auto cameraPos = pivot + offsetFromPivot;
+	auto cameraPos = Vector3::Lerp(GetTransform().GetPosition(), GetCameraPosition(m_target), Time::DeltaTime() * 5.0f);
 
 	auto lookTarget =
 		pivot
@@ -105,4 +95,30 @@ void AircraftCameraController::OnLateUpdate() {
 
 	m_mainCam->LookAt(cameraPos, lookTarget, Vector3::Up);
 	//m_mainCam->LookAt(cameraPos, lookTarget, targetUp);
+}
+
+DirectX::SimpleMath::Vector3 AircraftCameraController::GetCameraPosition(const Transform* target) const noexcept {
+	using DirectX::SimpleMath::Vector3;
+
+	auto pivot = target->GetRenderPosition();
+	auto targetForward = target->GetRenderForward();
+	auto targetUp = target->GetRenderUp();
+	auto targetRight = target->GetRenderRight();
+
+	Vector3 orbitOffset = GetOrbitCameraOffset();
+
+	Vector3 offsetFromPivot =
+		targetRight * orbitOffset.x
+		+ targetUp * orbitOffset.y
+		+ targetForward * orbitOffset.z;
+
+	return pivot + offsetFromPivot;
+}
+
+DirectX::SimpleMath::Vector3 AircraftCameraController::GetOrbitCameraOffset() const noexcept {
+	return {
+		m_followDistance * std::sin(m_orbitYaw) * std::cos(m_orbitPitch),
+		m_followDistance * std::sin(m_orbitPitch),
+		m_followDistance * std::cos(m_orbitYaw) * std::cos(m_orbitPitch)
+	};
 }

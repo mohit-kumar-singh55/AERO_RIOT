@@ -3,6 +3,8 @@
 #include <SNX/Core/Object/Component.h>
 #include <SNX/Core/Components/Camera/Camera.h>
 
+#include <SimpleMath.h>
+
 class AircraftCameraController final :public Component {
 public:
 	AircraftCameraController(GameObject& gameObject, Transform* target) noexcept;
@@ -17,8 +19,20 @@ protected:
 	void OnLateUpdate() override;
 
 private:
+	/// <summary>
+	/// camera position in the orbit around the target
+	/// </summary>
+	/// <param name="target"></param>
+	/// <returns></returns>
+	DirectX::SimpleMath::Vector3 GetCameraPosition(const Transform* target) const noexcept;
+
+	DirectX::SimpleMath::Vector3 GetOrbitCameraOffset() const noexcept;
+
+private:
 	Camera* m_mainCam = nullptr;
 	Transform* m_target = nullptr;
+
+	//DirectX::SimpleMath::Vector3 m_current
 
 	float m_orbitYaw = 0.0f;
 	float m_orbitPitch = 0.0f;
