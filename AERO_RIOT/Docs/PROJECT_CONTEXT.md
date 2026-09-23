@@ -463,6 +463,27 @@ Next: camera smoothing/cinematic follow is now a separate optional presentation 
 - Smoothing algorithm can be reusable, but smoothing policy/state/tuning belong in a camera controller/rig. Different cameras may require no smoothing, different axes, different strengths, spring behavior, cutscene snapping, etc.
 - If the same smoothing math is reused later, extract only the generic math helper (e.g. frame-rate-independent exponential damping) or a reusable follow controller once a second real use case exists. Do not generalize prematurely.
 
+
+## Basic weapon subsystem review — latest
+Commit `f2b802ff1ae6100122a5b60efde3d5d912730827` added the first working weapon path:
+AircraftController -> Aircraft::Fire(WeaponType) -> WeaponController::TryFire -> spawned Bullet GameObject with PrimitiveRenderer + KineticBody.
+GunMuzzle is a child Transform of Body. Gun uses held LeftShoulder input; missile input is currently only a placeholder.
+
+Important review findings:
+- WeaponController::TryFire currently ignores the requested WeaponType, so pressing the missile input will also fire the gun whenever the gun cooldown allows. Split/switch by WeaponType before implementing missile behavior.
+- Current gun launch uses one AddForce(direction * 9000) call. With current KineticBody semantics this is a one-fixed-step force, so resulting bullet speed depends on mass and fixedDeltaTime. For a projectile muzzle speed, prefer SetLinearVelocity(...) now, or implement proper ForceMode semantics first.
+- Unity-style correction: ForceMode should conceptually be Force, Acceleration, Impulse, VelocityChange. Explosion is not a force mode; an explosion is a separate radial-force operation (e.g. AddExplosionForce / overlap + impulses). Rename/remove the current ForceMode::Explosive when implementing modes.
+- Bullet currently has no Projectile/lifetime component in this commit, so bullets persist indefinitely. Add a temporary lifetime/destruction path before pooling.
+
+Planned engine/gameplay directions:
+- visual projectile shape and collision shape should remain independent; a sphere collider is reasonable even if future visuals are an elongated bolt/trail
+- BasicPrimitiveMaterial already supports BasicEffect emissive color when supplied to PrimitiveRenderer, but true visible glow requires bloom/post-process; trail rendering can provide the laser-streak look later
+- object pooling is appropriate for bullets/missiles after basic projectile lifetime/destruction and collision behavior are established; pooled reuse must reset Transform, KineticBody velocity/forces/interpolation state and active/enabled state
+- current GameObjectManager already has deferred destruction via Destroy(GameObject&) -> RequestDestroy() -> EndFrame removal. A Unity-like Destroy convenience can wrap this; do not duplicate destruction ownership
+- Instantiate should eventually mean cloning/spawning a prefab/prototype, not just alias CreateGameObject. Ownership belongs to GameObjectManager/Scene; prefer Scene/GameObjectManager Instantiate once prefab/template data exists rather than instance GameObject owning creation
+- add an engine-level debug text/log overlay so remote components can call a simple Debug::Log/ScreenLog-style API; central renderer consumes queued messages using existing SpriteBatch/SpriteFont. Keep it separate from MainScene UI and preferably available only/primarily in debug builds.
+- NVIDIA overlay presence is not evidence that the GPU is or is not being used. AERO_RIOT already creates a D3D11 device/context and renders through it; overlay appearance depends on NVIDIA app/overlay detection, support/settings/hooking. Verify GPU usage via Task Manager GPU engine/performance metrics or NVIDIA performance tools instead.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
