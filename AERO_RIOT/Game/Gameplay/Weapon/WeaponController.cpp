@@ -25,11 +25,24 @@ void WeaponController::OnUpdate() {
 		m_gunFireTimer -= Time::DeltaTime();
 }
 
-void WeaponController::TryFire(const WeaponType weaponType) noexcept {
+void WeaponController::TryFire(const WeaponType weaponType) {
 	// TODO: check if the requested weapon can be fired
-	if (m_gunFireTimer <= 0.0f) {
-		FireGun(m_gunMuzzle->GetPosition(), m_gunMuzzle->GetForward());
-		m_gunFireTimer = m_gunFireInterval;
+	switch (weaponType)
+	{
+	case WeaponType::Gun: {
+		if (m_gunFireTimer <= 0.0f) {
+			FireGun(m_gunMuzzle->GetPosition(), m_gunMuzzle->GetForward());
+			m_gunFireTimer = m_gunFireInterval;
+		}
+
+		break;
+	}
+	case WeaponType::Missile: {
+		//FireMissile(nullptr);
+		break;
+	}
+	default:
+		break;
 	}
 
 	// TODO: fire the requested weapon
@@ -38,7 +51,7 @@ void WeaponController::TryFire(const WeaponType weaponType) noexcept {
 void WeaponController::FireGun(
 	const DirectX::SimpleMath::Vector3 spawnPosition,
 	const DirectX::SimpleMath::Vector3 direction
-) noexcept {
+) {
 	auto& bulletGO = GetScene()->GetGameObjects().CreateGameObject("Bullet");
 	auto& bulletRenderer = bulletGO.AddComponent<PrimitiveRenderer>(
 		GetScene()->GetContext().deviceResources.GetContext(),
@@ -53,5 +66,9 @@ void WeaponController::FireGun(
 	bulletKb.SetUseGravity(false);
 	bulletKb.SetUseLinearDamping(false);
 	bulletKb.SetUseAngularDamping(false);
-	bulletKb.AddForce(direction * 9000.0f);
+	bulletKb.SetLinearVelocity(direction * m_muzzleSpeed);
+}
+
+void WeaponController::FireMissile(const Transform* target) {
+
 }

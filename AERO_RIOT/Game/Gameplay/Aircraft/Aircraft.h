@@ -37,7 +37,7 @@ private:
 	AircraftControlInput m_controlInput;
 	Transform* m_aircraftBody = nullptr;		// visual child	
 	AircraftKinetics* m_aircraftKinetics = nullptr;
-	WeaponController* m_weaponController;
+	WeaponController* m_weaponController = nullptr;
 
 	float m_rotationSpeed = 60.0f;	// degree/s
 
