@@ -6,6 +6,8 @@
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Input/InputManager.h>
 
+#include <Game/Gameplay/Weapon/WeaponType.h>
+
 #include <stdexcept>
 
 void AircraftController::OnInitialize() {
@@ -19,7 +21,7 @@ void AircraftController::OnUpdate() {
 	auto& input = InputManager::Get();
 	AircraftControlInput controlInput{};
 
-	// setting inputs
+	// ! setting inputs
 	controlInput.throttle = input.GetGamePadTrigger(GamePadTrigger::Right);
 	controlInput.airBrake = input.GetGamePadTrigger(GamePadTrigger::Left);
 
@@ -40,6 +42,12 @@ void AircraftController::OnUpdate() {
 
 	// transfer inputs to the aircraft
 	m_aircraft->SetControlInput(controlInput);
+
+	// ! check for firing input
+	if (input.IsGamePadButtonDown(GamePadButton::LeftShoulder))
+		m_aircraft->Fire(WeaponType::Gun);
+	if (input.IsGamePadButtonPressed(GamePadButton::RightShoulder))
+		m_aircraft->Fire(WeaponType::Missile);
 }
 
 void AircraftController::OnDestroy() {

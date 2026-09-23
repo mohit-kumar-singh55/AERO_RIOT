@@ -15,6 +15,7 @@
 #include <Game/Gameplay/Aircraft/AircraftController.h>
 #include <Game/Gameplay/Aircraft/AircraftKinetics.h>
 #include <Game/Gameplay/Cameras/AircraftCameraController.h>
+#include <Game/Gameplay/Weapon/WeaponController.h>
 
 #include <DirectXColors.h>
 #include <Keyboard.h>
@@ -41,22 +42,26 @@ void MainScene::OnLoad() {
 	GameObject& aircraftBody = GetGameObjects().CreateGameObject("Body");
 	GameObject& aircraftBase = GetGameObjects().CreateGameObject("Base");
 	GameObject& aircraftWing = GetGameObjects().CreateGameObject("Wing");
+	GameObject& gunMuzzle = GetGameObjects().CreateGameObject("GunMuzzle");
 	GameObject& thirdPersonCameraAnchor = GetGameObjects().CreateGameObject("ThirdPersonCameraAnchor");
-
-	aircraftRoot.AddComponent<Aircraft>();
-	aircraftRoot.AddComponent<AircraftController>();
-	m_kb = &aircraftRoot.AddComponent<KineticBody>();
-	aircraftRoot.AddComponent<AircraftKinetics>();
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();
 	Transform& wingTransform = aircraftWing.GetTransform();
 	Transform& tpcaTransform = thirdPersonCameraAnchor.GetTransform();
+	Transform& gunMuzzleTransform = gunMuzzle.GetTransform();
 
 	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
 	baseTransform.SetParent(&bodyTransform, false);
 	wingTransform.SetParent(&bodyTransform, false);
 	tpcaTransform.SetParent(&aircraftRoot.GetTransform(), false);
+	gunMuzzleTransform.SetParent(&bodyTransform, false);
+
+	aircraftRoot.AddComponent<Aircraft>();
+	aircraftRoot.AddComponent<AircraftController>();
+	m_kb = &aircraftRoot.AddComponent<KineticBody>();
+	aircraftRoot.AddComponent<AircraftKinetics>();
+	aircraftRoot.AddComponent<WeaponController>(&gunMuzzleTransform);
 
 	tpcaTransform.SetLocalPosition({ 0.0f,0.0f,0.0f });
 
@@ -64,6 +69,8 @@ void MainScene::OnLoad() {
 	baseTransform.RotateEulerDegrees({ -90.0f,0.0f,0.0f });
 
 	wingTransform.SetLocalScale({ 5.0f,0.1f,0.8f });
+
+	gunMuzzleTransform.SetLocalPosition({ 0.0f,0.0f,-2.5f });
 
 	auto& baseRenderer = aircraftBase.AddComponent<PrimitiveRenderer>(
 		context.deviceResources.GetContext(),

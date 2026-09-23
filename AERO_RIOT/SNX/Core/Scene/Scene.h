@@ -60,16 +60,16 @@ public:
 	[[nodiscard]]
 	const Kinetics* GetKinetics() const noexcept { return &m_kinetics; }
 
+	[[nodiscard]]
+	SceneContext& GetContext() noexcept { return m_context; }
+	[[nodiscard]]
+	const SceneContext& GetContext() const noexcept { return m_context; }
+
 protected:
 	[[nodiscard]]
 	SceneManager& GetSceneManager() noexcept { return m_sceneManager; }
 	[[nodiscard]]
 	const SceneManager& GetSceneManager() const noexcept { return m_sceneManager; }
-
-	[[nodiscard]]
-	SceneContext& GetContext() noexcept { return m_context; }
-	[[nodiscard]]
-	const SceneContext& GetContext() const noexcept { return m_context; }
 
 protected:
 	virtual void OnLoad() {}

@@ -7,6 +7,8 @@
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
 
+#include <Game/Gameplay/Weapon/WeaponController.h>
+
 void Aircraft::OnInitialize() {
 	// ! considering the body gameobject is at index 0
 	// TODO: change it to explicit
@@ -18,9 +20,12 @@ void Aircraft::OnInitialize() {
 
 void Aircraft::OnStart() {
 	m_aircraftKinetics = GetGameObject().GetComponent<AircraftKinetics>();
+	m_weaponController = GetGameObject().GetComponent<WeaponController>();
 
 	if (!m_aircraftKinetics)
 		throw std::runtime_error("Aircraft::OnStart: Cannot find AircraftKinetics component.");
+	if (!m_weaponController)
+		throw std::runtime_error("Aircraft::OnStart: Cannot find WeaponController component.");
 }
 
 void Aircraft::OnFixedUpdate() {
@@ -88,4 +93,8 @@ void Aircraft::PerformEvadeRoll() noexcept {
 		// first and last rotation should be same
 		m_aircraftBody->SetLocalRotation(m_startRotation);
 	}
+}
+
+void Aircraft::Fire(const WeaponType weaponType) const noexcept {
+	m_weaponController->TryFire(weaponType);
 }

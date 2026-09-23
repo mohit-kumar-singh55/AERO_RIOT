@@ -83,6 +83,9 @@
     <Filter Include="Configs">
       <UniqueIdentifier>{3afd2b58-6b4d-420b-8a52-b03c3ae0ef6c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Gameplay\Weapon">
+      <UniqueIdentifier>{59fe1ecf-ae81-4551-a26c-c6554a7e92e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -168,6 +171,9 @@
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Game\Gameplay\Aircraft\AircraftKinetics.cpp">
       <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Gameplay\Weapon\WeaponController.cpp">
+      <Filter>Game\Gameplay\Weapon</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -268,6 +274,12 @@
     </ClInclude>
     <ClInclude Include="Game\Gameplay\Aircraft\AircraftKinetics.h">
       <Filter>Game\Gameplay\Aircraft</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Weapon\WeaponController.h">
+      <Filter>Game\Gameplay\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Weapon\WeaponType.h">
+      <Filter>Game\Gameplay\Weapon</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

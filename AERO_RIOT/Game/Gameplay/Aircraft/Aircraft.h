@@ -4,10 +4,13 @@
 
 #include <SNX/Core/Object/Component.h>
 
+#include <Game/Gameplay/Weapon/WeaponType.h>
+
 #include <SimpleMath.h>
 
 class KineticBody;
 class AircraftKinetics;
+class WeaponController;
 
 class Aircraft final : public Component {
 public:
@@ -16,6 +19,8 @@ public:
 	void SetControlInput(AircraftControlInput controlInput) noexcept {
 		m_controlInput = controlInput.GetNormalized();
 	}
+
+	void Fire(const WeaponType weaponType) const noexcept;
 
 protected:
 	void OnInitialize() override;
@@ -32,6 +37,7 @@ private:
 	AircraftControlInput m_controlInput;
 	Transform* m_aircraftBody = nullptr;		// visual child	
 	AircraftKinetics* m_aircraftKinetics = nullptr;
+	WeaponController* m_weaponController;
 
 	float m_rotationSpeed = 60.0f;	// degree/s
 
