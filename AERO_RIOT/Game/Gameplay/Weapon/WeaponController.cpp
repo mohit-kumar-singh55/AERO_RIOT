@@ -65,7 +65,7 @@ void WeaponController::FireGun(
 
 	bulletRenderer.SetColor({ 0.5f,0.9f,0.3f,1.0f });
 
-	bullet.Launch(direction, m_muzzleSpeed);
+	bullet.RequestLaunch(direction, m_muzzleSpeed);
 }
 
 void WeaponController::FireMissile(const Transform* target) {

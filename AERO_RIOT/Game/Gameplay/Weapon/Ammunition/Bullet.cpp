@@ -15,6 +15,9 @@ void Bullet::OnStart() {
 	m_kb->SetUseGravity(false);
 	m_kb->SetUseLinearDamping(false);
 	m_kb->SetUseAngularDamping(false);
+
+	if (m_launchRequested)
+		Launch();
 }
 
 void Bullet::OnUpdate() {
@@ -22,14 +25,21 @@ void Bullet::OnUpdate() {
 		m_lifeTimeTimer -= Time::DeltaTime();
 
 		if (m_lifeTimeTimer <= 0.0f)
-			RequestRemove();
+			GetGameObject().RequestDestroy();
 	}
 }
 
-void Bullet::Launch(
+void Bullet::RequestLaunch(
 	const DirectX::SimpleMath::Vector3 direction,
 	float speed
 ) {
+	m_launchRequested = true;
+	m_launchSpeed = speed;
+	m_launchDirection = direction;
+}
+
+void Bullet::Launch() {
+	m_launchRequested = false;
 	m_lifeTimeTimer = m_lifeTime;
-	m_kb->SetLinearVelocity(direction * speed);
+	m_kb->SetLinearVelocity(m_launchDirection * m_launchSpeed);
 }

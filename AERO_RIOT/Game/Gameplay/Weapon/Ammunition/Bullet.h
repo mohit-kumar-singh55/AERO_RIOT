@@ -10,7 +10,7 @@ class Bullet final : public Component {
 public:
 	using Component::Component;
 
-	void Launch(
+	void RequestLaunch(
 		const DirectX::SimpleMath::Vector3 direction,
 		float speed
 	);
@@ -20,9 +20,16 @@ protected:
 	void OnUpdate() override;
 
 private:
-	KineticBody* m_kb;
+	void Launch();
 
-	float m_lifeTime = 2.0f;
+private:
+	KineticBody* m_kb = nullptr;
+
+	float m_lifeTime = 4.0f;
 
 	float m_lifeTimeTimer = 0.0f;
+
+	bool m_launchRequested = false;
+	float m_launchSpeed = 0.0f;
+	DirectX::SimpleMath::Vector3 m_launchDirection;
 };
