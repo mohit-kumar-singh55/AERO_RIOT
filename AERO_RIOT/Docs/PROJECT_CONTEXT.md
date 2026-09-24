@@ -511,6 +511,20 @@ Current caveat for future pooling: RequestLaunch currently defers only into OnSt
 
 Next milestone: add a reusable engine-level on-screen debug/log overlay before collision work, so arbitrary components can emit temporary diagnostics without routing through a Scene subclass.
 
+
+## Debug overlay architecture decision
+Planned next engine utility: a static Debug class, similar to Time, with only static functions/state so any gameplay/engine code can emit diagnostics without knowing about Game or Scene.
+
+Design:
+- Debug::Log / LogWarning / LogError enqueue lightweight screen-log entries containing text, remaining lifetime, severity (and later optional metadata if needed).
+- Logging can also mirror immediately to OutputDebugString so the same call appears in Visual Studio output.
+- Keep update and rendering separate:
+  - Debug::Update(deltaTime) decrements lifetimes and removes expired entries exactly once per frame.
+  - Debug::Draw/Render(spriteBatch, font) only draws current entries and does not mutate lifetime state.
+- Game is the integration point because it owns SpriteBatch/SpriteFont. It calls Debug::Update once per frame and Debug::Draw during the existing UI SpriteBatch Begin/End phase.
+- Debug should not own or globally cache SpriteBatch/SpriteFont; pass them into Draw from Game.
+- Do not add threading, categories, debug shapes, command console, or complex formatting yet. Text logs only until a real need appears.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
