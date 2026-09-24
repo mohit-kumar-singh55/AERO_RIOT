@@ -525,6 +525,17 @@ Design:
 - Debug should not own or globally cache SpriteBatch/SpriteFont; pass them into Draw from Game.
 - Do not add threading, categories, debug shapes, command console, or complex formatting yet. Text logs only until a real need appears.
 
+
+## Debug overlay first implementation review
+Commit `74ea2147c95272ee5efdefb6b58b702697173ccc` added the static Debug system and Game integration.
+
+Review findings:
+- Linker error LNK2001 is because Debug::m_logs is declared in Debug.h but has no out-of-class definition. Add exactly one definition in Debug.cpp: `std::vector<DebugMessage> Debug::m_logs{};` (alternative later: C++17 inline static in the header).
+- Debug::Update iterator loop is currently unsafe/incorrect: assigning `i = erase(i)` inside a `for (...; ...; i++)` causes the loop increment to advance again, skipping the next element; if erase returns end(), the loop increment can attempt to increment end(). Use a loop that increments only in the non-erase branch, or use std::erase_if after first decrementing lifetimes.
+- Debug::Log is marked noexcept but vector::emplace_back / std::wstring allocation can throw. Remove noexcept from Log/LogWarning/LogError unless intentionally terminating on allocation failure.
+- Current Draw puts every message at the same coordinate; stacking is intentionally still pending.
+- Game integration is otherwise appropriate: Debug::Update once per frame; Debug::Draw inside the existing SpriteBatch Begin/End UI phase; Draw/Update private and Game is a friend.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
