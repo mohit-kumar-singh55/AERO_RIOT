@@ -484,6 +484,19 @@ Planned engine/gameplay directions:
 - add an engine-level debug text/log overlay so remote components can call a simple Debug::Log/ScreenLog-style API; central renderer consumes queued messages using existing SpriteBatch/SpriteFont. Keep it separate from MainScene UI and preferably available only/primarily in debug builds.
 - NVIDIA overlay presence is not evidence that the GPU is or is not being used. AERO_RIOT already creates a D3D11 device/context and renders through it; overlay appearance depends on NVIDIA app/overlay detection, support/settings/hooking. Verify GPU usage via Task Manager GPU engine/performance metrics or NVIDIA performance tools instead.
 
+
+## Projectile component ownership decision
+Latest user code fixed WeaponType dispatch, changed gun launch to explicit muzzle velocity, initialized pointers, and corrected ForceMode names to Force/Acceleration/Impulse/VelocityChange. Note: KineticBody::AddForce currently still ignores the mode argument; actual semantics are not implemented yet.
+
+Next projectile architecture:
+- WeaponController owns weapon-level policy: fire rate/cooldown, selected weapon, ammo later, muzzle/hardpoint selection, spawning/configuring shots.
+- Each spawned projectile owns its own per-instance runtime behavior. Add a Bullet component for bullet lifetime and bullet-specific KineticBody setup/behavior; later add a HomingMissile (or Missile) component for target tracking/guidance/lifetime.
+- WeaponController should not track lifetime timers for individual projectiles.
+- With current deferred GameObject lifecycle, all components can be attached before the pending GameObject initializes next frame; Bullet can safely acquire its sibling KineticBody during OnInitialize/OnStart.
+- For current destruction-based lifecycle, Bullet can count lifetime and RequestDestroy its own GameObject.
+- Important for future pooling: OnStart runs only once, so pooled projectiles will need an explicit per-shot reset/Launch/Activate method (or future OnEnable lifecycle) to reset timer, velocity, interpolation state, target, etc. Do not rely solely on OnStart for reusable projectile initialization.
+- Prefer WeaponController to provide spawn-specific data while the projectile component applies it to its own KineticBody. Visual and collision shape remain independent.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
