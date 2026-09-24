@@ -4,6 +4,7 @@
 
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
+#include <SNX/Core/Debugger/Debug.h>
 
 #include <stdexcept>
 
@@ -174,6 +175,9 @@ void AircraftKinetics::Apply(const AircraftControlInput& controlInput) noexcept 
 	assistAcceleration = std::clamp(assistAcceleration, 0.0f, m_maxSpeedAssistAcceleration);
 	auto speedAssistForce = aircraftForward * assistAcceleration * m_kb->GetMass();
 	m_kb->AddForce(speedAssistForce);
+
+
+	Debug::LogError(std::to_wstring(m_kb->GetLinearVelocity().Length()), 0.05);
 }
 
 float AircraftKinetics::CalculateLiftCoefficient(const float angleOfAttack) const noexcept {

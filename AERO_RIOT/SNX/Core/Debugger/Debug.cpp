@@ -1,13 +1,17 @@
 #include "pch.h"
 #include "Debug.h"
 
+std::vector<DebugMessage> Debug::m_logs{};
+
 void Debug::Update(float deltaTime) noexcept {
 	// decrease timer, remove if time out
-	for (auto i = m_logs.begin(); i != m_logs.end(); i++) {
+	for (auto i = m_logs.begin(); i != m_logs.end();) {
 		i->remainingTime -= deltaTime;
 
 		if (i->remainingTime <= 0.0f)
 			i = m_logs.erase(i);
+		else
+			i++;
 	}
 }
 
@@ -29,6 +33,6 @@ void Debug::Draw(
 	}
 }
 
-void Debug::Log(std::wstring text, float lifeTime, DebugSeverity severity) noexcept {
+void Debug::Log(std::wstring text, float lifeTime, DebugSeverity severity) {
 	m_logs.emplace_back(text, lifeTime, severity);
 }

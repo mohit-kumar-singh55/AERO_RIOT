@@ -59,7 +59,7 @@ void MainScene::OnLoad() {
 
 	aircraftRoot.AddComponent<Aircraft>();
 	aircraftRoot.AddComponent<AircraftController>();
-	m_kb = &aircraftRoot.AddComponent<KineticBody>();
+	aircraftRoot.AddComponent<KineticBody>();
 	aircraftRoot.AddComponent<AircraftKinetics>();
 	aircraftRoot.AddComponent<WeaponController>(&gunMuzzleTransform);
 
@@ -174,24 +174,4 @@ void MainScene::OnRenderUI() {
 			DirectX::Colors::Green
 		);
 	}
-
-	GetContext().font.DrawString(
-		&GetContext().spriteBatch,
-		std::to_wstring(m_kb->GetLinearVelocity().Length()).c_str(),
-		DirectX::SimpleMath::Vector2(
-			20.0f,
-			140.0f
-		),
-		DirectX::Colors::Magenta
-	);
-
-	//GetContext().font.DrawString(
-	//	&GetContext().spriteBatch,
-	//	std::to_wstring(DirectX::XMConvertToDegrees(m_kb->angle)).c_str(),
-	//	DirectX::SimpleMath::Vector2(
-	//		20.0f,
-	//		180.0f
-	//	),
-	//	DirectX::Colors::DeepPink
-	//);
 }

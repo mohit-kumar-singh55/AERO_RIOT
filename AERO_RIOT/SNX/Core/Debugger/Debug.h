@@ -33,13 +33,13 @@ public:
 		std::wstring text,
 		float lifeTime = 1.0f,
 		DebugSeverity severity = DebugSeverity::Log
-	) noexcept;
+	);
 
-	static void LogWarning(std::wstring text, float lifeTime = 1.0f) noexcept {
+	static void LogWarning(std::wstring text, float lifeTime = 1.0f) {
 		Log(text, lifeTime, DebugSeverity::Warning);
 	}
 
-	static void LogError(std::wstring text, float lifeTime = 1.0f) noexcept {
+	static void LogError(std::wstring text, float lifeTime = 1.0f) {
 		Log(text, lifeTime, DebugSeverity::Error);
 	}
 

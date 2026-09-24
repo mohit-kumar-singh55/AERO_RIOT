@@ -22,7 +22,4 @@ private:
 	Camera* m_camera = nullptr;
 
 	GameObject* m_aircraftRoot = nullptr;
-
-	// ? temp
-	KineticBody* m_kb = nullptr;
 };
