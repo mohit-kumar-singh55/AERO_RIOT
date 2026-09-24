@@ -536,6 +536,18 @@ Review findings:
 - Current Draw puts every message at the same coordinate; stacking is intentionally still pending.
 - Game integration is otherwise appropriate: Debug::Update once per frame; Debug::Draw inside the existing SpriteBatch Begin/End UI phase; Draw/Update private and Game is a friend.
 
+
+## Debug overlay — working, minor cleanup before freeze
+Latest debug polish stacks messages on screen and mirrors to OutputDebugStringW.
+
+Review:
+- Stacking/layout is working and the temporary aircraft speed log was removed.
+- Move OutputDebugStringW from Debug::Draw() into Debug::Log(). Draw runs every frame, so a message with a 1-second lifetime is currently written to the Visual Studio Output window ~60 times. Log should emit once when the message is created; Draw should only render.
+- Debug::~Debug() clearing m_logs is ineffective/unnecessary because Debug is a static-only class with deleted constructor, so no Debug instance/destructor runs. The static vector is destroyed automatically at program shutdown. Remove the custom destructor; add an explicit static Clear() only if runtime clearing is actually needed.
+- After those two small fixes, freeze the text debug logger and move to collision.
+
+Next major milestone: collision foundation. Kinetics is already the intended world-level owner (its header comments include collision detection). Start with Collider component architecture and simple shape overlap before response/raycast/pooling.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
