@@ -4,7 +4,6 @@
 
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
-#include <SNX/Core/Debugger/Debug.h>
 
 #include <stdexcept>
 
