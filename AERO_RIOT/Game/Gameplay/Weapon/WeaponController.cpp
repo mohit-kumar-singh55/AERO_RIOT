@@ -1,6 +1,7 @@
 #include <pch.h>
 
 #include "WeaponController.h"
+#include <Game/Gameplay/Weapon/Ammunition/Bullet.h>
 
 #include <SNX/Core/Scene/Scene.h>
 #include <SNX/Core/Components/Renderer/PrimitiveRenderer.h>
@@ -57,16 +58,14 @@ void WeaponController::FireGun(
 		GetScene()->GetContext().deviceResources.GetContext(),
 		PrimitiveShape::Sphere
 	);
-	auto& bulletKb = bulletGO.AddComponent<KineticBody>();
+	bulletGO.AddComponent<KineticBody>();
+	auto& bullet = bulletGO.AddComponent<Bullet>();
 
 	bulletGO.GetTransform().SetPosition(spawnPosition);
 
 	bulletRenderer.SetColor({ 0.5f,0.9f,0.3f,1.0f });
 
-	bulletKb.SetUseGravity(false);
-	bulletKb.SetUseLinearDamping(false);
-	bulletKb.SetUseAngularDamping(false);
-	bulletKb.SetLinearVelocity(direction * m_muzzleSpeed);
+	bullet.Launch(direction, m_muzzleSpeed);
 }
 
 void WeaponController::FireMissile(const Transform* target) {

@@ -86,6 +86,9 @@
     <Filter Include="Game\Gameplay\Weapon">
       <UniqueIdentifier>{59fe1ecf-ae81-4551-a26c-c6554a7e92e3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Game\Gameplay\Weapon\Ammunition">
+      <UniqueIdentifier>{17837b74-4c22-4995-ae8f-08ce3bf26c6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -174,6 +177,9 @@
     </ClCompile>
     <ClCompile Include="Game\Gameplay\Weapon\WeaponController.cpp">
       <Filter>Game\Gameplay\Weapon</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\Gameplay\Weapon\Ammunition\Bullet.cpp">
+      <Filter>Game\Gameplay\Weapon\Ammunition</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -280,6 +286,9 @@
     </ClInclude>
     <ClInclude Include="Game\Gameplay\Weapon\WeaponType.h">
       <Filter>Game\Gameplay\Weapon</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\Gameplay\Weapon\Ammunition\Bullet.h">
+      <Filter>Game\Gameplay\Weapon\Ammunition</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

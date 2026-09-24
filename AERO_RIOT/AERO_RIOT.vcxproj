@@ -177,6 +177,7 @@
     <ClCompile Include="Game\Gameplay\Aircraft\AircraftController.cpp" />
     <ClCompile Include="Game\Gameplay\Aircraft\AircraftKinetics.cpp" />
     <ClCompile Include="Game\Gameplay\Cameras\AircraftCameraController.cpp" />
+    <ClCompile Include="Game\Gameplay\Weapon\Ammunition\Bullet.cpp" />
     <ClCompile Include="Game\Gameplay\Weapon\WeaponController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
@@ -214,6 +215,7 @@
     <ClInclude Include="Game\Gameplay\Aircraft\AircraftController.h" />
     <ClInclude Include="Game\Gameplay\Aircraft\AircraftKinetics.h" />
     <ClInclude Include="Game\Gameplay\Cameras\AircraftCameraController.h" />
+    <ClInclude Include="Game\Gameplay\Weapon\Ammunition\Bullet.h" />
     <ClInclude Include="Game\Gameplay\Weapon\WeaponController.h" />
     <ClInclude Include="Game\Gameplay\Weapon\WeaponType.h" />
     <ClInclude Include="pch.h" />
