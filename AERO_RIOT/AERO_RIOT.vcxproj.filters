@@ -89,6 +89,9 @@
     <Filter Include="Game\Gameplay\Weapon\Ammunition">
       <UniqueIdentifier>{17837b74-4c22-4995-ae8f-08ce3bf26c6f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SNX\Core\Debugger">
+      <UniqueIdentifier>{e66b1619-18fa-4c7d-8b5e-10bd85989b4a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -98,6 +101,7 @@
     <None Include="Docs\PROJECT_CONTEXT.md">
       <Filter>Docs</Filter>
     </None>
+    <None Include="..\.gitignore" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -180,6 +184,9 @@
     </ClCompile>
     <ClCompile Include="Game\Gameplay\Weapon\Ammunition\Bullet.cpp">
       <Filter>Game\Gameplay\Weapon\Ammunition</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Core\Debugger\Debug.cpp">
+      <Filter>SNX\Core\Debugger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -289,6 +296,9 @@
     </ClInclude>
     <ClInclude Include="Game\Gameplay\Weapon\Ammunition\Bullet.h">
       <Filter>Game\Gameplay\Weapon\Ammunition</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Debugger\Debug.h">
+      <Filter>SNX\Core\Debugger</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

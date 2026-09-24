@@ -7,6 +7,7 @@
 
 #include <SNX/Core/Time.h>
 #include <SNX/Input/InputManager.h>
+#include <SNX/Core/Debugger/Debug.h>
 
 #include <stdexcept>
 
@@ -54,6 +55,8 @@ void Game::Tick() {
 	m_sceneManager->Update();
 
 	m_sceneManager->LateUpdate();
+
+	Debug::Update(Time::DeltaTime());
 
 	m_audioManager.Update();
 
@@ -114,6 +117,9 @@ void Game::Render() {
 	m_spriteBatch->Begin();
 
 	m_sceneManager->RenderUI();
+
+	// draw debug ui over normal ui
+	Debug::Draw(m_spriteBatch.get(), m_font.get());
 
 	m_spriteBatch->End();
 	// ***********

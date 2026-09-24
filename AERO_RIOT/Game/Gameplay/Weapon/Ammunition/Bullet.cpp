@@ -32,13 +32,13 @@ void Bullet::OnUpdate() {
 void Bullet::RequestLaunch(
 	const DirectX::SimpleMath::Vector3 direction,
 	float speed
-) {
+) noexcept {
 	m_launchRequested = true;
 	m_launchSpeed = speed;
 	m_launchDirection = direction;
 }
 
-void Bullet::Launch() {
+void Bullet::Launch() noexcept {
 	m_launchRequested = false;
 	m_lifeTimeTimer = m_lifeTime;
 	m_kb->SetLinearVelocity(m_launchDirection * m_launchSpeed);

@@ -1,0 +1,70 @@
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include <SpriteBatch.h>
+#include <SpriteFont.h>
+
+enum class DebugSeverity {
+	Log,
+	Warning,
+	Error
+};
+
+struct DebugMessage {
+	DebugMessage(std::wstring str, float lifeTime, DebugSeverity level) {
+		text = str;
+		remainingTime = lifeTime;
+		severity = level;
+	}
+
+	std::wstring text;
+	float remainingTime;
+	DebugSeverity severity;
+};
+
+class Debug final {
+public:
+	Debug() = delete;
+	~Debug() = default;
+
+	static void Log(
+		std::wstring text,
+		float lifeTime = 1.0f,
+		DebugSeverity severity = DebugSeverity::Log
+	) noexcept;
+
+	static void LogWarning(std::wstring text, float lifeTime = 1.0f) noexcept {
+		Log(text, lifeTime, DebugSeverity::Warning);
+	}
+
+	static void LogError(std::wstring text, float lifeTime = 1.0f) noexcept {
+		Log(text, lifeTime, DebugSeverity::Error);
+	}
+
+private:
+	static void Update(float deltaTime) noexcept;
+
+	static void Draw(
+		DirectX::SpriteBatch* spriteBatch,
+		DirectX::SpriteFont* font
+	) noexcept;
+
+	static DirectX::XMVECTORF32 GetColor(DebugSeverity severity) noexcept {
+		switch (severity) {
+		case DebugSeverity::Error:
+			return { 1.0f, 0.1f, 0.1f, 1.0f };
+		case DebugSeverity::Warning:
+			return { 1.0f, 1.0f, 0.1f, 1.0f };
+		case DebugSeverity::Log:
+		default:
+			return { 1.0f, 1.0f, 1.0f, 1.0f };
+		}
+	}
+
+private:
+	static std::vector<DebugMessage> m_logs;
+
+	friend class Game;
+};

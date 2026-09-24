@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\.gitignore" />
     <None Include="Docs\PROJECT_CONTEXT.md" />
     <None Include="Docs\TODO.md" />
     <None Include="packages.config" />
@@ -193,6 +194,7 @@
     <ClCompile Include="SNX\Core\Components\Renderer\MeshRenderer.cpp" />
     <ClCompile Include="SNX\Core\Components\Renderer\PrimitiveRenderer.cpp" />
     <ClCompile Include="SNX\Core\Components\Transform.cpp" />
+    <ClCompile Include="SNX\Core\Debugger\Debug.cpp" />
     <ClCompile Include="SNX\Core\Kinetics\Kinetics.cpp" />
     <ClCompile Include="SNX\Core\Materials\BasicPrimitiveMaterial.cpp" />
     <ClCompile Include="SNX\Core\ModelObject3D.cpp" />
@@ -229,6 +231,7 @@
     <ClInclude Include="SNX\Core\Components\Renderer\PrimitiveRenderer.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\Renderer.h" />
     <ClInclude Include="SNX\Core\Components\Transform.h" />
+    <ClInclude Include="SNX\Core\Debugger\Debug.h" />
     <ClInclude Include="SNX\Core\Kinetics\Kinetics.h" />
     <ClInclude Include="SNX\Core\Materials\BasicPrimitiveMaterial.h" />
     <ClInclude Include="SNX\Core\ModelObject3D.h" />

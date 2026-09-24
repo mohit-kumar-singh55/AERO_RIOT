@@ -13,14 +13,14 @@ public:
 	void RequestLaunch(
 		const DirectX::SimpleMath::Vector3 direction,
 		float speed
-	);
+	) noexcept;
 
 protected:
 	void OnStart() override;
 	void OnUpdate() override;
 
 private:
-	void Launch();
+	void Launch() noexcept;
 
 private:
 	KineticBody* m_kb = nullptr;
