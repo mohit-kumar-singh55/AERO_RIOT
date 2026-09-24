@@ -34,14 +34,14 @@ void Debug::Draw(
 			GetColor(msg.severity)
 		);
 
-		// visual studio console logs
-		OutputDebugStringW(msg.text.c_str());
-		OutputDebugStringW(L"\n");
-
 		count++;
 	}
 }
 
 void Debug::Log(std::wstring text, float lifeTime, DebugSeverity severity) {
 	m_logs.emplace_back(text, lifeTime, severity);
+
+	// visual studio console logs
+	OutputDebugStringW(text.c_str());
+	OutputDebugStringW(L"\n");
 }

@@ -27,9 +27,6 @@ struct DebugMessage {
 class Debug final {
 public:
 	Debug() = delete;
-	~Debug() {
-		m_logs.clear();
-	}
 
 	static void Log(
 		std::wstring text,
