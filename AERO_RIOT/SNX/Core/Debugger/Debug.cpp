@@ -19,17 +19,26 @@ void Debug::Draw(
 	DirectX::SpriteBatch* spriteBatch,
 	DirectX::SpriteFont* font
 ) noexcept {
+	int count = 0;
+
 	// draw, stack, set color based on severity
 	for (auto& msg : m_logs) {
+		// on-screen logs
 		font->DrawString(
 			spriteBatch,
 			msg.text.c_str(),
 			DirectX::SimpleMath::Vector2(
-				20.0f,
-				140.0f
+				m_xPos,
+				m_startY + count * m_lineHeight
 			),
 			GetColor(msg.severity)
 		);
+
+		// visual studio console logs
+		OutputDebugStringW(msg.text.c_str());
+		OutputDebugStringW(L"\n");
+
+		count++;
 	}
 }
 

@@ -22,7 +22,6 @@
 #include <SimpleMath.h>
 #include <SpriteFont.h>
 
-#include <string>
 #include <time.h>
 
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
@@ -140,7 +139,7 @@ bool MainScene::BuildRenderContext(RenderContext& context) const noexcept {
 }
 
 void MainScene::OnRenderUI() {
-	// ! simple temp UI
+	// ! temp UI
 	GetContext().font.DrawString(
 		&GetContext().spriteBatch,
 		L"AERO RIOT",
@@ -160,18 +159,4 @@ void MainScene::OnRenderUI() {
 		),
 		DirectX::Colors::White
 	);
-
-	if (InputManager::Get().IsGamePadConnected()) {
-		auto& input = InputManager::Get();
-
-		GetContext().font.DrawString(
-			&GetContext().spriteBatch,
-			std::to_wstring(input.GetGamePadTrigger(GamePadTrigger::Right)).c_str(),
-			DirectX::SimpleMath::Vector2(
-				20.0f,
-				100.0f
-			),
-			DirectX::Colors::Green
-		);
-	}
 }

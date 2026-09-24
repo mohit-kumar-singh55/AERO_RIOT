@@ -27,7 +27,9 @@ struct DebugMessage {
 class Debug final {
 public:
 	Debug() = delete;
-	~Debug() = default;
+	~Debug() {
+		m_logs.clear();
+	}
 
 	static void Log(
 		std::wstring text,
@@ -65,6 +67,10 @@ private:
 
 private:
 	static std::vector<DebugMessage> m_logs;
+
+	static constexpr float m_xPos = 20.0f;
+	static constexpr float m_startY = 100.0f;
+	static constexpr float m_lineHeight = 40.0f;
 
 	friend class Game;
 };
