@@ -497,6 +497,20 @@ Next projectile architecture:
 - Important for future pooling: OnStart runs only once, so pooled projectiles will need an explicit per-shot reset/Launch/Activate method (or future OnEnable lifecycle) to reset timer, velocity, interpolation state, target, etc. Do not rely solely on OnStart for reusable projectile initialization.
 - Prefer WeaponController to provide spawn-specific data while the projectile component applies it to its own KineticBody. Visual and collision shape remain independent.
 
+
+## Bullet lifecycle — WORKING
+Commit `de90ca180d0c632e023b3d69f124ca88dbb41735` fixed the Bullet lifecycle:
+- WeaponController calls Bullet::RequestLaunch(direction, speed)
+- RequestLaunch stores launch data while the GameObject is still pending
+- Bullet::OnStart acquires/configures sibling KineticBody and consumes the pending launch request
+- Bullet owns its lifetime timer
+- lifetime expiry destroys the whole Bullet GameObject via RequestDestroy
+User verified it is working.
+
+Current caveat for future pooling: RequestLaunch currently defers only into OnStart; once a pooled Bullet has already started, reactivation will need an explicit relaunch/reset path (or OnEnable/OnDisable lifecycle). Do not address until pooling is actually implemented.
+
+Next milestone: add a reusable engine-level on-screen debug/log overlay before collision work, so arbitrary components can emit temporary diagnostics without routing through a Scene subclass.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
