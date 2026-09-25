@@ -548,6 +548,19 @@ Review:
 
 Next major milestone: collision foundation. Kinetics is already the intended world-level owner (its header comments include collision detection). Start with Collider component architecture and simple shape overlap before response/raycast/pooling.
 
+
+## Collision architecture decision — initial
+Planned collision foundation:
+- Collider is an abstract Component and cannot be attached directly.
+- Concrete shapes such as SphereCollider and BoxCollider inherit Collider and register/unregister themselves with Kinetics through Collider base lifecycle.
+- Static world geometry can have Collider without KineticBody. For the first implementation, no-KineticBody colliders are treated as static and assumed not to move; static-static pairs can be skipped. At least one collider in a tested pair should be associated with a dynamic KineticBody. A future kinematic-body concept may be needed if transforms move without physics.
+- Collider owns common collision metadata/state (e.g. isTrigger, local center/offset, shape type), not shape-pair math.
+- Shape-specific colliders own only their own geometry/data (sphere radius, box extents/orientation, etc.).
+- Do not implement Intersect(other-shape) methods across every concrete collider; that duplicates symmetric pair logic and makes adding new shapes modify many classes.
+- Put narrow-phase algorithms in a central CollisionDetection/CollisionAlgorithms layer with one implementation per unique unordered pair, e.g. Sphere-Sphere, Sphere-Box, Box-Box. Kinetics dispatches by collider shape type (or a small dispatcher function) and calls the canonical overload.
+- For asymmetric outputs such as contact normals, Box-Sphere can reuse Sphere-Box and flip the normal when argument order is reversed.
+- Start minimal: Collider + SphereCollider registration, static/dynamic pair filtering, Sphere-Sphere overlap. Add BoxCollider after the basic event path works. No collision response, friction, restitution, broad phase, casts, or full manifold solver yet.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
