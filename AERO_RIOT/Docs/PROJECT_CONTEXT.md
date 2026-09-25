@@ -561,6 +561,26 @@ Planned collision foundation:
 - For asymmetric outputs such as contact normals, Box-Sphere can reuse Sphere-Box and flip the normal when argument order is reversed.
 - Start minimal: Collider + SphereCollider registration, static/dynamic pair filtering, Sphere-Sphere overlap. Add BoxCollider after the basic event path works. No collision response, friction, restitution, broad phase, casts, or full manifold solver yet.
 
+
+## First sphere collision implementation — crash diagnosis
+Commit `ac5fe4cb838ccd66596bc4c7e6f38f242d3a3e0f` added Collider/SphereCollider/BoxCollider stubs, collider registration in Kinetics, Sphere-Sphere overlap logic, and a debug sphere.
+
+Critical crash cause:
+- Bullet::OnStart() calls GetGameObject().AddComponent<SphereCollider>().
+- GameObject::Update() is iterating m_components and EnsureComponentStarted(Bullet) invokes Bullet::OnStart().
+- AddComponent pushes into m_components; std::vector may reallocate and invalidate the range-for iterator/reference currently used by GameObject::Update.
+- Execution then returns to GameObject::Update and touches an invalid component reference, producing the observed crash.
+Immediate fix: add SphereCollider when building/spawning the Bullet GameObject, before lifecycle iteration begins. Bullet::OnStart should GetComponent<SphereCollider>() and validate/store it. Until GameObject supports deferred component additions, do not AddComponent from OnStart/Update/FixedUpdate/LateUpdate/Render callbacks.
+
+Additional collision review issues to fix before testing:
+- CollisionDetection.h defines the generic Collider dispatcher before the SphereCollider-SphereCollider overload. The call inside the dispatcher can resolve back to the generic overload (recursive dispatch). Define/declare the concrete Sphere-Sphere overload before the generic dispatcher.
+- BoxCollider constructor currently sets m_shape = ColliderShape::Sphere; change to Box.
+- Kinetics pair loop currently checks both A-B and B-A. Iterate unique unordered pairs (e.g. i, j=i+1) to avoid duplicate collision work/logs.
+- Scene currently does not call Kinetics::DetectCollision(). Add it to the fixed physics phase, normally after Integrate for the first discrete-overlap version.
+- Before pair testing, skip null/disabled/remove-requested/inactive colliders, similar to KineticBody filtering.
+- DetectCollision is currently noexcept but calls allocating debug/string code; remove noexcept or avoid throwing operations inside it.
+First goal remains detection only; no response/trigger events/broadphase yet.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
