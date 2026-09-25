@@ -73,10 +73,6 @@ void Kinetics::DetectCollision() noexcept {
 				!col_A->GetGameObject().IsActiveInHierarchy() || !col_B->GetGameObject().IsActiveInHierarchy())
 				continue;
 
-			// skip self collision
-			if (col_A == col_B)
-				continue;
-
 			// skip if both are static objects
 			if (!col_A->GetKineticBody()
 				&& !col_B->GetKineticBody())
