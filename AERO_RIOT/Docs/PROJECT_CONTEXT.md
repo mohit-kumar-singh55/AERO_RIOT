@@ -602,6 +602,28 @@ Minor review debt before expanding:
 
 Next logical lesson: collision event state (Enter/Stay/Exit and Trigger equivalents) before Box collision or physical response, so gameplay can react to first contact without firing every fixed tick.
 
+
+## Sphere-Sphere collision detection — WORKING
+Commit `e729224cdec64d788ea332ddabf95973f3234d03` fixed the first collision implementation and user verified it works:
+- bullet SphereCollider is attached during spawn, not from Bullet::OnStart
+- BoxCollider shape typo fixed
+- concrete Sphere-Sphere overload is visible before generic dispatch
+- Kinetics checks unique pairs using i/j with j=i+1
+- inactive/disabled/remove-requested colliders are skipped
+- static-static pairs are skipped
+- Scene::FixedUpdate runs DetectCollision after Integrate
+
+Review items before building collision events:
+- Collider is intended to be abstract, but current Collider has no pure virtual member and can still be instantiated directly. Make the abstraction explicit (e.g. pure virtual shape accessor) or otherwise prevent direct construction.
+- Kinetics::DetectCollision() is noexcept but currently performs allocating debug/string operations; remove noexcept while debug logging is inside it, or keep allocation/logging outside the noexcept simulation path.
+- Utils::Conversion::ToWString is defined in a header without inline; if included in multiple translation units it can cause ODR/multiple-definition linker errors. Mark inline or move definition to a .cpp.
+- SphereCollider radius currently ignores Transform scale. The debug sphere is visually scaled to 4 but its collider radius remains default 1. Decide later whether collider dimensions are independent (Unity-style radius affected by transform scale at query time) and implement world radius accordingly.
+- Collider center offset currently uses world position + raw offset, so offset is effectively world-axis offset rather than local offset. If offset is intended to be local, transform it by object rotation/scale when computing world center.
+- i<j makes col_A==col_B check redundant, but future multiple colliders on the same GameObject can self-collide unless same-owner pairs are explicitly skipped or compound-collider ownership is designed.
+- Current collision is discrete. Bullet speed 150 at 60 Hz moves about 2.5 units per physics step, so tunneling can occur against small targets. Do not solve yet; plan swept/raycast/CCD once event path works.
+
+Next recommended milestone: collision event state (Enter/Stay/Exit or a minimal Enter first), then Bullet responds to hit. No rigid-body collision response yet.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
