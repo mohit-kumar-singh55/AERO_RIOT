@@ -581,6 +581,27 @@ Additional collision review issues to fix before testing:
 - DetectCollision is currently noexcept but calls allocating debug/string code; remove noexcept or avoid throwing operations inside it.
 First goal remains detection only; no response/trigger events/broadphase yet.
 
+
+## Sphere-Sphere collision detection — WORKING
+Commit `e729224cdec64d788ea332ddabf95973f3234d03` fixed the first collision implementation and user verified it works.
+
+Current collision pipeline:
+- concrete Collider components register with Kinetics
+- Collider::OnStart caches same-GameObject KineticBody if present; absence means static under current rules
+- Scene::FixedUpdate runs GameObject FixedUpdate -> Kinetics::Integrate -> Kinetics::DetectCollision
+- DetectCollision filters invalid/disabled/remove-requested/inactive colliders, skips static-static, and iterates unique unordered pairs using i/j=i+1
+- CollisionDetection dispatches by ColliderShape; Sphere-Sphere overlap is implemented using squared center distance vs squared radius sum
+- bullets receive SphereCollider during spawn, not during lifecycle callbacks
+
+Minor review debt before expanding:
+- Kinetics::DetectCollision is still noexcept even though its current debug logging/string conversion can allocate/throw; remove noexcept or keep throwing work outside it
+- repeated overlap currently logs every fixed step, so a sustained overlap can enqueue many debug messages; collision state/events (Enter/Stay/Exit) should solve this rather than patching logger behavior
+- SphereCollider radius and Collider offset currently ignore Transform scale/rotation. For the current zero-offset, unit-scale collider tests this is fine; define world-space shape semantics before relying on scaled/offset colliders
+- MainScene debug sphere is visually scaled to 4 but its SphereCollider radius remains 1, so visual and collision size currently differ
+- Kinetics destructor only explicitly clears kinetic bodies; m_colliders self-destructs anyway, but clear it too later for symmetry if desired
+
+Next logical lesson: collision event state (Enter/Stay/Exit and Trigger equivalents) before Box collision or physical response, so gameplay can react to first contact without firing every fixed tick.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
