@@ -5,6 +5,7 @@
 #include <SimpleMath.h>
 
 class KineticBody;
+class SphereCollider;
 
 class Bullet final : public Component {
 public:
@@ -24,6 +25,7 @@ private:
 
 private:
 	KineticBody* m_kb = nullptr;
+	SphereCollider* m_col= nullptr;
 
 	float m_lifeTime = 4.0f;
 

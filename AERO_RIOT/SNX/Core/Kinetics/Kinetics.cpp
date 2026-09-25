@@ -4,6 +4,10 @@
 
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Object/GameObject.h>
+#include <SNX/Core/Components/Collider/CollisionDetection.h>
+
+#include <SNX/Core/Debugger/Debug.h>
+#include <SNX/Utils/Conversion.h>
 
 Kinetics::~Kinetics() {
 	m_kineticBodies.clear();
@@ -15,6 +19,14 @@ void Kinetics::RegisterKineticBody(KineticBody* body) {
 
 void Kinetics::UnregisterKineticBody(KineticBody* body) {
 	std::erase(m_kineticBodies, body);
+}
+
+void Kinetics::RegisterCollider(Collider* collider) {
+	m_colliders.push_back(collider);
+}
+
+void Kinetics::UnregisterCollider(Collider* collider) {
+	std::erase(m_colliders, collider);
 }
 
 void Kinetics::Integrate(float fixedDeltaTime) noexcept {
@@ -45,5 +57,27 @@ void Kinetics::UpdateInterpolation(float alpha) noexcept {
 
 
 		body->UpdateInterpolation(alpha);
+	}
+}
+
+void Kinetics::DetectCollision() noexcept {
+	for (const auto col_A : m_colliders) {
+		for (const auto col_B : m_colliders) {
+			// skip self collision
+			if (col_A == col_B)
+				continue;
+
+			// skip if both are static objects
+			if (!col_A->GetKineticBody()
+				&& !col_B->GetKineticBody())
+				continue;
+
+			if (CollisionDetection::Intersects(*col_A, *col_B))
+				Debug::LogWarning(
+					Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
+					+ L" Collided with " +
+					Utils::Conversion::ToWString(col_B->GetGameObject().GetName())
+				);
+		}
 	}
 }

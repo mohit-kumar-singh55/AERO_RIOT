@@ -5,6 +5,7 @@
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
+#include <SNX/Core/Components/Collider/SphereCollider.h>
 
 void Bullet::OnStart() {
 	m_kb = GetGameObject().GetComponent<KineticBody>();
@@ -18,6 +19,8 @@ void Bullet::OnStart() {
 
 	if (m_launchRequested)
 		Launch();
+
+	m_col = &GetGameObject().AddComponent<SphereCollider>();
 }
 
 void Bullet::OnUpdate() {

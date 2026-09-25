@@ -7,6 +7,7 @@
 
 #include <SNX/Core/Components/Renderer/PrimitiveRenderer.h>
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
+#include <SNX/Core/Components/Collider/SphereCollider.h>
 
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
@@ -113,6 +114,18 @@ void MainScene::OnLoad() {
 		cubeTrans.SetScale({ 0.2f,4.0f,20.0f });
 		cubeTrans.SetPosition({ (float)(std::rand() % 10) - i,-(float)(std::rand() % 10) + i,-(float)(std::rand() % 20) - i });
 	}
+
+	// ? TEST
+	auto& sphere = GetGameObjects().CreateGameObject("DEBUG_SPHERE");
+	auto& renderer = sphere.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Sphere
+	);
+	renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
+	auto& sphereTrans = sphere.GetTransform();
+	sphereTrans.SetPosition({ 0.0f,0.0f,-10.0f });
+
+	sphere.AddComponent<SphereCollider>();
 }
 
 void MainScene::OnUnload() {
