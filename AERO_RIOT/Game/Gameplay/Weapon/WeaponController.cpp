@@ -7,6 +7,7 @@
 #include <SNX/Core/Components/Renderer/PrimitiveRenderer.h>
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
+#include <SNX/Core/Components/Collider/SphereCollider.h>
 #include <SNX/Core/Time.h>
 
 #include <stdexcept>
@@ -59,6 +60,7 @@ void WeaponController::FireGun(
 		PrimitiveShape::Sphere
 	);
 	bulletGO.AddComponent<KineticBody>();
+	bulletGO.AddComponent<SphereCollider>();
 	auto& bullet = bulletGO.AddComponent<Bullet>();
 
 	bulletGO.GetTransform().SetPosition(spawnPosition);

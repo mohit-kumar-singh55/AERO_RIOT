@@ -123,7 +123,8 @@ void MainScene::OnLoad() {
 	);
 	renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
 	auto& sphereTrans = sphere.GetTransform();
-	sphereTrans.SetPosition({ 0.0f,0.0f,-10.0f });
+	sphereTrans.SetPosition({ 0.0f,0.0f,-50.0f });
+	sphereTrans.SetScale({ 4.0f,4.0f,4.0f });
 
 	sphere.AddComponent<SphereCollider>();
 }

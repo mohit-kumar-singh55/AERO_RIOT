@@ -55,6 +55,9 @@ void Scene::FixedUpdate() {
 
 		// phase to apply physics
 		m_kinetics.Integrate(Time::FixedDeltaTime());
+
+		// detect collision
+		m_kinetics.DetectCollision();
 	}
 }
 

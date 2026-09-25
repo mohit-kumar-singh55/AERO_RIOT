@@ -61,8 +61,18 @@ void Kinetics::UpdateInterpolation(float alpha) noexcept {
 }
 
 void Kinetics::DetectCollision() noexcept {
-	for (const auto col_A : m_colliders) {
-		for (const auto col_B : m_colliders) {
+	for (size_t i = 0; i < m_colliders.size(); i++) {
+		for (size_t j = i + 1; j < m_colliders.size(); j++) {
+			auto col_A = m_colliders[i];
+			auto col_B = m_colliders[j];
+
+			// no need to detect collision for the component which is inactive or about to be removed
+			if (!col_A || !col_B ||
+				!col_A->IsEnabled() || !col_B->IsEnabled() ||
+				col_A->IsRemoveRequested() || col_B->IsRemoveRequested() ||
+				!col_A->GetGameObject().IsActiveInHierarchy() || !col_B->GetGameObject().IsActiveInHierarchy())
+				continue;
+
 			// skip self collision
 			if (col_A == col_B)
 				continue;
@@ -76,7 +86,8 @@ void Kinetics::DetectCollision() noexcept {
 				Debug::LogWarning(
 					Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
 					+ L" Collided with " +
-					Utils::Conversion::ToWString(col_B->GetGameObject().GetName())
+					Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
+					5.0f
 				);
 		}
 	}
