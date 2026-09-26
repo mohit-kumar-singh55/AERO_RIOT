@@ -624,6 +624,22 @@ Review items before building collision events:
 
 Next recommended milestone: collision event state (Enter/Stay/Exit or a minimal Enter first), then Bullet responds to hit. No rigid-body collision response yet.
 
+
+## Collider local/world geometry cleanup — implemented
+Commit `f6dea0db7af0f20fe13a683df86821039ecc891c`:
+- Collider is now truly abstract through pure virtual GetShape(); stored m_shape removed.
+- Collider offset is local-space and GetCenter() transforms it through simulation GetWorldMatrix().
+- SphereCollider stores local radius and exposes GetWorldRadius(); Sphere-Sphere uses world radii.
+- BoxCollider stores local half-extents and exposes scaled world half-extents.
+- Shape identity is now compile-time/override behavior rather than mutable constructor state.
+
+Small remaining cleanup before collision events:
+- SphereCollider::GetWorldRadius() should use abs(scale.x/y/z), matching BoxCollider; negative scale otherwise breaks radius.
+- Kinetics::DetectCollision() remains noexcept while debug/string allocation occurs inside it; remove noexcept for the current debug implementation.
+- Full OBB shape/API is deferred until Sphere-Box/Box-Box work. Do not build an OBB abstraction just for future-proofing yet.
+
+Next milestone: collision event state. Teach current-vs-previous contact pairs and start with OnCollisionEnter only before Stay/Exit or response.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
