@@ -6,6 +6,5 @@ SphereCollider::SphereCollider(
 	float radius
 ) noexcept :
 	Collider(gameObject) {
-	m_shape = ColliderShape::Sphere;
 	SetRadius(radius);
 }

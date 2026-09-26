@@ -5,6 +5,8 @@
 
 #include <SimpleMath.h>
 
+using DirectX::SimpleMath::Vector3;
+
 class KineticBody;
 
 enum class ColliderShape { Sphere, Box, Capsule };
@@ -22,11 +24,26 @@ public:
 	void SetIsTrigger(bool trigger) noexcept { m_isTrigger = trigger; }
 
 	[[nodiscard]]
-	ColliderShape GetShape() const noexcept { return m_shape; }
+	virtual ColliderShape GetShape() const noexcept = 0;
+
+	// local-space offset
+	[[nodiscard]]
+	Vector3 GetOffset() const noexcept { return m_offset; }
+
+	// local-space offset
+	void SetOffset(Vector3 localOffset) noexcept { m_offset = localOffset; }
 
 	[[nodiscard]]
-	DirectX::SimpleMath::Vector3 GetCenter() const noexcept {
-		return GetTransform().GetPosition() + m_offset;
+	Vector3 GetCenter() const noexcept {
+		/*
+		* as m_offset is in local-space,
+		* convert to world-space to apply automatically apply
+		* scale, rotation and translation
+		*/
+		return Vector3::Transform(
+			m_offset,
+			GetTransform().GetWorldMatrix()
+		);
 	}
 
 protected:
@@ -39,7 +56,9 @@ protected:
 	KineticBody* m_kb = nullptr;
 
 	bool m_isTrigger = false;
-	ColliderShape m_shape = ColliderShape::Sphere;
-	// offset from the position of the game object, it is attached to
-	DirectX::SimpleMath::Vector3 m_offset = DirectX::SimpleMath::Vector3::Zero;
+	/*
+	* local-space
+	* offset from the position of the game object, it is attached to
+	*/
+	Vector3 m_offset = Vector3::Zero;
 };

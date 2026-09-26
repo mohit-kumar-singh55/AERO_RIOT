@@ -5,7 +5,7 @@
 
 namespace CollisionDetection {
 	inline bool Intersects(const SphereCollider& a, const SphereCollider& b) {
-		const float radiusSum = a.GetRadius() + b.GetRadius();
+		const float radiusSum = a.GetWorldRadius() + b.GetWorldRadius();
 
 		const float distanceSquared = DirectX::SimpleMath::Vector3::DistanceSquared(
 			a.GetCenter(), b.GetCenter()
