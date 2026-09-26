@@ -23,8 +23,8 @@ public:
 	[[nodiscard]]
 	float GetWorldRadius() const noexcept {
 		auto scale = GetTransform().GetScale();
-		float max = std::max(scale.x, scale.y);
-		return m_radius * std::max(max, scale.z);
+		float max = std::max(std::abs(scale.x), std::abs(scale.y));
+		return m_radius * std::max(max, std::abs(scale.z));
 	}
 
 	ColliderShape GetShape() const noexcept override { return ColliderShape::Sphere; }

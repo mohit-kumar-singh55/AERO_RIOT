@@ -6,9 +6,6 @@
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Components/Collider/CollisionDetection.h>
 
-#include <SNX/Core/Debugger/Debug.h>
-#include <SNX/Utils/Conversion.h>
-
 Kinetics::~Kinetics() {
 	m_kineticBodies.clear();
 }
@@ -78,13 +75,13 @@ void Kinetics::DetectCollision() noexcept {
 				&& !col_B->GetKineticBody())
 				continue;
 
-			if (CollisionDetection::Intersects(*col_A, *col_B))
-				Debug::LogWarning(
-					Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
-					+ L" Collided with " +
-					Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
-					5.0f
-				);
+			if (CollisionDetection::Intersects(*col_A, *col_B)) {}
+			//Debug::LogWarning(
+			//	Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
+			//	+ L" Collided with " +
+			//	Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
+			//	5.0f
+			//);
 		}
 	}
 }
