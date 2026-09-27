@@ -209,3 +209,45 @@ void GameObject::DestroyComponents() noexcept {
 
 	m_componentsDestroyed = true;
 }
+
+void GameObject::NotifyCollisionEnter() {
+	// checks are being done in Kinetics
+	for (const auto& component : m_components) {
+		if (!component || !component->m_enabled || component->m_removeRequested)
+			continue;
+
+		component->OnCollisionEnter();
+
+		// ! stop immediately if destruction is requested
+		if (m_destroyRequested)
+			break;
+	}
+}
+
+void GameObject::NotifyCollisionStay() {
+	// checks are being done in Kinetics
+	for (const auto& component : m_components) {
+		if (!component || !component->m_enabled || component->m_removeRequested)
+			continue;
+
+		component->OnCollisionStay();
+
+		// ! stop immediately if destruction is requested
+		if (m_destroyRequested)
+			break;
+	}
+}
+
+void GameObject::NotifyCollisionExit() {
+	// checks are being done in Kinetics
+	for (const auto& component : m_components) {
+		if (!component || !component->m_enabled || component->m_removeRequested)
+			continue;
+
+		component->OnCollisionExit();
+
+		// ! stop immediately if destruction is requested
+		if (m_destroyRequested)
+			break;
+	}
+}

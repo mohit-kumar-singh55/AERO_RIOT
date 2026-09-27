@@ -19,6 +19,9 @@ protected:
 	void OnStart() override;
 	void OnUpdate() override;
 
+	void OnCollisionEnter() override;
+	void OnCollisionStay() override;
+
 private:
 	void Launch() noexcept;
 

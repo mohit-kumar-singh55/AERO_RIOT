@@ -133,6 +133,11 @@ public:
 	[[nodiscard]]
 	const GameObjectManager* GetGameObjects() const noexcept { return m_gameObjects; }
 
+	// notify components about the collision
+	void NotifyCollisionEnter();
+	void NotifyCollisionStay();
+	void NotifyCollisionExit();
+
 private:
 	void EnsureComponentStarted(Component& component);
 

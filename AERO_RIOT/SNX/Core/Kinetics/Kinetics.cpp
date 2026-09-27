@@ -75,7 +75,24 @@ void Kinetics::DetectCollision() noexcept {
 				&& !col_B->GetKineticBody())
 				continue;
 
-			if (CollisionDetection::Intersects(*col_A, *col_B)) {}
+			if (CollisionDetection::Intersects(*col_A, *col_B)) {
+				auto pair = CollisionPair(col_A, col_B);
+
+				m_currentCollisions.insert(pair);
+
+				if (!m_previousCollisions.contains(pair)) {
+					// notify on collision enter
+					col_A->GetGameObject().NotifyCollisionEnter();
+					col_B->GetGameObject().NotifyCollisionEnter();
+				}
+				else {
+					// notify on collision stay
+					col_A->GetGameObject().NotifyCollisionStay();
+					col_B->GetGameObject().NotifyCollisionStay();
+				}
+
+				m_previousCollisions = m_currentCollisions;
+			}
 			//Debug::LogWarning(
 			//	Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
 			//	+ L" Collided with " +

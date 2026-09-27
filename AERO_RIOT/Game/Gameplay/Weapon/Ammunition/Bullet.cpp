@@ -6,6 +6,9 @@
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
 
+#include <SNX/Core/Debugger/Debug.h>
+#include <SNX/Utils/Conversion.h>
+
 void Bullet::OnStart() {
 	m_kb = GetGameObject().GetComponent<KineticBody>();
 
@@ -27,6 +30,24 @@ void Bullet::OnUpdate() {
 		if (m_lifeTimeTimer <= 0.0f)
 			GetGameObject().RequestDestroy();
 	}
+}
+
+void Bullet::OnCollisionEnter() {
+	Debug::LogWarning(
+		//Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
+		 L" Collided with " 
+		//Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
+		,5.0f
+	);
+}
+
+void Bullet::OnCollisionStay() {
+	Debug::LogWarning(
+		//Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
+		L" Collision Stayed with "
+		//Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
+		, 5.0f
+	);
 }
 
 void Bullet::RequestLaunch(

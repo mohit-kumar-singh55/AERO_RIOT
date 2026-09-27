@@ -61,6 +61,15 @@ protected:
 	// called before the component is removed
 	virtual void OnDestroy() {}
 
+	// called when collision entered
+	virtual void OnCollisionEnter() {}
+
+	// called when colliders are overlapped over the frames
+	virtual void OnCollisionStay() {}
+
+	// called when collision exited
+	virtual void OnCollisionExit() {}
+
 private:
 	GameObject* m_gameObject = nullptr;
 
