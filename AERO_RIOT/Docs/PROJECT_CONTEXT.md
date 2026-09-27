@@ -656,6 +656,19 @@ Each recipient gets a perspective-specific Collision payload: object A receives 
 
 Repo note: `SNX/Core/Collision.h` already exists with older RectF/SphereBounds helpers. Avoid accidentally creating a second conflicting Collision definition; either repurpose/clean that file if those helpers are obsolete, or place the new payload in a clearly scoped collision header.
 
+
+## Collision event payload — WORKING
+Commit `c307285c7d660bd2a2f4e434d7875740d827827c` refactored collision code into:
+- SNX/Core/Collision/Collision.h
+- SNX/Core/Collision/CollisionDetection.h
+- SNX/Core/Collision/CollisionPair.h
+
+Component/GameObject collision callbacks now take `const Collision&`, with the initial payload containing `Collider& other`. Kinetics constructs recipient-specific payloads (A receives B, B receives A). Enter and repeated Stay were verified working.
+
+The legacy `SNX/Core/Collision.h` containing RectF/SphereBounds is no longer referenced by current code and can be deleted; remove its vcxproj/filters entry as well. The new Collision directory is the canonical collision subsystem location.
+
+Before implementing Exit, remember collider destruction/unregistration must be considered because previous collision pairs contain raw Collider pointers.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
