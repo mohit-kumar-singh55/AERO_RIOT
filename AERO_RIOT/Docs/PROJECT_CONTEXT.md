@@ -690,6 +690,22 @@ Small robustness cleanup:
 
 Next practical milestone: high-speed projectile tunneling. Gun muzzle speed is back to 150; discrete sphere overlap can miss thin/small targets. Prefer a game-first swept projectile test (segment/sphere or ray/sphere style) rather than full general CCD.
 
+
+## CCD motion history foundation — implemented
+Commit `0f303e0d87d8da5d3ffddb55c8fb6304d99f3709`:
+- Collider has CollisionDetectionMode { Discrete, Continuous }, default Discrete.
+- KineticBody exposes previous world position/rotation already captured by physics integration.
+- Collider exposes GetCenter() and GetPreviousCenter().
+- GetPreviousCenter() reconstructs previous world SRT using current world scale + previous KineticBody rotation/position; static colliders fall back to current center.
+- This supports relative-motion swept tests without duplicating pose history in Collider.
+
+Next: implement continuous Sphere-Sphere boolean detection in CollisionDetection using relative motion:
+relativeStart = A.previousCenter - B.previousCenter
+relativeEnd = A.currentCenter - B.currentCenter
+segment = relativeStart -> relativeEnd
+expanded radius = worldRadiusA + worldRadiusB.
+For boolean-only detection, closest-point-on-segment to origin is sufficient and simpler than solving the quadratic. If either collider requests Continuous, use this swept pair test; otherwise use existing discrete overlap. Bullet should opt into Continuous at spawn. Do not build general CCD/TOI/response yet.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
