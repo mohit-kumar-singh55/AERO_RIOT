@@ -11,6 +11,11 @@ class KineticBody;
 
 enum class ColliderShape { Sphere, Box, Capsule };
 
+enum class CollisionDetectionMode {
+	Discrete,
+	Continuous
+};
+
 class Collider : public Component {
 public:
 	using Component::Component;
@@ -33,17 +38,19 @@ public:
 	// local-space offset
 	void SetOffset(Vector3 localOffset) noexcept { m_offset = localOffset; }
 
+	// current world center
 	[[nodiscard]]
-	Vector3 GetCenter() const noexcept {
-		/*
-		* as m_offset is in local-space,
-		* convert to world-space to apply automatically apply
-		* scale, rotation and translation
-		*/
-		return Vector3::Transform(
-			m_offset,
-			GetTransform().GetWorldMatrix()
-		);
+	Vector3 GetCenter() const noexcept;
+
+	// previous physics-step world center
+	[[nodiscard]]
+	Vector3 GetPreviousCenter() const noexcept;
+
+	[[nodiscard]]
+	CollisionDetectionMode GetDetectionMode() const noexcept { return m_detectionMode; }
+
+	void SetDetectionMode(CollisionDetectionMode detectionMode) noexcept {
+		m_detectionMode = detectionMode;
 	}
 
 protected:
@@ -61,4 +68,6 @@ protected:
 	* offset from the position of the game object, it is attached to
 	*/
 	Vector3 m_offset = Vector3::Zero;
+
+	CollisionDetectionMode m_detectionMode = CollisionDetectionMode::Discrete;
 };

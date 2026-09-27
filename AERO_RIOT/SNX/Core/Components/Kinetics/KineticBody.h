@@ -99,6 +99,12 @@ public:
 		m_accumulatedTorque += torque;
 	}
 
+	[[nodiscard]]
+	Vector3 GetPreviousPosition() const noexcept { return m_previousPosition; }
+
+	[[nodiscard]]
+	Quaternion GetPreviousRotation() const noexcept { return m_previousRotation; }
+
 protected:
 	void OnInitialize() override;
 	void OnDestroy() override;
