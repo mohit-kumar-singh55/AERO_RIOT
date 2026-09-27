@@ -669,6 +669,27 @@ The legacy `SNX/Core/Collision.h` containing RectF/SphereBounds is no longer ref
 
 Before implementing Exit, remember collider destruction/unregistration must be considered because previous collision pairs contain raw Collider pointers.
 
+
+## Collision Enter/Stay/Exit — WORKING
+Commits `3724fba09a0d55a1eb05af7be6d1391ec52b299f` and `0663890c17eef38c4b5095008a347f9c18ea17a7` completed collision state events:
+- new overlap -> OnCollisionEnter
+- persistent overlap -> OnCollisionStay each fixed step
+- previous pair missing from current -> OnCollisionExit
+- Collision payload gives each receiver the other Collider
+- CollisionPair::Contains supports cleanup
+- UnregisterCollider removes stale previous-pair entries
+
+User verified:
+- normal Enter/Stay/Exit behavior works
+- destroying bullet in Enter produces only Enter
+- destroying bullet during Stay produces Enter + one Stay, with no stale Exit/crash
+
+Small robustness cleanup:
+- UnregisterCollider should also erase matching pairs from m_currentCollisions so its invariant is independent of current lifecycle timing.
+- CollisionPair.h should include <functional> directly because it uses std::less/std::hash.
+
+Next practical milestone: high-speed projectile tunneling. Gun muzzle speed is back to 150; discrete sphere overlap can miss thin/small targets. Prefer a game-first swept projectile test (segment/sphere or ray/sphere style) rather than full general CCD.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
