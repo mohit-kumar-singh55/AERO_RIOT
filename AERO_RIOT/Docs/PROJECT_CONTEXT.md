@@ -706,6 +706,29 @@ segment = relativeStart -> relativeEnd
 expanded radius = worldRadiusA + worldRadiusB.
 For boolean-only detection, closest-point-on-segment to origin is sufficient and simpler than solving the quadratic. If either collider requests Continuous, use this swept pair test; otherwise use existing discrete overlap. Bullet should opt into Continuous at spawn. Do not build general CCD/TOI/response yet.
 
+
+## Continuous Sphere-Sphere CCD — WORKING
+Commit `4bfea71140df2723124812b83361425768a063fd` implemented game-focused swept Sphere-Sphere collision:
+- Bullet SphereCollider opts into CollisionDetectionMode::Continuous.
+- Generic CollisionDetection dispatch uses continuous Sphere-Sphere when either collider requests Continuous; otherwise existing discrete overlap.
+- Continuous test uses relative motion:
+  - relativeStart = A.previousCenter - B.previousCenter
+  - relativeEnd = A.currentCenter - B.currentCenter
+  - closest point on the relative segment to origin
+  - compare closest distance² to (radiusA + radiusB)²
+- Near-zero relative motion falls back to ordinary discrete overlap.
+- Relative motion handles moving targets as well as static targets.
+
+User validation:
+- At bullet speed 600 with Discrete, many bullets tunnel through the target.
+- At the same speed with Continuous, every tested bullet collides.
+
+Small cleanup: CollisionDetection.h uses std::clamp and should include <algorithm> directly.
+
+Known deliberate limitation: a swept hit represents "touched at any time during this fixed step", not necessarily overlap at the step endpoint. Thus a surviving Continuous object can produce Enter on a pass-through and Exit on the next step; if it starts a step already overlapping and leaves during that step, Stay/Exit timing can be one step later. Accept for projectile-focused CCD; do not build a full TOI/contact solver unless gameplay needs it.
+
+Next likely collision milestone: Sphere-Box using BoxCollider as an OBB, starting with discrete Sphere-vs-OBB. Design the minimum OBB world data/API only when implementing that pair.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
