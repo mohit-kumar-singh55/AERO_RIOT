@@ -52,6 +52,15 @@ void Bullet::OnCollisionStay(const Collision& collision) {
 	);
 }
 
+void Bullet::OnCollisionExit(const Collision& collision) {
+	Debug::LogWarning(
+		Utils::Conversion::ToWString(GetGameObject().GetName())
+		+ L" Collision exited with " +
+		Utils::Conversion::ToWString(collision.other.GetGameObject().GetName()),
+		5.0f
+	);
+}
+
 void Bullet::RequestLaunch(
 	const DirectX::SimpleMath::Vector3 direction,
 	float speed

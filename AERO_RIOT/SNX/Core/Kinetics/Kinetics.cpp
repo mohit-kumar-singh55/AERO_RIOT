@@ -100,6 +100,22 @@ void Kinetics::DetectCollision() {
 		}
 	}
 
+	/*
+	* colliders that are in previous collision set
+	* but not in current collision set
+	* are the one exited the collision
+	*/
+	for (const auto& previousCol : m_previousCollisions) {
+		if (!m_currentCollisions.contains(previousCol)) {
+			Collision collision_A(*previousCol.b);
+			Collision collision_B(*previousCol.a);
+
+			// notify on collision exit
+			previousCol.a->GetGameObject().NotifyCollisionExit(collision_A);
+			previousCol.b->GetGameObject().NotifyCollisionExit(collision_B);
+		}
+	}
+
 	m_previousCollisions.swap(m_currentCollisions);
 	m_currentCollisions.clear();
 }

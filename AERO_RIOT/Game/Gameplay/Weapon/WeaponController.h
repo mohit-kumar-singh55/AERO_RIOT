@@ -30,7 +30,7 @@ private:
 	Transform* m_gunMuzzle = nullptr;
 
 	float m_gunFireInterval = 0.1f;
-	float m_muzzleSpeed = 40.0f;	// bullet speed
+	float m_muzzleSpeed = 150.0f;	// bullet speed
 
 	float m_gunFireTimer = 0.0f;
 };

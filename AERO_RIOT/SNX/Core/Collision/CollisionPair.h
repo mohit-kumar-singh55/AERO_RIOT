@@ -18,6 +18,10 @@ struct CollisionPair {
 		return a == other.a && b == other.b;
 	}
 
+	bool Contains(const Collider* collider) const noexcept {
+		return a == collider || b == collider;
+	}
+
 	Collider* a;	// smaller
 	Collider* b;	// higher
 };
