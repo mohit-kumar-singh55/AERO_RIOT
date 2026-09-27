@@ -640,6 +640,22 @@ Small remaining cleanup before collision events:
 
 Next milestone: collision event state. Teach current-vs-previous contact pairs and start with OnCollisionEnter only before Stay/Exit or response.
 
+
+## Collision callback payload decision
+Collision event callbacks will use a small `Collision` struct now rather than taking `Collider& other` directly. Rationale: this stabilizes the Component callback API before contact data is added later.
+
+Initial payload should stay minimal:
+- reference/pointer to the other Collider only
+- no contact point, normal, penetration, impulse, etc. until detection actually computes them
+
+Recommended callback shape:
+`OnCollisionEnter(const Collision& collision)`
+(and Stay/Exit likewise).
+
+Each recipient gets a perspective-specific Collision payload: object A receives other=B; object B receives other=A. Later, directional data such as contact normal can also be flipped appropriately per recipient.
+
+Repo note: `SNX/Core/Collision.h` already exists with older RectF/SphereBounds helpers. Avoid accidentally creating a second conflicting Collision definition; either repurpose/clean that file if those helpers are obsolete, or place the new payload in a clearly scoped collision header.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
