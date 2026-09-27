@@ -62,7 +62,7 @@ public:
 	void UpdateInterpolation(float alpha) noexcept;
 
 	// check collision
-	void DetectCollision() noexcept;
+	void DetectCollision();
 
 private:
 	std::vector<KineticBody*> m_kineticBodies;

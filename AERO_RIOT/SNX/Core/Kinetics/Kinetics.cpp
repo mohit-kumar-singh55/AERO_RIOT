@@ -57,7 +57,7 @@ void Kinetics::UpdateInterpolation(float alpha) noexcept {
 	}
 }
 
-void Kinetics::DetectCollision() noexcept {
+void Kinetics::DetectCollision() {
 	for (size_t i = 0; i < m_colliders.size(); i++) {
 		for (size_t j = i + 1; j < m_colliders.size(); j++) {
 			auto col_A = m_colliders[i];
@@ -76,7 +76,7 @@ void Kinetics::DetectCollision() noexcept {
 				continue;
 
 			if (CollisionDetection::Intersects(*col_A, *col_B)) {
-				auto pair = CollisionPair(col_A, col_B);
+				CollisionPair pair(col_A, col_B);
 
 				m_currentCollisions.insert(pair);
 
@@ -90,8 +90,6 @@ void Kinetics::DetectCollision() noexcept {
 					col_A->GetGameObject().NotifyCollisionStay();
 					col_B->GetGameObject().NotifyCollisionStay();
 				}
-
-				m_previousCollisions = m_currentCollisions;
 			}
 			//Debug::LogWarning(
 			//	Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
@@ -101,4 +99,7 @@ void Kinetics::DetectCollision() noexcept {
 			//);
 		}
 	}
+
+	m_previousCollisions.swap(m_currentCollisions);
+	m_currentCollisions.clear();
 }
