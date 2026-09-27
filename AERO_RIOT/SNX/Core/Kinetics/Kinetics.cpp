@@ -27,11 +27,19 @@ void Kinetics::RegisterCollider(Collider* collider) {
 void Kinetics::UnregisterCollider(Collider* collider) {
 	std::erase(m_colliders, collider);
 
-	// remove collider if it exists in previous collision set
-	std::erase_if(m_previousCollisions,
+	// remove collider if it exists in collision set
+	std::erase_if(
+		m_previousCollisions,
 		[collider](const CollisionPair& pair) {
 			return pair.Contains(collider);
-		});
+		}
+	);
+	std::erase_if(
+		m_currentCollisions,
+		[collider](const CollisionPair& pair) {
+			return pair.Contains(collider);
+		}
+	);
 }
 
 void Kinetics::Integrate(float fixedDeltaTime) noexcept {
