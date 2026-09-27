@@ -227,7 +227,6 @@
     <ClInclude Include="Scenes\MainScene.h" />
     <ClInclude Include="Scenes\SceneIds.h" />
     <ClInclude Include="SNX\Audio\AudioManager.h" />
-    <ClInclude Include="SNX\Core\Collision.h" />
     <ClInclude Include="SNX\Core\Collision\Collision.h" />
     <ClInclude Include="SNX\Core\Collision\CollisionDetection.h" />
     <ClInclude Include="SNX\Core\Collision\CollisionPair.h" />

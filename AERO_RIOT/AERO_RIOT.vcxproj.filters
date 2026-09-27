@@ -209,9 +209,6 @@
     <ClInclude Include="SNX\Audio\AudioManager.h">
       <Filter>SNX\Audio</Filter>
     </ClInclude>
-    <ClInclude Include="SNX\Core\Collision.h">
-      <Filter>SNX\Core</Filter>
-    </ClInclude>
     <ClInclude Include="SNX\Core\ModelObject3D.h">
       <Filter>SNX\Core</Filter>
     </ClInclude>
