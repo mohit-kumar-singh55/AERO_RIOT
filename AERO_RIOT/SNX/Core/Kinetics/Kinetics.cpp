@@ -4,7 +4,9 @@
 
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Object/GameObject.h>
-#include <SNX/Core/Components/Collider/CollisionDetection.h>
+#include <SNX/Core/Collision/CollisionDetection.h>
+#include <SNX/Core/Components/Collider/Collider.h>
+#include <SNX/Core/Collision/Collision.h>
 
 Kinetics::~Kinetics() {
 	m_kineticBodies.clear();
@@ -75,28 +77,26 @@ void Kinetics::DetectCollision() {
 				&& !col_B->GetKineticBody())
 				continue;
 
+			// check for collision
 			if (CollisionDetection::Intersects(*col_A, *col_B)) {
 				CollisionPair pair(col_A, col_B);
 
 				m_currentCollisions.insert(pair);
 
+				Collision collision_A(*col_B);
+				Collision collision_B(*col_A);
+
 				if (!m_previousCollisions.contains(pair)) {
 					// notify on collision enter
-					col_A->GetGameObject().NotifyCollisionEnter();
-					col_B->GetGameObject().NotifyCollisionEnter();
+					col_A->GetGameObject().NotifyCollisionEnter(collision_A);
+					col_B->GetGameObject().NotifyCollisionEnter(collision_B);
 				}
 				else {
 					// notify on collision stay
-					col_A->GetGameObject().NotifyCollisionStay();
-					col_B->GetGameObject().NotifyCollisionStay();
+					col_A->GetGameObject().NotifyCollisionStay(collision_A);
+					col_B->GetGameObject().NotifyCollisionStay(collision_B);
 				}
 			}
-			//Debug::LogWarning(
-			//	Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
-			//	+ L" Collided with " +
-			//	Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
-			//	5.0f
-			//);
 		}
 	}
 

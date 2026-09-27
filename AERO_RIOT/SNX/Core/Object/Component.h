@@ -5,6 +5,7 @@ class GameObject;
 class Transform;
 
 struct RenderContext;
+struct Collision;
 
 class Component {
 public:
@@ -62,13 +63,13 @@ protected:
 	virtual void OnDestroy() {}
 
 	// called when collision entered
-	virtual void OnCollisionEnter() {}
+	virtual void OnCollisionEnter(const Collision& collision) {}
 
 	// called when colliders are overlapped over the frames
-	virtual void OnCollisionStay() {}
+	virtual void OnCollisionStay(const Collision& collision) {}
 
 	// called when collision exited
-	virtual void OnCollisionExit() {}
+	virtual void OnCollisionExit(const Collision& collision) {}
 
 private:
 	GameObject* m_gameObject = nullptr;

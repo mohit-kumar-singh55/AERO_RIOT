@@ -228,10 +228,12 @@
     <ClInclude Include="Scenes\SceneIds.h" />
     <ClInclude Include="SNX\Audio\AudioManager.h" />
     <ClInclude Include="SNX\Core\Collision.h" />
+    <ClInclude Include="SNX\Core\Collision\Collision.h" />
+    <ClInclude Include="SNX\Core\Collision\CollisionDetection.h" />
+    <ClInclude Include="SNX\Core\Collision\CollisionPair.h" />
     <ClInclude Include="SNX\Core\Components\Camera\Camera.h" />
     <ClInclude Include="SNX\Core\Components\Collider\BoxCollider.h" />
     <ClInclude Include="SNX\Core\Components\Collider\Collider.h" />
-    <ClInclude Include="SNX\Core\Components\Collider\CollisionDetection.h" />
     <ClInclude Include="SNX\Core\Components\Collider\SphereCollider.h" />
     <ClInclude Include="SNX\Core\Components\Kinetics\KineticBody.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\MeshRenderer.h" />

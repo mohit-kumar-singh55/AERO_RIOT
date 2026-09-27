@@ -95,6 +95,9 @@
     <Filter Include="SNX\Utils">
       <UniqueIdentifier>{39d8e49e-7a74-404d-a1b7-23e2854835dc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SNX\Core\Collision">
+      <UniqueIdentifier>{218c64ba-7e0f-4f89-90aa-c6bcd5b709b9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -321,11 +324,17 @@
     <ClInclude Include="SNX\Core\Components\Collider\BoxCollider.h">
       <Filter>SNX\Core\Components\Collider</Filter>
     </ClInclude>
-    <ClInclude Include="SNX\Core\Components\Collider\CollisionDetection.h">
-      <Filter>SNX\Core\Components\Collider</Filter>
-    </ClInclude>
     <ClInclude Include="SNX\Utils\Conversion.h">
       <Filter>SNX\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Collision\CollisionDetection.h">
+      <Filter>SNX\Core\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Collision\CollisionPair.h">
+      <Filter>SNX\Core\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Collision\Collision.h">
+      <Filter>SNX\Core\Collision</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Collider.h"
-#include "SphereCollider.h"
+#include <SNX/Core/Components/Collider/Collider.h>
+#include<SNX/Core/Components/Collider/SphereCollider.h>
 
 namespace CollisionDetection {
 	inline bool Intersects(const SphereCollider& a, const SphereCollider& b) {

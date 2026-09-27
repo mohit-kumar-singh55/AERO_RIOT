@@ -11,6 +11,7 @@
 
 class GameObjectManager;
 struct RenderContext;
+struct Collision;
 
 class GameObject final {
 public:
@@ -134,9 +135,9 @@ public:
 	const GameObjectManager* GetGameObjects() const noexcept { return m_gameObjects; }
 
 	// notify components about the collision
-	void NotifyCollisionEnter();
-	void NotifyCollisionStay();
-	void NotifyCollisionExit();
+	void NotifyCollisionEnter(const Collision& collision);
+	void NotifyCollisionStay(const Collision& collision);
+	void NotifyCollisionExit(const Collision& collision);
 
 private:
 	void EnsureComponentStarted(Component& component);

@@ -5,6 +5,8 @@
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
+#include <SNX/Core/Components/Collider/Collider.h>
+#include <SNX/Core/Collision/Collision.h>
 
 #include <SNX/Core/Debugger/Debug.h>
 #include <SNX/Utils/Conversion.h>
@@ -32,21 +34,21 @@ void Bullet::OnUpdate() {
 	}
 }
 
-void Bullet::OnCollisionEnter() {
+void Bullet::OnCollisionEnter(const Collision& collision) {
 	Debug::LogWarning(
-		//Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
-		 L" Collided with " 
-		//Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
-		,5.0f
+		Utils::Conversion::ToWString(GetGameObject().GetName())
+		+ L" Collided with " +
+		Utils::Conversion::ToWString(collision.other.GetGameObject().GetName()),
+		5.0f
 	);
 }
 
-void Bullet::OnCollisionStay() {
+void Bullet::OnCollisionStay(const Collision& collision) {
 	Debug::LogWarning(
-		//Utils::Conversion::ToWString(col_A->GetGameObject().GetName())
-		L" Collision Stayed with "
-		//Utils::Conversion::ToWString(col_B->GetGameObject().GetName()),
-		, 5.0f
+		Utils::Conversion::ToWString(GetGameObject().GetName())
+		+ L" Collision stayed with " +
+		Utils::Conversion::ToWString(collision.other.GetGameObject().GetName()),
+		5.0f
 	);
 }
 
