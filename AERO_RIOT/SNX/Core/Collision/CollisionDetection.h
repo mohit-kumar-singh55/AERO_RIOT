@@ -2,9 +2,11 @@
 
 #include <SNX/Core/Components/Collider/Collider.h>
 #include <SNX/Core/Components/Collider/SphereCollider.h>
+#include <SNX/Core/Components/Collider/BoxCollider.h>
 
 namespace CollisionDetection {
 	using DirectX::SimpleMath::Vector3;
+	using DirectX::SimpleMath::Quaternion;
 
 	inline bool Intersects(const SphereCollider& a, const SphereCollider& b) {
 		const float radiusSum = a.GetWorldRadius() + b.GetWorldRadius();
@@ -43,15 +45,69 @@ namespace CollisionDetection {
 		return closest.LengthSquared() <= radiusSum * radiusSum;
 	}
 
+	inline bool Intersects(const SphereCollider& a, const BoxCollider& b) {
+		/*
+		* for the Sphere vs OBB
+		* we convert the sphere into the box's orientation space.
+		* rather than using some complicated math based on the OBB's world orientation
+		*/
+		// sphere position relative to the box
+		const Vector3 sphereRelativePos = a.GetCenter() - b.GetCenter();
+
+		// undo the box rotation
+		Quaternion boxInverseRotation;
+		b.GetRotation().Inverse(boxInverseRotation);
+
+		const Vector3 localSphereCenter = Vector3::Transform(sphereRelativePos, boxInverseRotation);
+
+		/*
+		* now the box is centered at the origin with bounds:
+		* x = [-extent.x, +extent.x]
+		* y = [-extent.y, +extent.y]
+		* z = [-extent.z, +extent.z]
+		*/
+
+		// find the point on that box closest to the sphere center
+		const auto extents = b.GetWorldExtents();
+		Vector3 closest;
+		localSphereCenter.Clamp(-extents, extents, closest);
+
+		const auto distanceSquared = Vector3::DistanceSquared(
+			localSphereCenter, closest
+		);
+
+		return distanceSquared <= a.GetWorldRadius() * a.GetWorldRadius();
+	}
+
 	inline bool Intersects(const Collider& a, const Collider& b) {
 		switch (a.GetShape()) {
 		case ColliderShape::Sphere: {
-			if (b.GetShape() == ColliderShape::Sphere)
+			if (b.GetShape() == ColliderShape::Sphere) {
 				if (a.GetDetectionMode() == CollisionDetectionMode::Discrete
 					&& b.GetDetectionMode() == CollisionDetectionMode::Discrete)
 					return Intersects(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const SphereCollider&>(b));
 				else
 					return IntersectsContinuous(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const SphereCollider&>(b));
+			}
+
+			if (b.GetShape() == ColliderShape::Box) {
+
+				if (a.GetDetectionMode() == CollisionDetectionMode::Discrete
+					&& b.GetDetectionMode() == CollisionDetectionMode::Discrete)
+					return Intersects(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const BoxCollider&>(b));
+				//else
+				//	return IntersectsContinuous(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const SphereCollider&>(b));
+			}
+		}
+		case ColliderShape::Box: {
+			if (b.GetShape() == ColliderShape::Sphere) {
+
+				if (a.GetDetectionMode() == CollisionDetectionMode::Discrete
+					&& b.GetDetectionMode() == CollisionDetectionMode::Discrete)
+					return Intersects(dynamic_cast<const SphereCollider&>(b), dynamic_cast<const BoxCollider&>(a));
+				//else
+				//	return IntersectsContinuous(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const SphereCollider&>(b));
+			}
 		}
 		}
 
