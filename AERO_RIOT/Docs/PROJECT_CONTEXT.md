@@ -729,6 +729,25 @@ Known deliberate limitation: a swept hit represents "touched at any time during 
 
 Next likely collision milestone: Sphere-Box using BoxCollider as an OBB, starting with discrete Sphere-vs-OBB. Design the minimum OBB world data/API only when implementing that pair.
 
+
+## Sphere-OBB first implementation review
+Commit `273e1c8e257176c484898e4f1c9b5e5973167665` added discrete Sphere-vs-OBB:
+- sphere center transformed into box orientation space via inverse box rotation
+- closest local point found by clamping against scaled half-extents
+- squared distance compared against sphere world radius²
+- canonical Sphere-Box overload reused for Box-Sphere dispatch
+
+Main issue before testing:
+- Bullet collider is Continuous. In the generic dispatcher, Sphere-Box only calls the discrete overload when BOTH colliders are Discrete; the Continuous branch is commented out. Therefore a Continuous bullet vs Box currently falls through and returns false, so bullets will never collide with box colliders until continuous Sphere-Box exists or the dispatcher deliberately falls back to discrete.
+- For initial discrete validation, temporarily use a Discrete sphere/bullet or explicitly fall back to the discrete Sphere-Box test. Then implement swept Sphere-OBB next.
+
+Header hygiene:
+- Collider.h currently returns unqualified `Quaternion` but only imports Vector3; use DirectX::SimpleMath::Quaternion or add an explicit using declaration.
+- CollisionDetection.h uses std::clamp and should include <algorithm> directly.
+- BoxCollider.h uses std::abs and should include <cmath> directly.
+
+The Sphere-OBB closest-point algorithm itself is conceptually correct for the current no-shear transform assumptions.
+
 ## Repository
 GitHub: https://github.com/mohit-kumar-singh55/AERO_RIOT
 Default branch: `master`
