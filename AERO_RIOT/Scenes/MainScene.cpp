@@ -137,10 +137,11 @@ void MainScene::OnLoad() {
 	renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
 	auto& boxTrans = box.GetTransform();
 	boxTrans.SetPosition({ 0.0f,0.0f,-50.0f });
-	boxTrans.SetEulerDegrees({ 0.0f,65.0f,40.0f });
+	boxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
 	boxTrans.SetScale({ 4.0f,4.0f,4.0f });
 
 	box.AddComponent<BoxCollider>();
+	box.AddComponent<KineticBody>().SetLinearVelocity({ 30.0f,15.0f,-60.0f });
 }
 
 void MainScene::OnUnload() {

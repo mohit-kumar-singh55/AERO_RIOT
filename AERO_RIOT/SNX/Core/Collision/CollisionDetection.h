@@ -99,14 +99,14 @@ namespace CollisionDetection {
 		const Vector3 relativeStart = a.GetPreviousCenter() - b.GetPreviousCenter();
 		const Vector3 relativeEnd = a.GetCenter() - b.GetCenter();
 
-		const Vector3 direction = relativeEnd - relativeStart;
-
 		// undo the box rotation
 		Quaternion boxInverseRotation;
 		b.GetRotation().Inverse(boxInverseRotation);
 
 		const Vector3 localSphereCenterStart = Vector3::Transform(relativeStart, boxInverseRotation);
 		const Vector3 localSphereCenterEnd = Vector3::Transform(relativeEnd, boxInverseRotation);
+
+		const Vector3 direction = localSphereCenterEnd - localSphereCenterStart;
 
 		/*
 		* segment vs expanded AABB
@@ -126,14 +126,8 @@ namespace CollisionDetection {
 			return (x >= a && x <= b);
 			};
 
-		auto swap = [](float& a, float& b) {
-			float temp = a;
-			a = b;
-			b = temp;
-			};
-
 		/*
-		* At what t does the point enter the box, 
+		* At what t does the point enter the box,
 		* and at what t does it leave?
 		*/
 		auto checkForInterval = [&](float extent, float start, float direction) {
@@ -143,7 +137,7 @@ namespace CollisionDetection {
 			float tFar = t(extent, start, direction);
 
 			if (tNear > tFar)
-				swap(tNear, tFar);
+				std::swap(tNear, tFar);
 
 			tEnter = std::max(tEnter, tNear);
 			tExit = std::min(tExit, tFar);
@@ -151,30 +145,30 @@ namespace CollisionDetection {
 
 		// for x axis bounds/interval
 		if (std::abs(direction.x) < 0.0001f) {
-			if (!checkifInside(relativeStart.x, -boxExpandedExtents.x, boxExpandedExtents.x))
+			if (!checkifInside(localSphereCenterStart.x, -boxExpandedExtents.x, boxExpandedExtents.x))
 				return false;
 			// else skip X
 		}
 		else
-			checkForInterval(boxExpandedExtents.x, relativeStart.x, direction.x);
+			checkForInterval(boxExpandedExtents.x, localSphereCenterStart.x, direction.x);
 
 		// for y axis bounds/interval
 		if (std::abs(direction.y) < 0.0001f) {
-			if (!checkifInside(relativeStart.y, -boxExpandedExtents.y, boxExpandedExtents.y))
+			if (!checkifInside(localSphereCenterStart.y, -boxExpandedExtents.y, boxExpandedExtents.y))
 				return false;
 			// else skip Y
 		}
 		else
-			checkForInterval(boxExpandedExtents.y, relativeStart.y, direction.y);
+			checkForInterval(boxExpandedExtents.y, localSphereCenterStart.y, direction.y);
 
 		// for z axis bounds/interval
 		if (std::abs(direction.z) < 0.0001f) {
-			if (!checkifInside(relativeStart.z, -boxExpandedExtents.z, boxExpandedExtents.z))
+			if (!checkifInside(localSphereCenterStart.z, -boxExpandedExtents.z, boxExpandedExtents.z))
 				return false;
 			// else skip Y
 		}
 		else
-			checkForInterval(boxExpandedExtents.z, relativeStart.z, direction.z);
+			checkForInterval(boxExpandedExtents.z, localSphereCenterStart.z, direction.z);
 
 		return tEnter <= tExit;
 	}
@@ -197,9 +191,10 @@ namespace CollisionDetection {
 				if (CheckBothDiscrete(a, b))
 					return Intersects(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const BoxCollider&>(b));
 				else
-					return IntersectsContinuous(dynamic_cast<const SphereCollider&>(b), dynamic_cast<const BoxCollider&>(a));
+					return IntersectsContinuous(dynamic_cast<const SphereCollider&>(a), dynamic_cast<const BoxCollider&>(b));
 			}
 		}
+
 		case ColliderShape::Box: {
 			if (b.GetShape() == ColliderShape::Sphere) {
 				if (CheckBothDiscrete(a, b))
@@ -208,6 +203,9 @@ namespace CollisionDetection {
 					return IntersectsContinuous(dynamic_cast<const SphereCollider&>(b), dynamic_cast<const BoxCollider&>(a));
 			}
 		}
+
+		default:
+			break;
 		}
 
 		return false;
