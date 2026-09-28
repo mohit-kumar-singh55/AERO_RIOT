@@ -71,8 +71,11 @@ namespace CollisionDetection {
 
 		// find the point on that box closest to the sphere center
 		const auto extents = b.GetWorldExtents();
-		Vector3 closest;
-		localSphereCenter.Clamp(-extents, extents, closest);
+		const Vector3 closest{
+			std::clamp(localSphereCenter.x,-extents.x,extents.x),
+			std::clamp(localSphereCenter.y,-extents.y,extents.y),
+			std::clamp(localSphereCenter.z,-extents.z,extents.z)
+		};
 
 		const auto distanceSquared = Vector3::DistanceSquared(
 			localSphereCenter, closest
