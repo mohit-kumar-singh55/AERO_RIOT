@@ -53,6 +53,11 @@ public:
 		m_detectionMode = detectionMode;
 	}
 
+	// world-space
+	Quaternion GetRotation() const noexcept {
+		return GetTransform().GetRotation();
+	}
+
 protected:
 	void OnInitialize() override;
 	void OnDestroy() override;
