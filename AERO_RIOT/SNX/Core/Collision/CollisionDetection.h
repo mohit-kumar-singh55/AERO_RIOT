@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include <SNX/Core/Components/Collider/Collider.h>
 #include <SNX/Core/Components/Collider/SphereCollider.h>
 #include <SNX/Core/Components/Collider/BoxCollider.h>

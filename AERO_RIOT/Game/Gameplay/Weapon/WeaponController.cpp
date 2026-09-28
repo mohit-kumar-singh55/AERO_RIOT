@@ -61,7 +61,7 @@ void WeaponController::FireGun(
 	);
 	bulletGO.AddComponent<KineticBody>();
 	bulletGO.AddComponent<SphereCollider>()
-		.SetDetectionMode(CollisionDetectionMode::Continuous);
+		.SetDetectionMode(CollisionDetectionMode::Discrete);
 	auto& bullet = bulletGO.AddComponent<Bullet>();
 
 	bulletGO.GetTransform().SetPosition(spawnPosition);

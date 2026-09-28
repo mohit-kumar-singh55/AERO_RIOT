@@ -6,6 +6,7 @@
 #include <SimpleMath.h>
 
 using DirectX::SimpleMath::Vector3;
+using DirectX::SimpleMath::Quaternion;
 
 class KineticBody;
 

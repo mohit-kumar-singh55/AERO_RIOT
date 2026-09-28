@@ -4,6 +4,8 @@
 
 #include <SimpleMath.h>
 
+#include <cmath>
+
 class BoxCollider final : public Collider {
 public:
 	BoxCollider(

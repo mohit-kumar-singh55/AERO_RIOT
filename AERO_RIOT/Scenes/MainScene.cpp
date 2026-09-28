@@ -8,6 +8,7 @@
 #include <SNX/Core/Components/Renderer/PrimitiveRenderer.h>
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Components/Collider/SphereCollider.h>
+#include <SNX/Core/Components/Collider/BoxCollider.h>
 
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
@@ -116,17 +117,30 @@ void MainScene::OnLoad() {
 	}
 
 	// ? TEST
-	auto& sphere = GetGameObjects().CreateGameObject("DEBUG_SPHERE");
-	auto& renderer = sphere.AddComponent<PrimitiveRenderer>(
+	//auto& sphere = GetGameObjects().CreateGameObject("DEBUG_SPHERE");
+	//auto& renderer = sphere.AddComponent<PrimitiveRenderer>(
+	//	context.deviceResources.GetContext(),
+	//	PrimitiveShape::Sphere
+	//);
+	//renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
+	//auto& sphereTrans = sphere.GetTransform();
+	//sphereTrans.SetPosition({ 0.0f,0.0f,-50.0f });
+	//sphereTrans.SetScale({ 4.0f,4.0f,4.0f });
+
+	//sphere.AddComponent<SphereCollider>();
+
+	auto& box = GetGameObjects().CreateGameObject("DEBUG_BOX");
+	auto& renderer = box.AddComponent<PrimitiveRenderer>(
 		context.deviceResources.GetContext(),
-		PrimitiveShape::Sphere
+		PrimitiveShape::Cube
 	);
 	renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
-	auto& sphereTrans = sphere.GetTransform();
-	sphereTrans.SetPosition({ 0.0f,0.0f,-50.0f });
-	sphereTrans.SetScale({ 4.0f,4.0f,4.0f });
+	auto& boxTrans = box.GetTransform();
+	boxTrans.SetPosition({ 0.0f,0.0f,-50.0f });
+	boxTrans.SetEulerDegrees({ 0.0f,65.0f,40.0f });
+	boxTrans.SetScale({ 4.0f,4.0f,4.0f });
 
-	sphere.AddComponent<SphereCollider>();
+	box.AddComponent<BoxCollider>();
 }
 
 void MainScene::OnUnload() {
