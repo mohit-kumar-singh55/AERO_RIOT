@@ -12,7 +12,7 @@ PrimitiveRenderer::PrimitiveRenderer(
 	GameObject& gameObject,
 	ID3D11DeviceContext* deviceContext,
 	PrimitiveShape shape,
-	std::shared_ptr<BasicPrimitiveMaterial> material
+	std::shared_ptr<IPrimitiveMaterial> material
 ) noexcept :
 	Renderer(gameObject),
 	m_creationContext(deviceContext),

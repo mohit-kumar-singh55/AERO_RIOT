@@ -10,9 +10,11 @@
 
 #include <memory>
 
+#include "IPrimitiveMaterial.h"
+
 struct RenderContext;
 
-class BasicPrimitiveMaterial final {
+class BasicPrimitiveMaterial final : public IPrimitiveMaterial {
 public:
 	BasicPrimitiveMaterial() = default;
 	~BasicPrimitiveMaterial() = default;
@@ -39,7 +41,7 @@ public:
 		const DirectX::XMVECTORF32& diffuseColor,
 		const DirectX::SimpleMath::Vector3& emissiveColor,
 		bool wireframe = false
-	);
+	) override;
 
 	bool IsInitialized() const noexcept {
 		return

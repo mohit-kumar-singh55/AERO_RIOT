@@ -5,8 +5,8 @@
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Time.h>
-#include <SNX/Core/Components/Collider/Collider.h>
 #include <SNX/Core/Collision/Collision.h>
+#include <SNX/Core/Components/Collider/Collider.h>
 
 #include <SNX/Core/Debugger/Debug.h>
 #include <SNX/Utils/Conversion.h>

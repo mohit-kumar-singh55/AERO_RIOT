@@ -98,6 +98,9 @@
     <Filter Include="SNX\Core\Collision">
       <UniqueIdentifier>{218c64ba-7e0f-4f89-90aa-c6bcd5b709b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SNX\Core\Materials\Primitive">
+      <UniqueIdentifier>{c9db8bc7-5531-496d-932e-633de03d7c9e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -144,9 +147,6 @@
     </ClCompile>
     <ClCompile Include="SNX\Core\Components\Renderer\PrimitiveRenderer.cpp">
       <Filter>SNX\Core\Components\Renderer</Filter>
-    </ClCompile>
-    <ClCompile Include="SNX\Core\Materials\BasicPrimitiveMaterial.cpp">
-      <Filter>SNX\Core\Materials</Filter>
     </ClCompile>
     <ClCompile Include="SNX\Core\Components\Renderer\MeshRenderer.cpp">
       <Filter>SNX\Core\Components\Renderer</Filter>
@@ -203,6 +203,9 @@
     <ClCompile Include="SNX\Core\Components\Collider\BoxCollider.cpp">
       <Filter>SNX\Core\Components\Collider</Filter>
     </ClCompile>
+    <ClCompile Include="SNX\Core\Materials\Primitive\BasicPrimitiveMaterial.cpp">
+      <Filter>SNX\Core\Materials\Primitive</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -244,9 +247,6 @@
     </ClInclude>
     <ClInclude Include="SNX\Core\Components\Renderer\Renderer.h">
       <Filter>SNX\Core\Components\Renderer</Filter>
-    </ClInclude>
-    <ClInclude Include="SNX\Core\Materials\BasicPrimitiveMaterial.h">
-      <Filter>SNX\Core\Materials</Filter>
     </ClInclude>
     <ClInclude Include="SNX\Core\Components\Renderer\MeshRenderer.h">
       <Filter>SNX\Core\Components\Renderer</Filter>
@@ -332,6 +332,12 @@
     </ClInclude>
     <ClInclude Include="SNX\Core\Collision\Collision.h">
       <Filter>SNX\Core\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Materials\Primitive\BasicPrimitiveMaterial.h">
+      <Filter>SNX\Core\Materials\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Materials\Primitive\IPrimitiveMaterial.h">
+      <Filter>SNX\Core\Materials\Primitive</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

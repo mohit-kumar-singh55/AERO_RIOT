@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Renderer.h"
-#include <SNX/Core/Materials/BasicPrimitiveMaterial.h>
+#include <SNX/Core/Materials/Primitive/IPrimitiveMaterial.h>
 
 #include <DirectXMath.h>
 #include <GeometricPrimitive.h>
@@ -18,7 +18,7 @@ public:
 		GameObject& gameObject,
 		ID3D11DeviceContext* deviceContext,
 		PrimitiveShape shape = PrimitiveShape::Cube,
-		std::shared_ptr<BasicPrimitiveMaterial> material = nullptr
+		std::shared_ptr<IPrimitiveMaterial> material = nullptr
 	) noexcept;
 
 	void SetColor(const DirectX::XMVECTORF32& color) { m_color = color; }
@@ -26,7 +26,7 @@ public:
 	[[nodiscard]]
 	const DirectX::XMVECTORF32& GetColor() const noexcept { return m_color; }
 
-	void SetMaterial(std::shared_ptr<BasicPrimitiveMaterial> material) noexcept {
+	void SetMaterial(std::shared_ptr<IPrimitiveMaterial> material) noexcept {
 		m_material = std::move(material);
 	}
 
@@ -61,7 +61,7 @@ private:
 
 	std::unique_ptr<DirectX::GeometricPrimitive> m_primitive;
 
-	std::shared_ptr<BasicPrimitiveMaterial> m_material;
+	std::shared_ptr<IPrimitiveMaterial> m_material;
 
 	DirectX::XMVECTORF32 m_color{ 1.0f, 1.0f, 1.0f, 1.0f };
 
