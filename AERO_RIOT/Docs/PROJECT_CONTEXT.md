@@ -1,6 +1,8 @@
 # AERO_RIOT — Project Context
 Last updated: 2026-09-28. Source of truth: inspect latest master in GitHub before new review.
 
+For the October 2026 game-completion schedule and the subsequent DX12/DXR learning plan, see `Docs/DEVELOPMENT_ROADMAP.md`. Keep this file about current technical implementation and immediate next work.
+
 ## Goal / workflow
 AERO_RIOT is a DirectXTK / C++ aircraft-dogfight GAME, not a full simulator or general-purpose game engine. Priority: responsive/fun gameplay, believable momentum, dramatic rendering, shader learning. Frequently ask: "Are we going deeper than the game needs?"
 The user MANUALLY writes their code to learn. Workflow: UNDERSTAND -> USER DESIGNS -> REVIEW -> USER IMPLEMENTS -> inspect pushed commit -> review -> next. Give concept/architecture and hints rather than complete paste-ready code unless requested. Do not continually add new requirements to a completed milestone.
