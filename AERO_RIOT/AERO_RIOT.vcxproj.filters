@@ -101,6 +101,9 @@
     <Filter Include="SNX\Core\Materials\Primitive">
       <UniqueIdentifier>{c9db8bc7-5531-496d-932e-633de03d7c9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SNX\Graphics\Shaders">
+      <UniqueIdentifier>{e9e03097-f73d-4c8c-90d0-eeb206725712}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -344,5 +347,13 @@
     <Text Include="Docs\DETAILS.txt">
       <Filter>Docs</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SNX\Graphics\Shaders\UnlitVS.hlsl">
+      <Filter>SNX\Graphics\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SNX\Graphics\Shaders\UnlitPS.hlsl">
+      <Filter>SNX\Graphics\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
