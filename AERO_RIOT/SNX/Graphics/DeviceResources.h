@@ -53,8 +53,6 @@ private:
 	void CreateRenderTarget();
 	void CreateDepthBuffer();
 
-	static void ThrowIfFailed(HRESULT result);
-
 private:
 	HWND m_window = nullptr;				// window handle, needs a window before we can render it
 

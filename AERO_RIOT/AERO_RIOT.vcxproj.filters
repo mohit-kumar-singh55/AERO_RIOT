@@ -351,6 +351,9 @@
     <ClInclude Include="SNX\Graphics\Effects\UnlitEffect.h">
       <Filter>SNX\Graphics\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="SNX\Utils\ErrorHandler.h">
+      <Filter>SNX\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Docs\DETAILS.txt">

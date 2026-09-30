@@ -5,6 +5,10 @@
 #include <stdexcept>
 #include <iterator>
 
+#include <SNX/Utils/ErrorHandler.h>
+
+using namespace ErrorHandler;
+
 // ! safe shutdown (Direct3D 11 cleanup pattern)
 DeviceResources::~DeviceResources() {
 	if (!m_context) return;
@@ -188,10 +192,4 @@ void DeviceResources::CreateDepthBuffer() {
 			m_depthStencilView.GetAddressOf()
 		)
 	);
-}
-
-void DeviceResources::ThrowIfFailed(HRESULT result) {
-	if (FAILED(result)) {
-		throw std::runtime_error("A Direct3D operation failed.");
-	}
 }

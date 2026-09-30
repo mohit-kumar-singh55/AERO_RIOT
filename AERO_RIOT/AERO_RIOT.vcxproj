@@ -260,6 +260,7 @@
     <ClInclude Include="SNX\Graphics\RenderContext.h" />
     <ClInclude Include="SNX\Input\InputManager.h" />
     <ClInclude Include="SNX\Utils\Conversion.h" />
+    <ClInclude Include="SNX\Utils\ErrorHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Docs\DETAILS.txt" />

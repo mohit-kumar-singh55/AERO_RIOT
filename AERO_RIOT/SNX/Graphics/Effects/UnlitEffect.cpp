@@ -4,11 +4,15 @@
 #include <stdexcept>
 #include <fstream>
 
+#include <SNX/Utils/ErrorHandler.h>
+
 void UnlitEffect::Initialize(ID3D11Device* device) {
 	if (!device)
 		throw std::invalid_argument("UnlitEffect::Initialize: device is invalid.");
 
-	auto file = [](const char* fileName) {
+	using namespace ErrorHandler;
+
+	auto loadShaderBytecode = [](const char* fileName) {
 		std::ifstream file(
 			fileName,
 			std::ios::binary | std::ios::ate
@@ -17,39 +21,39 @@ void UnlitEffect::Initialize(ID3D11Device* device) {
 		if (!file)
 			throw std::runtime_error("UnlitEffect::Initialize: Shader file not found.");
 
+		const std::streamsize size = file.tellg();
 		file.seekg(0, std::ios::beg);
 
-		return file;
+		if (size <= 0)
+			throw std::runtime_error("UnlitEffect::Initialize: Shader file is empty.");
+
+		std::vector<std::uint8_t> bytecode(size);
+
+		return bytecode;
 		};
 
 	// ! load shader files
-	auto vsFile = file("Shaders\\UnlitVS.cso");
-	auto psFile = file("Shaders\\UnlitPS.cso");
-
-	m_vsBytecode.resize(static_cast<size_t>(vsFile.tellg()));
-	std::vector<std::uint8_t> psBytecode(psFile.tellg());
-
-	vsFile.read(
-		reinterpret_cast<char*>(m_vsBytecode.data()),
-		vsFile.tellg()
-	);
-	psFile.read(
-		reinterpret_cast<char*>(psBytecode.data()),
-		psFile.tellg()
-	);
+	m_vsBytecode = loadShaderBytecode("Shaders\\UnlitVS.cso");
+	auto psBytecode = loadShaderBytecode("Shaders\\UnlitPS.cso");
 
 	// ! create shaders using the bytecodes
-	device->CreateVertexShader(
-		m_vsBytecode.data(),
-		m_vsBytecode.size(),
-		nullptr,
-		&m_vertexShader
+	ThrowIfFailed(
+		device->CreateVertexShader(
+			m_vsBytecode.data(),
+			m_vsBytecode.size(),
+			nullptr,
+			&m_vertexShader
+		),
+		"Unable to create Vertex Shader"
 	);
-	device->CreatePixelShader(
-		psBytecode.data(),
-		psBytecode.size(),
-		nullptr,
-		&m_pixelShader
+	ThrowIfFailed(
+		device->CreatePixelShader(
+			psBytecode.data(),
+			psBytecode.size(),
+			nullptr,
+			&m_pixelShader
+		),
+		"Unable to create Pixel Shader"
 	);
 
 	// ! create constant buffer to pass in the shader
@@ -59,10 +63,13 @@ void UnlitEffect::Initialize(ID3D11Device* device) {
 	bufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	bufferDesc.CPUAccessFlags = 0;
 
-	device->CreateBuffer(
-		&bufferDesc,
-		nullptr,
-		&m_cTransformBuffer
+	ThrowIfFailed(
+		device->CreateBuffer(
+			&bufferDesc,
+			nullptr,
+			&m_cTransformBuffer
+		),
+		"Unable to create constant buffer"
 	);
 }
 
