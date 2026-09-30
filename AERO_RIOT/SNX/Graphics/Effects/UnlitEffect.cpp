@@ -29,6 +29,11 @@ void UnlitEffect::Initialize(ID3D11Device* device) {
 
 		std::vector<std::uint8_t> bytecode(size);
 
+		file.read(
+			reinterpret_cast<char*>(bytecode.data()),
+			size
+		);
+
 		return bytecode;
 		};
 
