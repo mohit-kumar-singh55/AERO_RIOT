@@ -104,6 +104,9 @@
     <Filter Include="SNX\Graphics\Shaders">
       <UniqueIdentifier>{e9e03097-f73d-4c8c-90d0-eeb206725712}</UniqueIdentifier>
     </Filter>
+    <Filter Include="SNX\Graphics\Effects">
+      <UniqueIdentifier>{221bc1a8-ebce-4856-bd08-2d5ea581d615}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -208,6 +211,9 @@
     </ClCompile>
     <ClCompile Include="SNX\Core\Materials\Primitive\BasicPrimitiveMaterial.cpp">
       <Filter>SNX\Core\Materials\Primitive</Filter>
+    </ClCompile>
+    <ClCompile Include="SNX\Graphics\Effects\UnlitEffect.cpp">
+      <Filter>SNX\Graphics\Effects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -341,6 +347,9 @@
     </ClInclude>
     <ClInclude Include="SNX\Core\Materials\Primitive\IPrimitiveMaterial.h">
       <Filter>SNX\Core\Materials\Primitive</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Graphics\Effects\UnlitEffect.h">
+      <Filter>SNX\Graphics\Effects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

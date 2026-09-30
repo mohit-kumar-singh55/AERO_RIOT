@@ -210,6 +210,7 @@
     <ClCompile Include="SNX\Core\Time.cpp" />
     <ClCompile Include="SNX\Gameplay\Health.cpp" />
     <ClCompile Include="SNX\Graphics\DeviceResources.cpp" />
+    <ClCompile Include="SNX\Graphics\Effects\UnlitEffect.cpp" />
     <ClCompile Include="SNX\Input\InputManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -255,6 +256,7 @@
     <ClInclude Include="SNX\Core\Time.h" />
     <ClInclude Include="SNX\Gameplay\Health.h" />
     <ClInclude Include="SNX\Graphics\DeviceResources.h" />
+    <ClInclude Include="SNX\Graphics\Effects\UnlitEffect.h" />
     <ClInclude Include="SNX\Graphics\RenderContext.h" />
     <ClInclude Include="SNX\Input\InputManager.h" />
     <ClInclude Include="SNX\Utils\Conversion.h" />
