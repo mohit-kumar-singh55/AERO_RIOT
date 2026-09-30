@@ -11,7 +11,11 @@ struct VSOutput
 
 cbuffer Transform : register(b0)
 {
-    float4x4 WVP; // MVP (Model * View * Projeciton) = WVP (World * View * Projection)
+    /*
+    * dxtk stores matrices in row-major order,
+    * but HLSL defaults to column-major constant-buffer storage
+    */
+    row_major float4x4 WVP; // MVP (Model * View * Projeciton) = WVP (World * View * Projection)
 }
 
 VSOutput VSMain(VSInput input)
