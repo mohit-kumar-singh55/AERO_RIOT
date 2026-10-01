@@ -156,7 +156,7 @@ void MainScene::OnLoad() {
 		PrimitiveShape::Cube,
 		m_unlitMaterial
 	);
-	//ourBoxRenderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
+	ourBoxRenderer.SetColor({ 0.0f, 1.0f, 0.0f, 1.0f });
 	auto& ourBoxTrans = ourBox.GetTransform();
 	ourBoxTrans.SetPosition({ 4.0f,0.0f,-50.0f });
 	//ourBoxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });

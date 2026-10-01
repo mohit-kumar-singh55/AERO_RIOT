@@ -1,4 +1,10 @@
+cbuffer Material : register(b0)
+{
+    float4 Color;
+    float4 Emission;
+}
+
 float4 PSMain() : SV_TARGET
 {
-	return float4(1.0f, 0.0f, 1.0f, 1.0f);
+    return float4(Color.rgb + Emission.rgb, Color.a);
 }

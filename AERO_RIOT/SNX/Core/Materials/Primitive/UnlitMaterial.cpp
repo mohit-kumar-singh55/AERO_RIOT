@@ -76,17 +76,26 @@ void UnlitMaterial::Draw(
 
 	using DirectX::SimpleMath::Vector3;
 
-	const Vector3 diffuse{
-		diffuseColor.f[0],
-		diffuseColor.f[1],
-		diffuseColor.f[2],
+	const float alpha = std::clamp(diffuseColor.f[3], 0.0f, 1.0f);
+
+	const DirectX::XMFLOAT4 color{
+		 diffuseColor.f[0],
+		 diffuseColor.f[1],
+		 diffuseColor.f[2],
+		 alpha
 	};
 
-	const float alpha = std::clamp(diffuseColor.f[3], 0.0f, 1.0f);
+	const DirectX::XMFLOAT4 emission{
+		 emissiveColor.x,
+		 emissiveColor.y,
+		 emissiveColor.z,
+		 1.0f
+	};
 
 	auto wvp = world * context.view * context.projection;
 
 	m_effect->SetWorldViewProjection(wvp);
+	m_effect->SetMaterial(color, emission);
 
 	primitive.Draw(
 		m_effect.get(),

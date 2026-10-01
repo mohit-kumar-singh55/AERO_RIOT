@@ -76,6 +76,17 @@ void UnlitEffect::Initialize(ID3D11Device* device) {
 		),
 		"Unable to create constant buffer"
 	);
+
+	bufferDesc.ByteWidth = sizeof(m_materialBuffer);
+
+	ThrowIfFailed(
+		device->CreateBuffer(
+			&bufferDesc,
+			nullptr,
+			&m_cMaterialBuffer
+		),
+		"Unable to create constant buffer"
+	);
 }
 
 void UnlitEffect::Apply(ID3D11DeviceContext* context) {
@@ -91,14 +102,28 @@ void UnlitEffect::Apply(ID3D11DeviceContext* context) {
 		0,
 		0
 	);
+	context->UpdateSubresource(
+		m_cMaterialBuffer.Get(),
+		0,
+		nullptr,
+		&m_materialBuffer,
+		0,
+		0
+	);
 
 	ID3D11Buffer* ctransformBuffer = m_cTransformBuffer.Get();
+	ID3D11Buffer* cmaterialBuffer = m_cMaterialBuffer.Get();
 
-	// give buffer to the VS
+	// give buffer to the shader
 	context->VSSetConstantBuffers(
 		0,					// register slot (b0) in the shader
 		1,					// no. of buffers
 		&ctransformBuffer	// buffer(s)
+	);
+	context->PSSetConstantBuffers(
+		0,
+		1,
+		&cmaterialBuffer
 	);
 
 	// set which VS to use
