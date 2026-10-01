@@ -92,11 +92,13 @@ void UnlitEffect::Apply(ID3D11DeviceContext* context) {
 		0
 	);
 
+	ID3D11Buffer* ctransformBuffer = m_cTransformBuffer.Get();
+
 	// give buffer to the VS
 	context->VSSetConstantBuffers(
 		0,					// register slot (b0) in the shader
 		1,					// no. of buffers
-		&m_cTransformBuffer	// buffer(s)
+		&ctransformBuffer	// buffer(s)
 	);
 
 	// set which VS to use
