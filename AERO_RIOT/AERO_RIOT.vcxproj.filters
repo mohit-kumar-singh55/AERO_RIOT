@@ -215,6 +215,9 @@
     <ClCompile Include="SNX\Graphics\Effects\UnlitEffect.cpp">
       <Filter>SNX\Graphics\Effects</Filter>
     </ClCompile>
+    <ClCompile Include="SNX\Core\Materials\Primitive\UnlitMaterial.cpp">
+      <Filter>SNX\Core\Materials\Primitive</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -353,6 +356,9 @@
     </ClInclude>
     <ClInclude Include="SNX\Utils\ErrorHandler.h">
       <Filter>SNX\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="SNX\Core\Materials\Primitive\UnlitMaterial.h">
+      <Filter>SNX\Core\Materials\Primitive</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

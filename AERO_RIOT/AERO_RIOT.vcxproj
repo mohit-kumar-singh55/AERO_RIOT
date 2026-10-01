@@ -200,6 +200,7 @@
     <ClCompile Include="SNX\Core\Debugger\Debug.cpp" />
     <ClCompile Include="SNX\Core\Kinetics\Kinetics.cpp" />
     <ClCompile Include="SNX\Core\Materials\Primitive\BasicPrimitiveMaterial.cpp" />
+    <ClCompile Include="SNX\Core\Materials\Primitive\UnlitMaterial.cpp" />
     <ClCompile Include="SNX\Core\ModelObject3D.cpp" />
     <ClCompile Include="SNX\Core\Object\Component.cpp" />
     <ClCompile Include="SNX\Core\Object\GameObject.cpp" />
@@ -244,6 +245,7 @@
     <ClInclude Include="SNX\Core\Kinetics\Kinetics.h" />
     <ClInclude Include="SNX\Core\Materials\Primitive\BasicPrimitiveMaterial.h" />
     <ClInclude Include="SNX\Core\Materials\Primitive\IPrimitiveMaterial.h" />
+    <ClInclude Include="SNX\Core\Materials\Primitive\UnlitMaterial.h" />
     <ClInclude Include="SNX\Core\ModelObject3D.h" />
     <ClInclude Include="SNX\Core\Object\Component.h" />
     <ClInclude Include="SNX\Core\Object\GameObject.h" />

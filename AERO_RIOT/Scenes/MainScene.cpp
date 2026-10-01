@@ -136,12 +136,28 @@ void MainScene::OnLoad() {
 	);
 	renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
 	auto& boxTrans = box.GetTransform();
-	boxTrans.SetPosition({ 0.0f,0.0f,-50.0f });
-	boxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
+	boxTrans.SetPosition({ -4.0f,0.0f,-50.0f });
+	//boxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
 	boxTrans.SetScale({ 4.0f,4.0f,4.0f });
 
-	box.AddComponent<BoxCollider>();
-	box.AddComponent<KineticBody>().SetLinearVelocity({ 30.0f,15.0f,-60.0f });
+	//box.AddComponent<BoxCollider>();
+	//box.AddComponent<KineticBody>().SetLinearVelocity({ 30.0f,15.0f,-60.0f });
+
+	m_unlitMaterial = std::make_shared<UnlitMaterial>();
+
+	auto& ourBox = GetGameObjects().CreateGameObject("DEBUG_BOX_2");
+	auto& ourBoxRenderer = ourBox.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Cube,
+		m_unlitMaterial
+	);
+	//ourBoxRenderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
+	auto& ourBoxTrans = ourBox.GetTransform();
+	ourBoxTrans.SetPosition({ 4.0f,0.0f,-50.0f });
+	//ourBoxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
+	ourBoxTrans.SetScale({ 4.0f,4.0f,4.0f });
+
+	//ourBox.AddComponent<BoxCollider>();
 }
 
 void MainScene::OnUnload() {
