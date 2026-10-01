@@ -145,6 +145,11 @@ void MainScene::OnLoad() {
 
 	m_unlitMaterial = std::make_shared<UnlitMaterial>();
 
+	m_unlitMaterial->Initialize(
+		context.deviceResources.GetDevice(),
+		context.deviceResources.GetContext()
+	);
+
 	auto& ourBox = GetGameObjects().CreateGameObject("DEBUG_BOX_2");
 	auto& ourBoxRenderer = ourBox.AddComponent<PrimitiveRenderer>(
 		context.deviceResources.GetContext(),
