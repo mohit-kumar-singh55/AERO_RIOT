@@ -11,7 +11,7 @@ struct TransformBuffer {
 
 struct MaterialBuffer {
 	DirectX::XMFLOAT4 Color{ 1.0f, 1.0f, 1.0f,1.0f };
-	DirectX::XMFLOAT4 Emission{ 1.0f, 1.0f, 1.0f,1.0f };
+	DirectX::XMFLOAT4 Emission{ 0.0f, 0.0f, 0.0f, 0.0f };
 };
 
 class UnlitEffect : public DirectX::IEffect {
@@ -33,7 +33,7 @@ public:
 
 	void SetMaterial(
 		DirectX::XMFLOAT4 color,
-		DirectX::XMFLOAT4 emission = { 1.0f, 1.0f, 1.0f,1.0f }
+		DirectX::XMFLOAT4 emission = { 0.0f, 0.0f, 0.0f, 0.0f }
 	) noexcept {
 		m_materialBuffer.Color = color;
 		m_materialBuffer.Emission = emission;
