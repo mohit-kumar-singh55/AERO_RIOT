@@ -22,11 +22,15 @@ public:
 		size_t* length
 	) override;
 
+	void SetWorldViewProjection(DirectX::XMMATRIX wvp) noexcept {
+		m_transformBuffer.WVP = wvp;
+	}
+
 private:
 	std::vector<std::uint8_t> m_vsBytecode;
 	TransformBuffer m_transformBuffer;
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cTransformBuffer;				// constant buffer
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cTransformBuffer;	// constant buffer
 };

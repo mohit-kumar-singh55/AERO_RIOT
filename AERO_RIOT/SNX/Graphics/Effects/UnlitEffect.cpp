@@ -82,12 +82,42 @@ void UnlitEffect::Apply(ID3D11DeviceContext* context) {
 	if (!context)
 		throw std::invalid_argument("UnlitEffect::Apply: context is invalid.");
 
+	// copy cpu data to gpu (put data into buffer)
+	context->UpdateSubresource(
+		m_cTransformBuffer.Get(),	// kind of data
+		0,
+		nullptr,
+		&m_transformBuffer,			// actual data
+		0,
+		0
+	);
 
+	// give buffer to the VS
+	context->VSSetConstantBuffers(
+		0,					// register slot (b0) in the shader
+		1,					// no. of buffers
+		&m_cTransformBuffer	// buffer(s)
+	);
+
+	// set which VS to use
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	// set which PS to use
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
 }
 
 void UnlitEffect::GetVertexShaderBytecode(
 	void const** bytecode,
 	size_t* length
 ) {
-
+	*bytecode = m_vsBytecode.data();
+	*length = m_vsBytecode.size();
 }
