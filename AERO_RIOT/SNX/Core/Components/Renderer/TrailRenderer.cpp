@@ -8,6 +8,7 @@
 #include <SNX/Utils/ErrorHandler.h>
 
 #include <algorithm>
+#include <cstring>
 
 TrailRenderer::TrailRenderer(GameObject& gameObject) noexcept
 	: Renderer(gameObject) {}
@@ -79,11 +80,31 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		m_vertices.push_back({ right, alpha });
 	}
 
-	if (m_vertices.empty())
-		return;
-
 	if (m_vertices.size() > m_vertexCapacity)
 		EnsureVertexBufferCapacity(context);
+
+	// ! update vertex buffer using Map/Unmap
+	// to access/write GPU resource memory from CPU
+	D3D11_MAPPED_SUBRESOURCE mapped{};
+
+	// gives pointer to the resource memory
+	context.deviceContext->Map(
+		m_vertexBuffer.Get(),
+		0,
+		D3D11_MAP_WRITE_DISCARD,	// forces gpu to discard old content & give cpu memory to write new data
+		0,
+		&mapped						// mapped.pData has the pointer to the resource memory
+	);
+
+	// "memory copy" It copies a specified number of bytes from one memory location to another.
+	memcpy(
+		mapped.pData,							// destination
+		m_vertices.data(),						// source
+		sizeof(TrailVertex) * m_vertices.size()	// no. of bytes
+	);
+
+	// CPU is finished writing; GPU may use this resource again
+	context.deviceContext->Unmap(m_vertexBuffer.Get(), 0);
 }
 
 void TrailRenderer::EnsureVertexBufferCapacity(const RenderContext& context) {
