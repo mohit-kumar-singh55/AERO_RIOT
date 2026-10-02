@@ -1,0 +1,26 @@
+
+struct VSInput
+{
+    float3 position : POSITION; // world-space
+    float alpha : ALPHA;
+};
+
+struct VSOutput
+{
+    float3 position : SV_POSITION;
+    float alpha : ALPHA;
+};
+
+cbuffer Transform : register(b0)
+{
+    row_major float4x4 ViewProjection; // World is not needed as input position is already world-space
+}
+
+VSOutput VSMain(VSInput input)
+{
+    VSOutput output;
+    // convert to clip-space
+    output.position = mul(float4(input.position, 1.0f), ViewProjection);
+    output.alpha = input.alpha;
+    return output;
+}

@@ -48,6 +48,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	if (m_points.size() < 2)
 		return;
 
+	// ! create vertices
 	std::size_t lastIndex = m_points.size() - 1;
 	for (std::size_t i = 0; i < m_points.size(); i++) {
 		Vector3 trailDir;
@@ -80,6 +81,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		m_vertices.push_back({ right, alpha });
 	}
 
+	// ! create dynamic buffer / update its size
 	if (m_vertices.size() > m_vertexCapacity)
 		EnsureVertexBufferCapacity(context);
 
@@ -88,12 +90,15 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	D3D11_MAPPED_SUBRESOURCE mapped{};
 
 	// gives pointer to the resource memory
-	context.deviceContext->Map(
-		m_vertexBuffer.Get(),
-		0,
-		D3D11_MAP_WRITE_DISCARD,	// forces gpu to discard old content & give cpu memory to write new data
-		0,
-		&mapped						// mapped.pData has the pointer to the resource memory
+	ErrorHandler::ThrowIfFailed(
+		context.deviceContext->Map(
+			m_vertexBuffer.Get(),
+			0,
+			D3D11_MAP_WRITE_DISCARD,	// forces gpu to discard old content & give cpu memory to write new data
+			0,
+			&mapped						// mapped.pData has the pointer to the resource memory
+		),
+		"Unable to map trail vertex buffer"
 	);
 
 	// "memory copy" It copies a specified number of bytes from one memory location to another.
@@ -108,8 +113,6 @@ void TrailRenderer::Draw(const RenderContext& context) {
 }
 
 void TrailRenderer::EnsureVertexBufferCapacity(const RenderContext& context) {
-	using namespace ErrorHandler;
-
 	m_vertexCapacity = std::max(m_vertices.size(), m_vertexCapacity * 2);
 
 	D3D11_BUFFER_DESC vertexBufferDesc{};
@@ -118,7 +121,7 @@ void TrailRenderer::EnsureVertexBufferCapacity(const RenderContext& context) {
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	// cpu will write it frequently
 
-	ThrowIfFailed(
+	ErrorHandler::ThrowIfFailed(
 		context.device->CreateBuffer(
 			&vertexBufferDesc,
 			nullptr,
