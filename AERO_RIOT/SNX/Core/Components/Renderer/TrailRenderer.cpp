@@ -40,22 +40,23 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	// clear previous frame vertices
 	m_vertices.clear();
 
+	// atleast 2 points are required to generate ribbon
+	if (m_points.size() < 2)
+		return;
+
 	std::size_t lastIndex = m_points.size() - 1;
 	for (std::size_t i = 0; i < m_points.size(); i++) {
 		Vector3 trailDir;
 
-		// first point & has multiple points
-		if (i == 0 && i != lastIndex)
+		// first point
+		if (i == 0)
 			trailDir = m_points[i + 1].position - m_points[i].position;
 		// last point
 		else if (i == lastIndex)
 			trailDir = m_points[i].position - m_points[i - 1].position;
 		// middle points
-		else if (i != lastIndex)
-			trailDir = m_points[i + 1].position - m_points[i - 1].position;
-		// has a single point
 		else
-			trailDir = GetTransform().GetForward();
+			trailDir = m_points[i + 1].position - m_points[i - 1].position;
 
 		// billboarding
 		Vector3 dirToCamera = context.cameraPosition - m_points[i].position;
@@ -69,7 +70,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
 		Vector3 right = m_points[i].position + sideDirOfPoint * m_halfWidth;
 
-		float alpha = m_lifeTime - m_points[i].age;
+		float alpha = 1 - (m_points[i].age / m_lifeTime);
 
 		m_vertices.push_back({ left, alpha });
 		m_vertices.push_back({ right, alpha });
