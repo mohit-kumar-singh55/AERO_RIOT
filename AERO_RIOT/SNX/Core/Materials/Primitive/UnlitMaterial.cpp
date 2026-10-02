@@ -21,29 +21,11 @@ void UnlitMaterial::Initialize(
 
 	m_effect = std::make_unique<UnlitEffect>();
 
-	m_effect->Initialize(device);
-
-	// lighting settings
-	//m_effect->SetLightingEnabled(true);
-	//m_effect->SetPerPixelLighting(true);
-	//m_effect->EnableDefaultLighting();
-
-	//m_effect->SetAmbientLightColor(Vector3::One * 0.25f);
-	//m_effect->SetSpecularColor(Vector3::One * 0.3f);
-
-	//m_effect->SetSpecularPower(16.0f);
-
-	//// ! this material currently draws untextured primitives
-	//m_effect->SetTextureEnabled(false);
-	//m_effect->SetVertexColorEnabled(false);
-
-	//m_effect->SetFogEnabled(fogEnabled);
-
-	//if (fogEnabled) {
-	//	m_effect->SetFogColor(fogColor);
-	//	m_effect->SetFogStart(fogStart);
-	//	m_effect->SetFogEnd(fogEnd > fogStart + 0.001f ? fogEnd : fogStart + 0.001f);
-	//}
+	m_effect->Initialize(
+		device,
+		m_vsFilePath,
+		m_psFilePath
+	);
 
 	/*
 	* Every DirectXTK GeometricPrimitive uses the same

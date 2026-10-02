@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <wrl/client.h>
+#include <string_view>
 
 struct TransformBuffer {
 	DirectX::XMMATRIX WVP;
@@ -23,7 +24,11 @@ class UnlitEffect : public DirectX::IEffect {
 public:
 	~UnlitEffect() = default;
 
-	void Initialize(ID3D11Device* device);
+	void Initialize(
+		ID3D11Device* device,
+		std::string_view vsFilePath,
+		std::string_view psFilePath
+	);
 
 	void Apply(ID3D11DeviceContext* context) override;
 

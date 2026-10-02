@@ -6,3 +6,6 @@
 	- add models as .obj with .mtl (material file) and textures
 	- convert them into runtime mesh file like .cmo, .sdkmesh or .vbo using "meshconvert" command line tool
 	- then import that .cmo file through code
+
+- Centralized Shader File Settings in the .vcsproj so no need to set the setting in the properties of shader files
+	- every shader filename must have VS/PS, etc at the end

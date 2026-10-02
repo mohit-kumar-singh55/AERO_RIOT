@@ -7,6 +7,8 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 #include <memory>
+#include <string>
+#include <string_view>
 
 #include <DirectXMath.h>
 #include <SimpleMath.h>
@@ -49,8 +51,21 @@ public:
 			m_inputLayout != nullptr;
 	}
 
+	void SetVertexShader(std::string fileName) {
+		m_vsFilePath = std::string(COMPILED_SHADER_PATH) + fileName + ".cso";
+	}
+
+	void SetPixelShader(std::string fileName) {
+		m_psFilePath = std::string(COMPILED_SHADER_PATH) + fileName + ".cso";
+	}
+
 private:
 	std::unique_ptr<UnlitEffect> m_effect;
 
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+
+	std::string m_vsFilePath = std::string(COMPILED_SHADER_PATH) + "UnlitVS.cso";
+	std::string m_psFilePath = std::string(COMPILED_SHADER_PATH) + "UnlitPS.cso";
+
+	static inline constexpr std::string_view COMPILED_SHADER_PATH = "Shaders\\";
 };

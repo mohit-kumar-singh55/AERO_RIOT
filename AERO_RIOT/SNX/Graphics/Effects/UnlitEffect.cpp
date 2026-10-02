@@ -6,7 +6,11 @@
 
 #include <SNX/Utils/ErrorHandler.h>
 
-void UnlitEffect::Initialize(ID3D11Device* device) {
+void UnlitEffect::Initialize(
+	ID3D11Device* device,
+	std::string_view vsFilePath,
+	std::string_view psFilePath
+) {
 	if (!device)
 		throw std::invalid_argument("UnlitEffect::Initialize: device is invalid.");
 
@@ -38,8 +42,8 @@ void UnlitEffect::Initialize(ID3D11Device* device) {
 		};
 
 	// ! load shader files
-	m_vsBytecode = loadShaderBytecode("Shaders\\UnlitVS.cso");
-	auto psBytecode = loadShaderBytecode("Shaders\\UnlitPS.cso");
+	m_vsBytecode = loadShaderBytecode(vsFilePath.data());
+	auto psBytecode = loadShaderBytecode(psFilePath.data());
 
 	// ! create shaders using the bytecodes
 	ThrowIfFailed(
