@@ -5,6 +5,9 @@
 #include <SNX/Core/Object/GameObject.h>
 #include <SNX/Core/Components/Transform.h>
 #include <SNX/Core/Time.h>
+#include <SNX/Utils/ErrorHandler.h>
+
+#include <algorithm>
 
 TrailRenderer::TrailRenderer(GameObject& gameObject) noexcept
 	: Renderer(gameObject) {}
@@ -75,4 +78,31 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		m_vertices.push_back({ left, alpha });
 		m_vertices.push_back({ right, alpha });
 	}
+
+	if (m_vertices.empty())
+		return;
+
+	if (m_vertices.size() > m_vertexCapacity)
+		EnsureVertexBufferCapacity(context);
+}
+
+void TrailRenderer::EnsureVertexBufferCapacity(const RenderContext& context) {
+	using namespace ErrorHandler;
+
+	m_vertexCapacity = std::max(m_vertices.size(), m_vertexCapacity * 2);
+
+	D3D11_BUFFER_DESC vertexBufferDesc{};
+	vertexBufferDesc.ByteWidth = sizeof(TrailVertex) * m_vertexCapacity;
+	vertexBufferDesc.Usage = D3D11_USAGE_DYNAMIC;				// dynamic buffer
+	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vertexBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	// cpu will write it frequently
+
+	ThrowIfFailed(
+		context.device->CreateBuffer(
+			&vertexBufferDesc,
+			nullptr,
+			&m_vertexBuffer
+		),
+		"Unable to create dynamic vertex buffer"
+	);
 }
