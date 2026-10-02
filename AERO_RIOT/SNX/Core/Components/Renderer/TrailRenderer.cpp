@@ -7,9 +7,7 @@
 #include <SNX/Core/Time.h>
 
 TrailRenderer::TrailRenderer(GameObject& gameObject) noexcept
-	: Renderer(gameObject) {
-	m_points.push_back({ GetTransform().GetPosition(), 0.0f });
-}
+	: Renderer(gameObject) {}
 
 void TrailRenderer::OnUpdate() {
 	using DirectX::SimpleMath::Vector3;
@@ -24,10 +22,16 @@ void TrailRenderer::OnUpdate() {
 			i++;
 	}
 
-	// add new position
-	float distanceSquared = Vector3::DistanceSquared(GetTransform().GetPosition(), m_points.back().position);
-	if (distanceSquared >= m_minPointDistanceSquared)
-		m_points.push_back({ GetTransform().GetPosition(), 0.0f });
+	// add new point
+	auto currentPos = GetTransform().GetPosition();
+
+	if (m_points.empty())
+		m_points.push_back({ currentPos, 0.0f });
+	else {
+		float distanceSquared = Vector3::DistanceSquared(currentPos, m_points.back().position);
+		if (distanceSquared >= m_minPointDistanceSquared)
+			m_points.push_back({ currentPos, 0.0f });
+	}
 }
 
 void TrailRenderer::Draw(const RenderContext& context) {
