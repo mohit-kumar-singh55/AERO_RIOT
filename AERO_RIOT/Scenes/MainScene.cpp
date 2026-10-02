@@ -94,10 +94,10 @@ void MainScene::OnLoad() {
 	engineExhaustTransform.SetPosition({ 0.0f, 0.0f, 2.5f });
 	//engineExhaustTransform.SetLocalScale({ 0.9f, 0.9f, 0.9f });
 
-	auto m_unlitMaterial = std::make_shared<UnlitMaterial>();
+	auto engineGlowMaterial = std::make_shared<UnlitMaterial>();
 
-	m_unlitMaterial->SetPixelShader("EngineGlowPS");
-	m_unlitMaterial->Initialize(
+	engineGlowMaterial->SetPixelShader("EngineGlowPS");
+	engineGlowMaterial->Initialize(
 		context.deviceResources.GetDevice(),
 		context.deviceResources.GetContext()
 	);
@@ -105,7 +105,7 @@ void MainScene::OnLoad() {
 	auto& engineExhaustRenderer = engineExhaust.AddComponent<PrimitiveRenderer>(
 		context.deviceResources.GetContext(),
 		PrimitiveShape::Sphere,
-		m_unlitMaterial
+		engineGlowMaterial
 	);
 	engineExhaustRenderer.SetColor({ 0.0f, 1.0f, 1.0f, 1.0f });
 	engineExhaustRenderer.SetEmissiveColor({ 1.0f, 0.0f, 0.0f });

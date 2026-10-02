@@ -274,12 +274,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <FxCompile Include="Game\Graphics\Shaders\EngineGlowPS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
+	<FxCompile Include="Game\Graphics\Shaders\EngineGlowPS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitPS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitVS.hlsl" />
   </ItemGroup>
