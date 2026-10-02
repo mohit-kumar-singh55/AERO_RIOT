@@ -96,6 +96,7 @@ void UnlitMaterial::Draw(
 
 	m_effect->SetWorldViewProjection(wvp);
 	m_effect->SetMaterial(color, emission);
+	m_effect->SetTotalTime(context.totalTime);
 
 	primitive.Draw(
 		m_effect.get(),

@@ -15,7 +15,7 @@ struct MaterialBuffer {
 };
 
 struct FrameBuffer {
-	float TotalTime;	// elapsed time since the game started
+	float TotalTime = 0.0f;	// elapsed time since the game started
 	float Padding[3];
 };
 
@@ -44,11 +44,15 @@ public:
 		m_materialBuffer.Emission = emission;
 	}
 
+	void SetTotalTime(float totalTime) noexcept {
+		m_frameBuffer.TotalTime = totalTime;
+	}
+
 private:
 	std::vector<std::uint8_t> m_vsBytecode;
 	TransformBuffer m_transformBuffer;
 	MaterialBuffer m_materialBuffer;
-	FrameBuffer m_frameBuffer;
+	FrameBuffer m_frameBuffer{};
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;

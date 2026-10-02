@@ -86,7 +86,8 @@ void Scene::LateUpdate() {
 void Scene::RenderWorld() {
 	if (!m_loaded) return;
 
-	// filling the remaining fields of render context that might change in every life cycle
+	// provide the render context with the fields that might change in every life cycle
+	m_renderContext.totalTime = Time::TotalTime();
 	m_renderContext.fixedInterpolationAlpha = Time::FixedInterpolationAlpha();
 	if (BuildRenderContext(m_renderContext))
 		// render all the gameobjects of the current scene
