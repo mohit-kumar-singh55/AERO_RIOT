@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <stdexcept>
 
 #include <DirectXMath.h>
 #include <SimpleMath.h>
@@ -29,11 +30,7 @@ public:
 
 	void Initialize(
 		ID3D11Device* device,
-		ID3D11DeviceContext* deviceContext,
-		bool fogEnabled = false,
-		const DirectX::SimpleMath::Vector3& fogColor = DirectX::SimpleMath::Vector3::One,
-		float fogStart = 0.0f,
-		float fogEnd = 1.0f
+		ID3D11DeviceContext* deviceContext
 	);
 
 	void Draw(
@@ -52,10 +49,16 @@ public:
 	}
 
 	void SetVertexShader(std::string fileName) {
+		if (IsInitialized())
+			throw std::logic_error("UnlitMaterial: Shaders must be set before Initialization.");
+
 		m_vsFilePath = std::string(COMPILED_SHADER_PATH) + fileName + ".cso";
 	}
 
 	void SetPixelShader(std::string fileName) {
+		if (IsInitialized())
+			throw std::logic_error("UnlitMaterial: Shaders must be set before Initialization.");
+
 		m_psFilePath = std::string(COMPILED_SHADER_PATH) + fileName + ".cso";
 	}
 

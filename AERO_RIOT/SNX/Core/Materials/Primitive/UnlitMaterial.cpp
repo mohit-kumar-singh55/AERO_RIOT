@@ -8,11 +8,7 @@
 
 void UnlitMaterial::Initialize(
 	ID3D11Device* device,
-	ID3D11DeviceContext* deviceContext,
-	bool fogEnabled,
-	const DirectX::SimpleMath::Vector3& fogColor,
-	float fogStart,
-	float fogEnd
+	ID3D11DeviceContext* deviceContext
 ) {
 	if (!device || !deviceContext)
 		throw std::invalid_argument("UnlitMaterial::Initialize: requires a valid device and device context");
