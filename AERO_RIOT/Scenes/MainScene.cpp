@@ -10,6 +10,7 @@
 #include <SNX/Core/Components/Collider/SphereCollider.h>
 #include <SNX/Core/Components/Collider/BoxCollider.h>
 #include <SNX/Core/Materials/Primitive/UnlitMaterial.h>
+#include <SNX/Core/Components/Renderer/TrailRenderer.h>
 
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
@@ -94,6 +95,8 @@ void MainScene::OnLoad() {
 	engineExhaustTransform.SetPosition({ 0.0f, 0.0f, 2.5f });
 	//engineExhaustTransform.SetLocalScale({ 0.9f, 0.9f, 0.9f });
 
+	engineExhaust.AddComponent<TrailRenderer>();
+
 	auto engineGlowMaterial = std::make_shared<UnlitMaterial>();
 
 	engineGlowMaterial->SetPixelShader("EngineGlowPS");
@@ -139,19 +142,6 @@ void MainScene::OnLoad() {
 		cubeTrans.SetScale({ 0.2f,4.0f,20.0f });
 		cubeTrans.SetPosition({ (float)(std::rand() % 10) - i,-(float)(std::rand() % 10) + i,-(float)(std::rand() % 20) - i });
 	}
-
-	// ? TEST
-	//auto& sphere = GetGameObjects().CreateGameObject("DEBUG_SPHERE");
-	//auto& renderer = sphere.AddComponent<PrimitiveRenderer>(
-	//	context.deviceResources.GetContext(),
-	//	PrimitiveShape::Sphere
-	//);
-	//renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
-	//auto& sphereTrans = sphere.GetTransform();
-	//sphereTrans.SetPosition({ 0.0f,0.0f,-50.0f });
-	//sphereTrans.SetScale({ 4.0f,4.0f,4.0f });
-
-	//sphere.AddComponent<SphereCollider>();
 }
 
 void MainScene::OnUnload() {
