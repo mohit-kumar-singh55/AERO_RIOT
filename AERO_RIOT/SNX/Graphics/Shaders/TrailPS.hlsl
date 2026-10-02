@@ -3,8 +3,7 @@ cbuffer Material : register(b0)
     float4 Color;
 }
 
-float4 PSMain() : SV_TARGET
+float4 PSMain(float alpha : ALPHA) : SV_TARGET
 {
-    // return float4(Color.rgb,Color.a*);
-    return Color;
+    return float4(Color.rgb, Color.a * alpha);
 }
