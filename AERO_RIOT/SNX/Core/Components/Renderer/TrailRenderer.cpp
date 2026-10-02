@@ -35,5 +35,43 @@ void TrailRenderer::OnUpdate() {
 }
 
 void TrailRenderer::Draw(const RenderContext& context) {
+	using DirectX::SimpleMath::Vector3;
 
+	// clear previous frame vertices
+	m_vertices.clear();
+
+	std::size_t lastIndex = m_points.size() - 1;
+	for (std::size_t i = 0; i < m_points.size(); i++) {
+		Vector3 trailDir;
+
+		// first point & has multiple points
+		if (i == 0 && i != lastIndex)
+			trailDir = m_points[i + 1].position - m_points[i].position;
+		// last point
+		else if (i == lastIndex)
+			trailDir = m_points[i].position - m_points[i - 1].position;
+		// middle points
+		else if (i != lastIndex)
+			trailDir = m_points[i + 1].position - m_points[i - 1].position;
+		// has a single point
+		else
+			trailDir = GetTransform().GetForward();
+
+		// billboarding
+		Vector3 dirToCamera = context.cameraPosition - m_points[i].position;
+		Vector3 sideDirOfPoint = trailDir.Cross(dirToCamera);
+		if (sideDirOfPoint.LengthSquared() > 0.0001f)
+			sideDirOfPoint.Normalize();
+		else
+			sideDirOfPoint = GetTransform().GetRight();
+
+		// vertex position on left & right sides of the trail point
+		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
+		Vector3 right = m_points[i].position + sideDirOfPoint * m_halfWidth;
+
+		float alpha = m_lifeTime - m_points[i].age;
+
+		m_vertices.push_back({ left, alpha });
+		m_vertices.push_back({ right, alpha });
+	}
 }
