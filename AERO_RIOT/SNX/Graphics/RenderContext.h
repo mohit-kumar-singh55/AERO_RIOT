@@ -24,6 +24,9 @@ struct RenderContext final {
 	*/
 	float fixedInterpolationAlpha = 0.0f;
 
+	// elapsed time since the game started
+	float totalTime = 0.0f;
+
 	[[nodiscard]]
 	bool IsValid() const noexcept {
 		return

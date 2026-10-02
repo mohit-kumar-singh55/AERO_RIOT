@@ -14,6 +14,11 @@ struct MaterialBuffer {
 	DirectX::XMFLOAT4 Emission{ 0.0f, 0.0f, 0.0f, 0.0f };
 };
 
+struct FrameBuffer {
+	float TotalTime;	// elapsed time since the game started
+	float Padding[3];
+};
+
 class UnlitEffect : public DirectX::IEffect {
 public:
 	~UnlitEffect() = default;
@@ -43,9 +48,12 @@ private:
 	std::vector<std::uint8_t> m_vsBytecode;
 	TransformBuffer m_transformBuffer;
 	MaterialBuffer m_materialBuffer;
+	FrameBuffer m_frameBuffer;
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cTransformBuffer;	// constant buffer
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cMaterialBuffer;		// constant buffer
+	// constant buffers
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cTransformBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cMaterialBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_cFrameBuffer;
 };

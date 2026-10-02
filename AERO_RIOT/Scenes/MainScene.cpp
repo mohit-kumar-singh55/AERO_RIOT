@@ -156,7 +156,8 @@ void MainScene::OnLoad() {
 		PrimitiveShape::Cube,
 		m_unlitMaterial
 	);
-	ourBoxRenderer.SetColor({ 0.0f, 1.0f, 0.0f, 1.0f });
+	ourBoxRenderer.SetColor({ 0.0f, 0.2f, 0.0f, 1.0f });
+	ourBoxRenderer.SetEmissiveColor({ 0.0f, 1.0f, 1.0f });
 	auto& ourBoxTrans = ourBox.GetTransform();
 	ourBoxTrans.SetPosition({ 4.0f,0.0f,-50.0f });
 	//ourBoxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
@@ -180,7 +181,7 @@ bool MainScene::BuildRenderContext(RenderContext& context) const noexcept {
 	if (!m_camera)
 		return false;
 
-	// ! supply camera info
+	// ! supply camera info only
 	context.view = m_camera->GetView();
 	context.projection = m_camera->GetProjection();
 	context.cameraPosition = m_camera->GetPosition();

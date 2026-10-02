@@ -20,6 +20,7 @@ public:
 	[[nodiscard]]
 	static float FixedDeltaTime() noexcept { return s_fixedDeltaTime; }
 
+	// elapsed time since the game started
 	[[nodiscard]]
 	static double TotalTime() noexcept { return s_totalTime; }
 

@@ -16,6 +16,7 @@ Scene::Scene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	m_renderContext.deviceContext = deviceResources.GetContext();
 	m_renderContext.viewportWidth = deviceResources.GetWidth();
 	m_renderContext.viewportHeight = deviceResources.GetHeight();
+	m_renderContext.totalTime = Time::TotalTime();
 }
 
 void Scene::Load() {
