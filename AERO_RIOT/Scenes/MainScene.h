@@ -2,9 +2,6 @@
 
 #include <SNX/Core/Scene/Scene.h>
 
-#include <memory>
-#include <SNX/Core/Materials/Primitive/UnlitMaterial.h>
-
 class Camera;
 
 class MainScene final : public Scene {
@@ -25,6 +22,4 @@ private:
 	Camera* m_camera = nullptr;
 
 	GameObject* m_aircraftRoot = nullptr;
-
-	std::shared_ptr<UnlitMaterial> m_unlitMaterial;
 };

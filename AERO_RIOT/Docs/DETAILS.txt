@@ -8,4 +8,4 @@
 	- then import that .cmo file through code
 
 - Centralized Shader File Settings in the .vcsproj so no need to set the setting in the properties of shader files
-	- every shader filename must have VS/PS, etc at the end
+	- every shader filename must have VS/PS, etc at the end and entrypoint function name should be like VSMain(), PSMain(), etc

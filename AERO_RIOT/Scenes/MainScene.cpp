@@ -9,6 +9,7 @@
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Components/Collider/SphereCollider.h>
 #include <SNX/Core/Components/Collider/BoxCollider.h>
+#include <SNX/Core/Materials/Primitive/UnlitMaterial.h>
 
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
@@ -25,6 +26,7 @@
 #include <SpriteFont.h>
 
 #include <time.h>
+#include <memory>
 
 MainScene::MainScene(SceneManager& sceneManager, SceneContext& context) noexcept :
 	Scene(sceneManager, context) {}
@@ -45,18 +47,21 @@ void MainScene::OnLoad() {
 	GameObject& aircraftWing = GetGameObjects().CreateGameObject("Wing");
 	GameObject& gunMuzzle = GetGameObjects().CreateGameObject("GunMuzzle");
 	GameObject& thirdPersonCameraAnchor = GetGameObjects().CreateGameObject("ThirdPersonCameraAnchor");
+	GameObject& engineExhaust = GetGameObjects().CreateGameObject("EngineExhaustGlow");
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();
 	Transform& wingTransform = aircraftWing.GetTransform();
 	Transform& tpcaTransform = thirdPersonCameraAnchor.GetTransform();
 	Transform& gunMuzzleTransform = gunMuzzle.GetTransform();
+	Transform& engineExhaustTransform = engineExhaust.GetTransform();
 
 	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
 	baseTransform.SetParent(&bodyTransform, false);
 	wingTransform.SetParent(&bodyTransform, false);
 	tpcaTransform.SetParent(&aircraftRoot.GetTransform(), false);
 	gunMuzzleTransform.SetParent(&bodyTransform, false);
+	engineExhaustTransform.SetParent(&bodyTransform, false);
 
 	aircraftRoot.AddComponent<Aircraft>();
 	aircraftRoot.AddComponent<AircraftController>();
@@ -85,6 +90,25 @@ void MainScene::OnLoad() {
 
 	baseRenderer.SetColor({ 1.0f,0.5f,0.0f,1.0f });
 	wingRenderer.SetColor({ 0.0f,0.5f,1.0f,1.0f });
+
+	engineExhaustTransform.SetPosition({ 0.0f, 0.0f, 2.5f });
+	//engineExhaustTransform.SetLocalScale({ 0.9f, 0.9f, 0.9f });
+
+	auto m_unlitMaterial = std::make_shared<UnlitMaterial>();
+
+	m_unlitMaterial->SetPixelShader("EngineGlowPS");
+	m_unlitMaterial->Initialize(
+		context.deviceResources.GetDevice(),
+		context.deviceResources.GetContext()
+	);
+
+	auto& engineExhaustRenderer = engineExhaust.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Sphere,
+		m_unlitMaterial
+	);
+	engineExhaustRenderer.SetColor({ 0.0f, 1.0f, 1.0f, 1.0f });
+	engineExhaustRenderer.SetEmissiveColor({ 1.0f, 0.0f, 0.0f });
 
 	m_aircraftRoot = &aircraftRoot;
 
@@ -128,42 +152,6 @@ void MainScene::OnLoad() {
 	//sphereTrans.SetScale({ 4.0f,4.0f,4.0f });
 
 	//sphere.AddComponent<SphereCollider>();
-
-	auto& box = GetGameObjects().CreateGameObject("DEBUG_BOX");
-	auto& renderer = box.AddComponent<PrimitiveRenderer>(
-		context.deviceResources.GetContext(),
-		PrimitiveShape::Cube
-	);
-	renderer.SetColor({ 0.2f,1.0f,0.9f,1.0f });
-	auto& boxTrans = box.GetTransform();
-	boxTrans.SetPosition({ -4.0f,0.0f,-50.0f });
-	//boxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
-	boxTrans.SetScale({ 4.0f,4.0f,4.0f });
-
-	//box.AddComponent<BoxCollider>();
-	//box.AddComponent<KineticBody>().SetLinearVelocity({ 30.0f,15.0f,-60.0f });
-
-	m_unlitMaterial = std::make_shared<UnlitMaterial>();
-
-	m_unlitMaterial->Initialize(
-		context.deviceResources.GetDevice(),
-		context.deviceResources.GetContext()
-	);
-
-	auto& ourBox = GetGameObjects().CreateGameObject("DEBUG_BOX_2");
-	auto& ourBoxRenderer = ourBox.AddComponent<PrimitiveRenderer>(
-		context.deviceResources.GetContext(),
-		PrimitiveShape::Cube,
-		m_unlitMaterial
-	);
-	ourBoxRenderer.SetColor({ 0.0f, 0.2f, 0.0f, 1.0f });
-	ourBoxRenderer.SetEmissiveColor({ 0.0f, 1.0f, 1.0f });
-	auto& ourBoxTrans = ourBox.GetTransform();
-	ourBoxTrans.SetPosition({ 4.0f,0.0f,-50.0f });
-	//ourBoxTrans.SetEulerDegrees({ 120.0f,65.0f,40.0f });
-	ourBoxTrans.SetScale({ 4.0f,4.0f,4.0f });
-
-	//ourBox.AddComponent<BoxCollider>();
 }
 
 void MainScene::OnUnload() {
