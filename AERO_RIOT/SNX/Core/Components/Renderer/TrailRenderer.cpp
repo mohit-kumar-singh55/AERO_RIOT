@@ -114,6 +114,34 @@ void TrailRenderer::Draw(const RenderContext& context) {
 
 	// CPU is finished writing; GPU may use this resource again
 	context.deviceContext->Unmap(m_vertexBuffer.Get(), 0);
+
+	// ! bind vertex buffer to input assembler
+	ID3D11Buffer* vertexBuffer = m_vertexBuffer.Get();
+	UINT stride = sizeof(TrailVertex);
+	UINT offset = 0;
+
+	context.deviceContext->IASetInputLayout(m_inputLayout.Get());
+	context.deviceContext->IASetVertexBuffers(
+		0,				// start slot
+		1,				// no. of buffers
+		&vertexBuffer,	// buffers
+		&stride,		// size of buffers
+		&offset			// offset
+	);
+
+	// tell IA that this is a triangle strip (m_vertices ordering is necessary)
+	context.deviceContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+	// ! apply effect
+	m_trailEffect->SetViewProjection(context.view * context.projection);
+	m_trailEffect->SetMaterial({ 0.5f,1.0f,0.5f,1.0f });
+	m_trailEffect->Apply(context.deviceContext);
+
+	// ! draw
+	context.deviceContext->Draw(
+		static_cast<UINT>(m_vertices.size()),
+		0
+	);
 }
 
 void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
@@ -162,7 +190,6 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 		),
 		"Unable to create input layout for trail vertex buffer"
 	);
-	//context.deviceContext->IASetInputLayout(m_inputLayout.Get());
 }
 
 void TrailRenderer::EnsureVertexBufferCapacity(const RenderContext& context) {

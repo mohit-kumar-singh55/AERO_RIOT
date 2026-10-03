@@ -37,9 +37,9 @@ private:
 	std::vector<TrailPoint> m_points;
 	std::vector<TrailVertex> m_vertices;
 
-	float m_lifeTime = 1.0f;						// total life time of each trail point
+	float m_lifeTime = 3.0f;						// total life time of each trail point
 	float m_minPointDistanceSquared = 0.3f * 0.3f;	// min distance b/w each recorded trail point
-	float m_width = 0.5f;							// width of ribbon (distance b/w right and left vertices of a trail point)
+	float m_width = 1.0f;							// width of ribbon (distance b/w right and left vertices of a trail point)
 	float m_halfWidth = m_width * 0.5f;
 
 	std::unique_ptr<TrailEffect> m_trailEffect;

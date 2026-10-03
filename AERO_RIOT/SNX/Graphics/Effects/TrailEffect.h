@@ -1,10 +1,10 @@
 #pragma once
 
-#include <SimpleMath.h>
-
 #include <d3d11.h>
 #include <string_view>
 #include <wrl/client.h>
+#include <vector>
+#include <cstdint>
 
 struct TrailTransformBuffer {
 	DirectX::XMMATRIX ViewProjection;
