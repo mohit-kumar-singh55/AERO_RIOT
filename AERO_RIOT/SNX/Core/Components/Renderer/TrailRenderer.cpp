@@ -27,7 +27,7 @@ void TrailRenderer::OnUpdate() {
 	}
 
 	// add new point
-	auto currentPos = GetTransform().GetPosition();
+	auto currentPos = GetTransform().GetRenderPosition();
 
 	if (m_points.empty())
 		m_points.push_back({ currentPos, 0.0f });
@@ -49,6 +49,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		return;
 
 	// ! create vertices
+	Vector3 previousSide = Vector3::Zero;
 	std::size_t lastIndex = m_points.size() - 1;
 	for (std::size_t i = 0; i < m_points.size(); i++) {
 		Vector3 trailDir;
@@ -65,11 +66,23 @@ void TrailRenderer::Draw(const RenderContext& context) {
 
 		// billboarding
 		Vector3 dirToCamera = context.cameraPosition - m_points[i].position;
+		dirToCamera.Normalize();
+		trailDir.Normalize();
+
 		Vector3 sideDirOfPoint = trailDir.Cross(dirToCamera);
+
 		if (sideDirOfPoint.LengthSquared() > 0.0001f)
 			sideDirOfPoint.Normalize();
-		else
-			sideDirOfPoint = GetTransform().GetRight();
+		else {
+			if (previousSide != Vector3::Zero)
+				sideDirOfPoint = previousSide;
+			else
+				sideDirOfPoint = GetTransform().GetRight();
+		}
+
+		if (sideDirOfPoint.Dot(previousSide) < 0)
+			sideDirOfPoint = -sideDirOfPoint;
+		previousSide = sideDirOfPoint;
 
 		// vertex position on left & right sides of the trail point
 		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
@@ -130,7 +143,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	);
 
 	// tell IA that this is a triangle strip (m_vertices ordering is necessary)
-	context.deviceContext->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+	context.deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
 	// ! apply effect
 	m_trailEffect->SetViewProjection(context.view * context.projection);
