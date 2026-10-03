@@ -7,6 +7,9 @@
 #include <vector>
 #include <wrl/client.h>
 #include <d3d11.h>
+#include <memory>
+
+#include <SNX/Graphics/Effects/TrailEffect.h>
 
 struct TrailPoint {
 	DirectX::SimpleMath::Vector3 position;
@@ -27,6 +30,7 @@ protected:
 	void Draw(const RenderContext& context) override;
 
 private:
+	void CreateEffectAndInputLayout(const RenderContext& context);
 	void EnsureVertexBufferCapacity(const RenderContext& context);
 
 private:
@@ -37,6 +41,9 @@ private:
 	float m_minPointDistanceSquared = 0.3f * 0.3f;	// min distance b/w each recorded trail point
 	float m_width = 0.5f;							// width of ribbon (distance b/w right and left vertices of a trail point)
 	float m_halfWidth = m_width * 0.5f;
+
+	std::unique_ptr<TrailEffect> m_trailEffect;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;	// dynamic buffer
 	std::size_t m_vertexCapacity = 0;

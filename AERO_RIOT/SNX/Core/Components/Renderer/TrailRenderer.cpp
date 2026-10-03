@@ -81,6 +81,10 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		m_vertices.push_back({ right, alpha });
 	}
 
+	// ! lazy create TrailEffect and input layout (one time creation)
+	if (!m_trailEffect)
+		CreateEffectAndInputLayout(context);
+
 	// ! create dynamic buffer / update its size
 	if (m_vertices.size() > m_vertexCapacity)
 		EnsureVertexBufferCapacity(context);
@@ -110,6 +114,55 @@ void TrailRenderer::Draw(const RenderContext& context) {
 
 	// CPU is finished writing; GPU may use this resource again
 	context.deviceContext->Unmap(m_vertexBuffer.Get(), 0);
+}
+
+void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
+	// create trail effect
+	m_trailEffect = std::make_unique<TrailEffect>();
+
+	m_trailEffect->Initialize(
+		context.device,
+		"Shaders\\TrailVS.cso",
+		"Shaders\\TrailPS.cso"
+	);
+
+	// create input layout
+	D3D11_INPUT_ELEMENT_DESC inputLayoutDesc[] = {
+		{
+			"POSITION",						// semantic name
+			0,								// semantic index (if multiple fields with same semantic name)
+			DXGI_FORMAT_R32G32B32_FLOAT,	// format
+			0,								// input slot
+			0,								// byte offset
+			D3D11_INPUT_PER_VERTEX_DATA,	// input slot class
+			0								// instance data step rate
+		},
+		{
+			"ALPHA",
+			0,
+			DXGI_FORMAT_R32_FLOAT,
+			0,
+			12,
+			D3D11_INPUT_PER_VERTEX_DATA,
+			0
+		},
+	};
+
+	void const* vsBytecode;
+	std::size_t vsSize;
+	m_trailEffect->GetVertexShaderBytecode(&vsBytecode, &vsSize);
+
+	ErrorHandler::ThrowIfFailed(
+		context.device->CreateInputLayout(
+			inputLayoutDesc,
+			_countof(inputLayoutDesc),
+			vsBytecode,
+			vsSize,
+			&m_inputLayout
+		),
+		"Unable to create input layout for trail vertex buffer"
+	);
+	//context.deviceContext->IASetInputLayout(m_inputLayout.Get());
 }
 
 void TrailRenderer::EnsureVertexBufferCapacity(const RenderContext& context) {
