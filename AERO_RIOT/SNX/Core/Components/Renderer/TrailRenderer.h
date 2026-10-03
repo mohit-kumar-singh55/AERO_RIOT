@@ -44,6 +44,7 @@ private:
 
 	std::unique_ptr<TrailEffect> m_trailEffect;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_trailRasterizerState;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;	// dynamic buffer
 	std::size_t m_vertexCapacity = 0;

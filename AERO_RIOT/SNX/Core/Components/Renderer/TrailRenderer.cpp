@@ -137,11 +137,22 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	m_trailEffect->SetMaterial({ 0.5f,1.0f,0.5f,1.0f });
 	m_trailEffect->Apply(context.deviceContext);
 
+	// set rasterizer state cull mode to NONE, otherwise backside will not be visible
+	ID3D11RasterizerState* oldRasterizerState = nullptr;
+	context.deviceContext->RSGetState(&oldRasterizerState);
+	context.deviceContext->RSSetState(m_trailRasterizerState.Get());
+
 	// ! draw
 	context.deviceContext->Draw(
 		static_cast<UINT>(m_vertices.size()),
 		0
 	);
+
+	// restore rasterizer state to prevent leaking into later renderers
+	context.deviceContext->RSSetState(oldRasterizerState);
+	// Release the reference obtained by RSGetState
+	if (oldRasterizerState)
+		oldRasterizerState->Release();
 }
 
 void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
@@ -189,6 +200,20 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 			&m_inputLayout
 		),
 		"Unable to create input layout for trail vertex buffer"
+	);
+
+	// create rasterizer state to set cull mode to NONE
+	D3D11_RASTERIZER_DESC rasterizerDesc{};
+	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+	rasterizerDesc.CullMode = D3D11_CULL_NONE;
+	rasterizerDesc.DepthClipEnable = TRUE;
+
+	ErrorHandler::ThrowIfFailed(
+		context.device->CreateRasterizerState(
+			&rasterizerDesc,
+			&m_trailRasterizerState
+		),
+		"Unable to create trail rasterizer state"
 	);
 }
 
