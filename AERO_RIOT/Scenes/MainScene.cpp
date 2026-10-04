@@ -99,13 +99,13 @@ void MainScene::OnLoad() {
 	GradientKey keys[] = {
 		// tail
 		{ 0.00f, { 0.70f, 0.00f, 0.00f, 0.00f } }, // transparent dark red
-		//{ 0.12f, { 1.00f, 0.03f, 0.00f, 0.25f } }, // red
-		//{ 0.30f, { 1.00f, 0.12f, 0.00f, 0.60f } }, // red-orange
-		//{ 0.48f, { 1.00f, 0.42f, 0.02f, 0.90f } }, // orange
-		//{ 0.63f, { 1.00f, 0.90f, 0.15f, 1.00f } }, // yellow
-		//{ 0.74f, { 1.00f, 1.00f, 0.65f, 1.00f } }, // hot yellow/white
-		{ 0.86f, { 0.10f, 0.65f, 1.00f, 1.00f } }, // electric blue
-		{ 1.00f, { 0.55f, 0.95f, 1.00f, 1.00f } }, // blue-white core near engine
+		{ 0.12f, { 1.00f, 0.03f, 0.00f, 0.25f } }, // red
+		{ 0.30f, { 1.00f, 0.12f, 0.00f, 0.60f } }, // red-orange
+		{ 0.48f, { 1.00f, 0.42f, 0.02f, 0.90f } }, // orange
+		{ 0.63f, { 1.00f, 0.90f, 0.15f, 1.00f } }, // yellow
+		{ 0.74f, { 1.00f, 1.00f, 0.65f, 1.00f } }, // hot yellow/white
+		{ 0.86f, { 0.10f, 0.65f, 1.00f, 0.80f } }, // electric blue
+		{ 1.00f, { 0.55f, 0.95f, 1.00f, 0.00f } }, // blue-white core near engine
 	};
 	trailRenderer.GetGradient().SetKeys(keys);
 
@@ -117,13 +117,13 @@ void MainScene::OnLoad() {
 		context.deviceResources.GetContext()
 	);
 
-	//auto& engineExhaustRenderer = engineExhaust.AddComponent<PrimitiveRenderer>(
-	//	context.deviceResources.GetContext(),
-	//	PrimitiveShape::Sphere,
-	//	engineGlowMaterial
-	//);
-	//engineExhaustRenderer.SetColor({ 0.0f, 1.0f, 1.0f, 1.0f });
-	//engineExhaustRenderer.SetEmissiveColor({ 1.0f, 0.0f, 0.0f });
+	auto& engineExhaustRenderer = engineExhaust.AddComponent<PrimitiveRenderer>(
+		context.deviceResources.GetContext(),
+		PrimitiveShape::Sphere,
+		engineGlowMaterial
+	);
+	engineExhaustRenderer.SetColor({ 0.0f, 1.0f, 1.0f, 1.0f });
+	engineExhaustRenderer.SetEmissiveColor({ 1.0f, 0.0f, 0.0f });
 
 	m_aircraftRoot = &aircraftRoot;
 

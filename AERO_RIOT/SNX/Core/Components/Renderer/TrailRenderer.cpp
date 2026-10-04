@@ -61,7 +61,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	for (std::size_t i = 0; i < m_points.size(); i++) {
 		// trail length upto current point
 		if (i != 0)
-			accumulatedLength = Vector3::Distance(m_points[i - 1].position, m_points[i].position);
+			accumulatedLength += Vector3::Distance(m_points[i - 1].position, m_points[i].position);
 
 		Vector3 trailDir;
 
@@ -100,7 +100,10 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
 		Vector3 right = m_points[i].position + sideDirOfPoint * m_halfWidth;
 
-		float gradientPosition = accumulatedLength / totalLength;
+		float gradientPosition =
+			totalLength > 0.0001f
+			? accumulatedLength / totalLength
+			: 1.0f;
 		Vector4 color = m_gradient.Evaluate(gradientPosition);
 
 		m_vertices.push_back({ left, color });
