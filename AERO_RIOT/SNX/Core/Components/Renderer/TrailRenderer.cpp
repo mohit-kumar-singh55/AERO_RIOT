@@ -80,6 +80,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 				sideDirOfPoint = GetTransform().GetRight();
 		}
 
+		// prevent from sudden direction flipping
 		if (sideDirOfPoint.Dot(previousSide) < 0)
 			sideDirOfPoint = -sideDirOfPoint;
 		previousSide = sideDirOfPoint;
@@ -155,21 +156,37 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	context.deviceContext->RSGetState(&oldRasterizerState);
 	context.deviceContext->RSSetState(m_trailRasterizerState.Get());
 
+	// set blend state, otherwise even with alpha, trail will not become transparent
+	float blendFactor[4];
+	UINT sampleMask;
+	ID3D11BlendState* oldBlendSate = nullptr;
+	context.deviceContext->OMGetBlendState(&oldBlendSate, blendFactor, &sampleMask);
+	context.deviceContext->OMSetBlendState(m_trailBlendState.Get(), blendFactor, sampleMask);
+
 	// ! draw
 	context.deviceContext->Draw(
 		static_cast<UINT>(m_vertices.size()),
 		0
 	);
 
+	// ! restore & clean up
 	// restore rasterizer state to prevent leaking into later renderers
 	context.deviceContext->RSSetState(oldRasterizerState);
-	// Release the reference obtained by RSGetState
+	// Release the reference
 	if (oldRasterizerState)
 		oldRasterizerState->Release();
+
+	// restore blend state to prevent leaking into later renderers
+	context.deviceContext->OMSetBlendState(oldBlendSate, blendFactor, sampleMask);
+	// Release the reference
+	if (oldBlendSate)
+		oldBlendSate->Release();
 }
 
 void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
-	// create trail effect
+	using namespace ErrorHandler;
+
+	// ! create trail effect
 	m_trailEffect = std::make_unique<TrailEffect>();
 
 	m_trailEffect->Initialize(
@@ -178,7 +195,7 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 		"Shaders\\TrailPS.cso"
 	);
 
-	// create input layout
+	// ! create input layout
 	D3D11_INPUT_ELEMENT_DESC inputLayoutDesc[] = {
 		{
 			"POSITION",						// semantic name
@@ -204,7 +221,7 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 	std::size_t vsSize;
 	m_trailEffect->GetVertexShaderBytecode(&vsBytecode, &vsSize);
 
-	ErrorHandler::ThrowIfFailed(
+	ThrowIfFailed(
 		context.device->CreateInputLayout(
 			inputLayoutDesc,
 			_countof(inputLayoutDesc),
@@ -215,18 +232,39 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 		"Unable to create input layout for trail vertex buffer"
 	);
 
-	// create rasterizer state to set cull mode to NONE
+	// ! create rasterizer state to set cull mode to NONE
 	D3D11_RASTERIZER_DESC rasterizerDesc{};
 	rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 	rasterizerDesc.CullMode = D3D11_CULL_NONE;
 	rasterizerDesc.DepthClipEnable = TRUE;
 
-	ErrorHandler::ThrowIfFailed(
+	ThrowIfFailed(
 		context.device->CreateRasterizerState(
 			&rasterizerDesc,
 			&m_trailRasterizerState
 		),
 		"Unable to create trail rasterizer state"
+	);
+
+	// ! create blend state to blend trail with the render-target color (without it alpha alone can't do anything)
+	D3D11_BLEND_DESC blendDesc{};
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	ThrowIfFailed(
+		context.device->CreateBlendState(
+			&blendDesc,
+			&m_trailBlendState
+		),
+		"Unable to create trail blend state"
 	);
 }
 
