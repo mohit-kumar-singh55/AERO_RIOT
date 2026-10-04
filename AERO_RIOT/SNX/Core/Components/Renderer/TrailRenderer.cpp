@@ -98,6 +98,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 			1.0f
 			- (normalizedAge - m_fadeStart)
 			/ (1.0f - m_fadeStart);
+		//float alpha = 1.0f - (m_points[i].age / m_lifeTime);
 
 		m_vertices.push_back({ left, alpha });
 		m_vertices.push_back({ right, alpha });
