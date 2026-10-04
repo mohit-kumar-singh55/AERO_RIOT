@@ -115,9 +115,7 @@ void TrailEffect::Apply(ID3D11DeviceContext* context) {
 	);
 
 	ID3D11Buffer* cTransformBuffer = m_cTransformBuffer.Get();
-	ID3D11Buffer* cPSBuffers[] = {
-		m_cMaterialBuffer.Get()
-	};
+	ID3D11Buffer* cMaterialBuffer = m_cMaterialBuffer.Get();
 
 	// give buffer to the shader
 	context->VSSetConstantBuffers(
@@ -128,7 +126,7 @@ void TrailEffect::Apply(ID3D11DeviceContext* context) {
 	context->PSSetConstantBuffers(
 		0,
 		1,
-		cPSBuffers
+		&cMaterialBuffer
 	);
 
 	// set which VS to use
