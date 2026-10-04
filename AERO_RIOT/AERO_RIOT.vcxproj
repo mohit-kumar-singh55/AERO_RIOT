@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\.gitignore" />
+    <None Include="Docs\DEVELOPMENT_CHALLENGES.md" />
     <None Include="Docs\DEVELOPMENT_ROADMAP.md" />
     <None Include="Docs\PROJECT_CONTEXT.md" />
     <None Include="Docs\TODO.md" />
@@ -216,6 +217,7 @@
     <ClCompile Include="SNX\Graphics\Effects\TrailEffect.cpp" />
     <ClCompile Include="SNX\Graphics\Effects\UnlitEffect.cpp" />
     <ClCompile Include="SNX\Input\InputManager.cpp" />
+    <ClCompile Include="SNX\Utils\Gradient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Configs\AppConfig.h" />
@@ -269,6 +271,7 @@
     <ClInclude Include="SNX\Input\InputManager.h" />
     <ClInclude Include="SNX\Utils\Conversion.h" />
     <ClInclude Include="SNX\Utils\ErrorHandler.h" />
+    <ClInclude Include="SNX\Utils\Gradient.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="Docs\DETAILS.txt" />
