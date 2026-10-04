@@ -3,58 +3,75 @@
 
 #include <algorithm>
 
-Gradient::Gradient(std::span<GradientKey> keys) {
+Gradient::Gradient(std::span<const GradientKey> keys) {
 	SetKeys(keys);
 }
 
-void Gradient::SetKeys(std::span<GradientKey> keys) {
-	m_keys.insert(m_keys.end(), keys.begin(), keys.end());
+void Gradient::SetKeys(std::span<const GradientKey> keys) {
+	m_keys.clear();
+	m_keys.reserve(keys.size());
 
-	// sort in accending order of position
+	for (const auto& key : keys)
+		AddKey(key);
+}
+
+void Gradient::AddKey(GradientKey key) {
+	key.position = std::clamp(key.position, 0.0f, 1.0f);
+
+	// If a key already exists at this position, the newest value replaces it.
+	auto existing = std::find_if(
+		m_keys.begin(),
+		m_keys.end(),
+		[&key](const GradientKey& current) {
+			return current.position == key.position;
+		}
+	);
+
+	if (existing != m_keys.end())
+		*existing = key;
+	else
+		m_keys.push_back(key);
+
 	std::sort(
-		m_keys.begin(), m_keys.end(),
+		m_keys.begin(),
+		m_keys.end(),
 		[](const GradientKey& a, const GradientKey& b) {
 			return a.position < b.position;
 		}
 	);
-
-	// remove duplicates (based on position) (keeps the last "latest" key among the duplicates)
-	for (auto i = m_keys.begin(); i != m_keys.end();) {
-		auto next = std::next(i);
-
-		if (next != m_keys.end() && i->position == next->position)
-			i = m_keys.erase(i);
-		else
-			++i;
-	}
 }
 
 DirectX::SimpleMath::Vector4 Gradient::Evaluate(float position) const noexcept {
 	using DirectX::SimpleMath::Vector4;
 
+	if (m_keys.empty())
+		return Vector4::One;
+
 	position = std::clamp(position, 0.0f, 1.0f);
 
-	GradientKey keyBefore;
-	GradientKey keyAfter;
-	for (auto& key : m_keys) {
-		if (key.position == position)
-			return key.color;
+	if (position <= m_keys.front().position)
+		return m_keys.front().color;
 
-		else if (key.position < position)
-			keyBefore = key;
+	if (position >= m_keys.back().position)
+		return m_keys.back().color;
 
-		else if (key.position > position) {
-			keyAfter = key;
-			break;
-		}
+	for (std::size_t i = 1; i < m_keys.size(); ++i) {
+		const GradientKey& keyAfter = m_keys[i];
+
+		if (position > keyAfter.position)
+			continue;
+
+		const GradientKey& keyBefore = m_keys[i - 1];
+
+		// Convert the gradient-wide position into a 0..1 value between these two keys.
+		const float localT =
+			(position - keyBefore.position)
+			/
+			(keyAfter.position - keyBefore.position);
+
+		return Vector4::Lerp(keyBefore.color, keyAfter.color, localT);
 	}
 
-	// calculate where "position" lies b/w "keyBefore" it and "keyAfter" it
-	float localT =
-		(position - keyBefore.position)
-		/
-		(keyAfter.position - keyBefore.position);
-
-	// calculate the color at that position
-	return Vector4::Lerp(keyBefore.color, keyAfter.color, localT);
+	// Defensive fallback; the boundary checks above should normally handle this.
+	return m_keys.back().color;
 }
