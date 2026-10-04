@@ -89,7 +89,15 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
 		Vector3 right = m_points[i].position + sideDirOfPoint * m_halfWidth;
 
-		float alpha = 1 - (m_points[i].age / m_lifeTime);
+		float normalizedAge = m_points[i].age / m_lifeTime;
+		float alpha;
+		if (normalizedAge < m_fadeStart)
+			alpha = 1.0f;
+		else
+			alpha =
+			1.0f
+			- (normalizedAge - m_fadeStart)
+			/ (1.0f - m_fadeStart);
 
 		m_vertices.push_back({ left, alpha });
 		m_vertices.push_back({ right, alpha });
