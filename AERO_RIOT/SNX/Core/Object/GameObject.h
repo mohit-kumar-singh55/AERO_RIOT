@@ -1,6 +1,8 @@
 #pragma once
 
-#include <SNX/Core/Object/Component.h>
+#include "Component.h"
+#include "RenderPass.h"
+
 #include <SNX/Core/Components/Transform.h>
 
 #include <memory>
@@ -101,7 +103,7 @@ public:
 	void FixedUpdate();
 	void Update();
 	void LateUpdate();
-	void Render(const RenderContext& context);
+	void Render(const RenderContext& context, RenderPass renderPass);
 
 	void EndFrame();
 

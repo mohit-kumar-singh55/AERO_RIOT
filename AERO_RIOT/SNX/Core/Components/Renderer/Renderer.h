@@ -1,13 +1,9 @@
 #pragma once
 
 #include <SNX/Core/Object/Component.h>
+#include <SNX/Core/Object/RenderPass.h>
 
 struct RenderContext;
-
-enum class RenderPass {
-	Opaque,
-	Transparent
-};
 
 class Renderer : public Component {
 public:
@@ -20,7 +16,7 @@ public:
 	void SetVisible(bool visible) noexcept { m_visible = visible; }
 
 	[[nodiscard]]
-	virtual RenderPass GetRenderPass() = 0;
+	virtual RenderPass GetRenderPass() const noexcept = 0;
 
 protected:
 	void OnRender(const RenderContext& context) override final {

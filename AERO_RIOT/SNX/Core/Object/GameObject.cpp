@@ -2,6 +2,8 @@
 
 #include "GameObject.h"
 
+#include <SNX/Core/Components/Renderer/Renderer.h>
+
 GameObject::GameObject(GameObjectManager* gameObjects, std::string name) :
 	m_gameObjects(gameObjects),
 	m_name(name) {
@@ -136,11 +138,21 @@ void GameObject::LateUpdate() {
 	}
 }
 
-void GameObject::Render(const RenderContext& context) {
+void GameObject::Render(const RenderContext& context, RenderPass renderPass) {
 	if (!IsActiveInHierarchy()) return;
 
 	for (const auto& component : m_components) {
 		if (!component || !component->m_enabled || component->m_removeRequested)
+			continue;
+
+		// ! OnRender will be called only for the "Renderer" Components
+		auto* renderer = dynamic_cast<Renderer*>(component.get());
+
+		if (!renderer)
+			continue;
+
+		// if renderer belongs to a different pass
+		if (renderer->GetRenderPass() != renderPass)
 			continue;
 
 		component->OnRender(context);

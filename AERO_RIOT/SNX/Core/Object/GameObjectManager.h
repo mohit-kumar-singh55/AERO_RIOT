@@ -1,6 +1,7 @@
 #pragma once
 
-#include <SNX/Core/Object/GameObject.h>
+#include "GameObject.h"
+#include "RenderPass.h"
 
 #include <memory>
 #include <string>
@@ -60,6 +61,8 @@ public:
 private:
 	void AddPendingObjects();
 	void RemoveDestroyedObjects() noexcept;
+
+	void ExecuteRenderPass(const RenderContext& context, RenderPass renderPass);
 
 private:
 	Scene* m_scene = nullptr;

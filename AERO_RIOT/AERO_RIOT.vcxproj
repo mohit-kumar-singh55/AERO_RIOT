@@ -254,6 +254,7 @@
     <ClInclude Include="SNX\Core\Object\Component.h" />
     <ClInclude Include="SNX\Core\Object\GameObject.h" />
     <ClInclude Include="SNX\Core\Object\GameObjectManager.h" />
+    <ClInclude Include="SNX\Core\Object\RenderPass.h" />
     <ClInclude Include="SNX\Core\Scene\Scene.h" />
     <ClInclude Include="SNX\Core\Scene\SceneContext.h" />
     <ClInclude Include="SNX\Core\Scene\SceneManager.h" />

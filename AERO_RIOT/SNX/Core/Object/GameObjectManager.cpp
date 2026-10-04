@@ -51,11 +51,17 @@ void GameObjectManager::LateUpdate() {
 }
 
 void GameObjectManager::Render(const RenderContext& context) {
+	// render opaque objects -> then transparent objects
+	ExecuteRenderPass(context, RenderPass::Opaque);
+	ExecuteRenderPass(context, RenderPass::Transparent);
+}
+
+void GameObjectManager::ExecuteRenderPass(const RenderContext& context, RenderPass renderPass) {
 	for (const auto& gameObject : m_objects) {
 		if (!gameObject || gameObject->IsDestroyRequested())
 			continue;
 
-		gameObject->Render(context);
+		gameObject->Render(context, renderPass);
 	}
 }
 

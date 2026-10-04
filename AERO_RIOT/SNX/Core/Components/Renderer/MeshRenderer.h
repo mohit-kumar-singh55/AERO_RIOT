@@ -38,7 +38,7 @@ public:
 	bool HasLoadFailed() const noexcept { return m_loadFailed; }
 
 	[[nodiscard]]
-	RenderPass GetRenderPass() override { return RenderPass::Opaque; }
+	RenderPass GetRenderPass() const noexcept override { return RenderPass::Opaque; }
 
 protected:
 	void OnInitialize() override;
