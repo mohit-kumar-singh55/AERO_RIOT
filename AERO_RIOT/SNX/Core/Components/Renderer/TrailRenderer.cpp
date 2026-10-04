@@ -51,6 +51,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 
 	// calculated total length of the trail
 	float totalLength = 0.0f;
+	float accumulatedLength = 0.0f;
 	for (std::size_t i = 0; i < m_points.size() - 1; i++)
 		totalLength += Vector3::Distance(m_points[i].position, m_points[i + 1].position);
 
@@ -59,7 +60,6 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	std::size_t lastIndex = m_points.size() - 1;
 	for (std::size_t i = 0; i < m_points.size(); i++) {
 		// trail length upto current point
-		float accumulatedLength = 0.0f;
 		if (i != 0)
 			accumulatedLength = Vector3::Distance(m_points[i - 1].position, m_points[i].position);
 
