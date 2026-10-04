@@ -40,6 +40,7 @@ void TrailRenderer::OnUpdate() {
 
 void TrailRenderer::Draw(const RenderContext& context) {
 	using DirectX::SimpleMath::Vector3;
+	using DirectX::SimpleMath::Vector4;
 
 	// clear previous frame vertices
 	m_vertices.clear();
@@ -48,10 +49,20 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	if (m_points.size() < 2)
 		return;
 
+	// calculated total length of the trail
+	float totalLength = 0.0f;
+	for (std::size_t i = 0; i < m_points.size() - 1; i++)
+		totalLength += Vector3::Distance(m_points[i].position, m_points[i + 1].position);
+
 	// ! create vertices
 	Vector3 previousSide = Vector3::Zero;
 	std::size_t lastIndex = m_points.size() - 1;
 	for (std::size_t i = 0; i < m_points.size(); i++) {
+		// trail length upto current point
+		float accumulatedLength = 0.0f;
+		if (i != 0)
+			accumulatedLength = Vector3::Distance(m_points[i - 1].position, m_points[i].position);
+
 		Vector3 trailDir;
 
 		// first point
@@ -89,19 +100,11 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
 		Vector3 right = m_points[i].position + sideDirOfPoint * m_halfWidth;
 
-		float normalizedAge = m_points[i].age / m_lifeTime;
-		float alpha;
-		if (normalizedAge < m_fadeStart)
-			alpha = 1.0f;
-		else
-			alpha =
-			1.0f
-			- (normalizedAge - m_fadeStart)
-			/ (1.0f - m_fadeStart);
-		//float alpha = 1.0f - (m_points[i].age / m_lifeTime);
+		float gradientPosition = accumulatedLength / totalLength;
+		Vector4 color = m_gradient.Evaluate(gradientPosition);
 
-		m_vertices.push_back({ left, alpha });
-		m_vertices.push_back({ right, alpha });
+		m_vertices.push_back({ left, color });
+		m_vertices.push_back({ right, color });
 	}
 
 	// ! lazy create TrailEffect and input layout (one time creation)
@@ -157,7 +160,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 
 	// ! apply effect
 	m_trailEffect->SetViewProjection(context.view * context.projection);
-	m_trailEffect->SetMaterial({ 0.5f,1.0f,0.5f,1.0f });
+	m_trailEffect->SetMaterial({ 1.0f,1.0f,1.0f,1.0f });
 	m_trailEffect->Apply(context.deviceContext);
 
 	// ! set necessary states
@@ -229,9 +232,9 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 			0								// instance data step rate
 		},
 		{
-			"ALPHA",
+			"COLOR",
 			0,
-			DXGI_FORMAT_R32_FLOAT,
+			DXGI_FORMAT_R32G32B32A32_FLOAT,
 			0,
 			12,
 			D3D11_INPUT_PER_VERTEX_DATA,

@@ -10,6 +10,7 @@
 #include <memory>
 
 #include <SNX/Graphics/Effects/TrailEffect.h>
+#include <SNX/Utils/Gradient.h>
 
 struct TrailPoint {
 	DirectX::SimpleMath::Vector3 position;
@@ -18,7 +19,7 @@ struct TrailPoint {
 
 struct TrailVertex {
 	DirectX::SimpleMath::Vector3 position;
-	float alpha;
+	DirectX::SimpleMath::Vector4 color;
 };
 
 class TrailRenderer final : public Renderer {
@@ -27,6 +28,8 @@ public:
 
 	[[nodiscard]]
 	RenderPass GetRenderPass() const noexcept override { return RenderPass::Transparent; }
+
+	Gradient& GetGradient() noexcept { return m_gradient; }
 
 protected:
 	void OnUpdate() override;
@@ -44,7 +47,7 @@ private:
 	float m_minPointDistanceSquared = 0.2f * 0.2f;	// min distance b/w each recorded trail point
 	float m_width = 0.5f;							// width of ribbon (distance b/w right and left vertices of a trail point)
 	float m_halfWidth = m_width * 0.5f;
-	float m_fadeStart = 0.2f;						// from which point of age, start fading
+	Gradient m_gradient;
 
 	std::unique_ptr<TrailEffect> m_trailEffect;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;

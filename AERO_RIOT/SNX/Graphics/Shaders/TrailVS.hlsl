@@ -2,13 +2,13 @@
 struct VSInput
 {
     float3 position : POSITION; // world-space
-    float alpha : ALPHA;
+    float4 color : COLOR;
 };
 
 struct VSOutput
 {
     float4 position : SV_POSITION;
-    float alpha : ALPHA;
+    float4 color : COLOR;
 };
 
 cbuffer Transform : register(b0)
@@ -21,6 +21,6 @@ VSOutput VSMain(VSInput input)
     VSOutput output;
     // convert to clip-space
     output.position = mul(float4(input.position, 1.0f), ViewProjection);
-    output.alpha = input.alpha;
+    output.color = input.color;
     return output;
 }

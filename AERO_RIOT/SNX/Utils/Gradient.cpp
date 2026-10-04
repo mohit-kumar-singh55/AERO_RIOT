@@ -44,6 +44,7 @@ void Gradient::AddKey(GradientKey key) {
 DirectX::SimpleMath::Vector4 Gradient::Evaluate(float position) const noexcept {
 	using DirectX::SimpleMath::Vector4;
 
+	// default to white
 	if (m_keys.empty())
 		return Vector4::One;
 
@@ -63,7 +64,7 @@ DirectX::SimpleMath::Vector4 Gradient::Evaluate(float position) const noexcept {
 
 		const GradientKey& keyBefore = m_keys[i - 1];
 
-		// Convert the gradient-wide position into a 0..1 value between these two keys.
+		// convert the gradient-wide position into a 0..1 value between these two keys.
 		const float localT =
 			(position - keyBefore.position)
 			/
@@ -72,6 +73,6 @@ DirectX::SimpleMath::Vector4 Gradient::Evaluate(float position) const noexcept {
 		return Vector4::Lerp(keyBefore.color, keyAfter.color, localT);
 	}
 
-	// Defensive fallback; the boundary checks above should normally handle this.
+	// defensive fallback; the boundary checks above should normally handle this.
 	return m_keys.back().color;
 }

@@ -95,7 +95,14 @@ void MainScene::OnLoad() {
 	engineExhaustTransform.SetPosition({ 0.0f, 0.0f, 2.5f });
 	//engineExhaustTransform.SetLocalScale({ 0.9f, 0.9f, 0.9f });
 
-	engineExhaust.AddComponent<TrailRenderer>();
+	auto& trailRenderer = engineExhaust.AddComponent<TrailRenderer>();
+	GradientKey keys[] = {
+	{ 0.00f, { 0.00f, 0.20f, 1.00f, 0.00f } }, // transparent blue tail
+	{ 0.20f, { 0.00f, 0.80f, 1.00f, 0.80f } }, // cyan
+	{ 0.65f, { 0.20f, 1.00f, 1.00f, 1.00f } }, // bright cyan
+	{ 1.00f, { 1.00f, 1.00f, 1.00f, 1.00f } }, // white near engine
+	};
+	trailRenderer.GetGradient().SetKeys(keys);
 
 	auto engineGlowMaterial = std::make_shared<UnlitMaterial>();
 
