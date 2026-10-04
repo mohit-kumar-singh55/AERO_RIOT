@@ -2,12 +2,12 @@
 
 #include <SimpleMath.h>
 
-#include <vector>
 #include <span>
+#include <vector>
 
 struct GradientKey {
 	// 0.0 ~ 1.0
-	float position;
+	float position = 0.0f;
 	// RGBA
 	DirectX::SimpleMath::Vector4 color = DirectX::SimpleMath::Vector4::One;
 };
@@ -15,26 +15,19 @@ struct GradientKey {
 class Gradient final {
 public:
 	Gradient() = default;
-	Gradient(std::span<GradientKey> keys);
+	explicit Gradient(std::span<const GradientKey> keys);
 
-	// appends to the current keys
-	void SetKeys(std::span<GradientKey> keys);
+	// replaces the current keys
+	void SetKeys(std::span<const GradientKey> keys);
 
-	void Clear() noexcept {
-		m_keys.clear();
-		// keep default keys
-		m_keys.assign({
-			{ 0.0f, { 1.0f, 1.0f, 1.0f, 1.0f } },
-			{ 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f } }
-			});
-	}
+	// adds a new key, or replaces an existing key at the same position
+	void AddKey(GradientKey key);
 
+	void Clear() noexcept { m_keys.clear(); }
+
+	[[nodiscard]]
 	DirectX::SimpleMath::Vector4 Evaluate(float position) const noexcept;
 
 private:
-	// default to white
-	std::vector<GradientKey> m_keys{
-		{ 0.0f, { 1.0f, 1.0f, 1.0f, 1.0f } },
-		{ 1.0f, { 1.0f, 1.0f, 1.0f, 1.0f } }
-	};
+	std::vector<GradientKey> m_keys;
 };
