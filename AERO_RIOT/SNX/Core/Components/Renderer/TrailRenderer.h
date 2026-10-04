@@ -25,6 +25,9 @@ class TrailRenderer final : public Renderer {
 public:
 	explicit TrailRenderer(GameObject& gameObject) noexcept;
 
+	[[nodiscard]]
+	RenderPass GetRenderPass() override { return RenderPass::Transparent; }
+
 protected:
 	void OnUpdate() override;
 	void Draw(const RenderContext& context) override;

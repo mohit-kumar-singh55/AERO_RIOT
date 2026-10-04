@@ -47,6 +47,9 @@ public:
 		return m_wireframe;
 	}
 
+	[[nodiscard]]
+	RenderPass GetRenderPass() override { return RenderPass::Opaque; }
+
 protected:
 	void OnInitialize() override;
 

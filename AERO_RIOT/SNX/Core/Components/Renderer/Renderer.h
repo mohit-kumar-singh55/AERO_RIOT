@@ -4,6 +4,11 @@
 
 struct RenderContext;
 
+enum class RenderPass {
+	Opaque,
+	Transparent
+};
+
 class Renderer : public Component {
 public:
 	// inheriting/forwarding constructor
@@ -13,6 +18,9 @@ public:
 	bool IsVisible() const noexcept { return m_visible; }
 
 	void SetVisible(bool visible) noexcept { m_visible = visible; }
+
+	[[nodiscard]]
+	virtual RenderPass GetRenderPass() = 0;
 
 protected:
 	void OnRender(const RenderContext& context) override final {
