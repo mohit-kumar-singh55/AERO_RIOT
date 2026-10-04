@@ -160,6 +160,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	m_trailEffect->SetMaterial({ 0.5f,1.0f,0.5f,1.0f });
 	m_trailEffect->Apply(context.deviceContext);
 
+	// ! set necessary states
 	// set rasterizer state cull mode to NONE, otherwise backside will not be visible
 	ID3D11RasterizerState* oldRasterizerState = nullptr;
 	context.deviceContext->RSGetState(&oldRasterizerState);
@@ -172,24 +173,36 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	context.deviceContext->OMGetBlendState(&oldBlendState, blendFactor, &sampleMask);
 	context.deviceContext->OMSetBlendState(m_trailBlendState.Get(), nullptr, 0xffffffff);
 
+	// set depth stencil state so trail's invisible part doesn't block object behind it
+	ID3D11DepthStencilState* oldDepthState = nullptr;
+	UINT oldStencilRef = 0;
+	context.deviceContext->OMGetDepthStencilState(&oldDepthState, &oldStencilRef);
+	context.deviceContext->OMSetDepthStencilState(m_trailDepthState.Get(), 0);
+
 	// ! draw
 	context.deviceContext->Draw(
 		static_cast<UINT>(m_vertices.size()),
 		0
 	);
 
-	// ! restore & clean up
-	// restore rasterizer state to prevent leaking into later renderers
+	// ! restore & clean up states to prevent leaking into later renderers
+	// restore rasterizer state 
 	context.deviceContext->RSSetState(oldRasterizerState);
 	// Release the reference
 	if (oldRasterizerState)
 		oldRasterizerState->Release();
 
-	// restore blend state to prevent leaking into later renderers
+	// restore blend state
 	context.deviceContext->OMSetBlendState(oldBlendState, blendFactor, sampleMask);
 	// Release the reference
 	if (oldBlendState)
 		oldBlendState->Release();
+
+	// restore blend state
+	context.deviceContext->OMSetDepthStencilState(oldDepthState, oldStencilRef);
+	// Release the reference
+	if (oldDepthState)
+		oldDepthState->Release();
 }
 
 void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
@@ -275,6 +288,23 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 			&m_trailBlendState
 		),
 		"Unable to create trail blend state"
+	);
+
+	// ! create depth state, otherwise transparent trail part will still block the object behind it
+	D3D11_DEPTH_STENCIL_DESC depthDesc{};
+	depthDesc.DepthEnable = TRUE;							// trail can still correctly disappear behind walls
+	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;	// trail doesn't block objects rendered afterward (behind it)
+	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;			// incoming depth < store depth
+	depthDesc.StencilEnable = FALSE;
+	depthDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
+	depthDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+
+	ThrowIfFailed(
+		context.device->CreateDepthStencilState(
+			&depthDesc,
+			&m_trailDepthState
+		),
+		"Unable to create trail depth stencil state"
 	);
 }
 

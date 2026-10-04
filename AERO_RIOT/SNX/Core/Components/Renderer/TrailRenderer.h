@@ -47,6 +47,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_trailRasterizerState;
 	Microsoft::WRL::ComPtr<ID3D11BlendState> m_trailBlendState;
+	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_trailDepthState;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;	// dynamic buffer
 	std::size_t m_vertexCapacity = 0;
