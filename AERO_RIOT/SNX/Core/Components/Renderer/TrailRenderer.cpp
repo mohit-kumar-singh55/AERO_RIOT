@@ -159,9 +159,9 @@ void TrailRenderer::Draw(const RenderContext& context) {
 	// set blend state, otherwise even with alpha, trail will not become transparent
 	float blendFactor[4];
 	UINT sampleMask;
-	ID3D11BlendState* oldBlendSate = nullptr;
-	context.deviceContext->OMGetBlendState(&oldBlendSate, blendFactor, &sampleMask);
-	context.deviceContext->OMSetBlendState(m_trailBlendState.Get(), blendFactor, sampleMask);
+	ID3D11BlendState* oldBlendState = nullptr;
+	context.deviceContext->OMGetBlendState(&oldBlendState, blendFactor, &sampleMask);
+	context.deviceContext->OMSetBlendState(m_trailBlendState.Get(), nullptr, 0xffffffff);
 
 	// ! draw
 	context.deviceContext->Draw(
@@ -177,10 +177,10 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		oldRasterizerState->Release();
 
 	// restore blend state to prevent leaking into later renderers
-	context.deviceContext->OMSetBlendState(oldBlendSate, blendFactor, sampleMask);
+	context.deviceContext->OMSetBlendState(oldBlendState, blendFactor, sampleMask);
 	// Release the reference
-	if (oldBlendSate)
-		oldBlendSate->Release();
+	if (oldBlendState)
+		oldBlendState->Release();
 }
 
 void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
@@ -248,11 +248,12 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 
 	// ! create blend state to blend trail with the render-target color (without it alpha alone can't do anything)
 	D3D11_BLEND_DESC blendDesc{};
+	// RGB
 	blendDesc.RenderTarget[0].BlendEnable = TRUE;
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-
+	// ALPHA
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
