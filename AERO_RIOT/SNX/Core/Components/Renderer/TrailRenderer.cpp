@@ -20,7 +20,7 @@ void TrailRenderer::OnUpdate() {
 	for (auto i = m_points.begin();i != m_points.end();) {
 		i->age += Time::DeltaTime();
 
-		if (i->age >= m_lifeTime)
+		if (i->age >= m_lifeTime + 0.05f)	// a small increment so triangle gets enought time to become transparent
 			i = m_points.erase(i);
 		else
 			i++;
@@ -260,7 +260,7 @@ void TrailRenderer::CreateEffectAndInputLayout(const RenderContext& context) {
 	// RGB
 	blendDesc.RenderTarget[0].BlendEnable = TRUE;
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
 	// ALPHA
 	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
