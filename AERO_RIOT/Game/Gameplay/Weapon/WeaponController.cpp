@@ -9,6 +9,7 @@
 #include <SNX/Core/Components/Kinetics/KineticBody.h>
 #include <SNX/Core/Components/Collider/SphereCollider.h>
 #include <SNX/Core/Time.h>
+#include <SNX/Core/Components/Renderer/TrailRenderer.h>
 
 #include <stdexcept>
 
@@ -62,11 +63,27 @@ void WeaponController::FireGun(
 	bulletGO.AddComponent<KineticBody>();
 	bulletGO.AddComponent<SphereCollider>()
 		.SetDetectionMode(CollisionDetectionMode::Continuous);
+
+	auto& bulletTrail = bulletGO.AddComponent<TrailRenderer>();
+	GradientKey bulletTracerGradientKeys[] = {
+	{ 0.00f, { 1.00f, 0.95f, 0.70f, 0.00f } }, // transparent
+	{ 0.05f, { 1.00f, 0.95f, 0.65f, 0.95f } }, // hot white-yellow
+	{ 0.15f, { 1.00f, 0.75f, 0.20f, 1.00f } }, // yellow-orange
+	{ 0.30f, { 1.00f, 0.30f, 0.02f, 0.95f } }, // orange
+	{ 0.48f, { 0.90f, 0.08f, 0.01f, 0.70f } }, // red
+	{ 0.68f, { 0.35f, 0.01f, 0.00f, 0.40f } }, // dark red
+	{ 0.85f, { 0.08f, 0.00f, 0.00f, 0.12f } }, // faint red
+	{ 1.00f, { 0.00f, 0.00f, 0.00f, 0.00f } }, // transparent
+	};
+	bulletTrail.GetGradient().SetKeys(bulletTracerGradientKeys);
+	bulletTrail.SetTrailWidth(0.05f);
+
 	auto& bullet = bulletGO.AddComponent<Bullet>();
 
+	bulletGO.GetTransform().SetLocalScale({ 0.3f,0.3f,0.3f });
 	bulletGO.GetTransform().SetPosition(spawnPosition);
 
-	bulletRenderer.SetColor({ 0.5f,0.9f,0.3f,1.0f });
+	bulletRenderer.SetColor({ 0.90f, 0.08f, 0.01f, 1.0f });
 
 	bullet.RequestLaunch(direction, m_muzzleSpeed);
 }
