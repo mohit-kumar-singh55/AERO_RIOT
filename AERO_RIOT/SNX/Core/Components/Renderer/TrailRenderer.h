@@ -8,6 +8,7 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 #include <memory>
+#include <algorithm>
 
 #include <SNX/Graphics/Effects/TrailEffect.h>
 #include <SNX/Utils/Gradient.h>
@@ -31,6 +32,16 @@ public:
 
 	Gradient& GetGradient() noexcept { return m_gradient; }
 
+	[[nodiscard]]
+	float GetLifeTime() const noexcept { return m_lifeTime; }
+
+	void SetLifeTime(float lifeTime) noexcept { m_lifeTime = std::abs(lifeTime); }
+
+	[[nodiscard]]
+	float GetTrailWidth() const noexcept { return m_width; }
+
+	void SetTrailWidth(float width) noexcept { m_width = std::abs(width); }
+
 protected:
 	void OnUpdate() override;
 	void Draw(const RenderContext& context) override;
@@ -44,7 +55,7 @@ private:
 	std::vector<TrailVertex> m_vertices;
 
 	float m_lifeTime = 0.2f;						// total life time of each trail point
-	float m_minPointDistanceSquared = 0.2f * 0.2f;	// min distance b/w each recorded trail point
+	float m_minPointDistanceSquared = 0.1f * 0.1f;	// min distance b/w each recorded trail point
 	float m_width = 0.5f;							// width of ribbon (distance b/w right and left vertices of a trail point)
 	float m_halfWidth = m_width * 0.5f;
 	Gradient m_gradient;

@@ -7,7 +7,6 @@
 #include <SNX/Core/Time.h>
 #include <SNX/Utils/ErrorHandler.h>
 
-#include <algorithm>
 #include <cstring>
 
 TrailRenderer::TrailRenderer(GameObject& gameObject) noexcept
@@ -97,6 +96,7 @@ void TrailRenderer::Draw(const RenderContext& context) {
 		previousSide = sideDirOfPoint;
 
 		// vertex position on left & right sides of the trail point
+		m_halfWidth = m_width * 0.5f;
 		Vector3 left = m_points[i].position - sideDirOfPoint * m_halfWidth;
 		Vector3 right = m_points[i].position + sideDirOfPoint * m_halfWidth;
 

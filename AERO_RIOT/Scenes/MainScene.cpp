@@ -49,6 +49,8 @@ void MainScene::OnLoad() {
 	GameObject& gunMuzzle = GetGameObjects().CreateGameObject("GunMuzzle");
 	GameObject& thirdPersonCameraAnchor = GetGameObjects().CreateGameObject("ThirdPersonCameraAnchor");
 	GameObject& engineExhaust = GetGameObjects().CreateGameObject("EngineExhaustGlow");
+	GameObject& wingTipLeft = GetGameObjects().CreateGameObject("WingTipLeft");
+	GameObject& wingTipRight = GetGameObjects().CreateGameObject("WingTipRight");
 
 	Transform& bodyTransform = aircraftBody.GetTransform();
 	Transform& baseTransform = aircraftBase.GetTransform();
@@ -56,6 +58,8 @@ void MainScene::OnLoad() {
 	Transform& tpcaTransform = thirdPersonCameraAnchor.GetTransform();
 	Transform& gunMuzzleTransform = gunMuzzle.GetTransform();
 	Transform& engineExhaustTransform = engineExhaust.GetTransform();
+	Transform& wingTipLeftTransform = wingTipLeft.GetTransform();
+	Transform& wingTipRightTransform = wingTipRight.GetTransform();
 
 	bodyTransform.SetParent(&aircraftRoot.GetTransform(), false);
 	baseTransform.SetParent(&bodyTransform, false);
@@ -63,6 +67,8 @@ void MainScene::OnLoad() {
 	tpcaTransform.SetParent(&aircraftRoot.GetTransform(), false);
 	gunMuzzleTransform.SetParent(&bodyTransform, false);
 	engineExhaustTransform.SetParent(&bodyTransform, false);
+	wingTipLeftTransform.SetParent(&wingTransform, false);
+	wingTipRightTransform.SetParent(&wingTransform, false);
 
 	aircraftRoot.AddComponent<Aircraft>();
 	aircraftRoot.AddComponent<AircraftController>();
@@ -93,10 +99,10 @@ void MainScene::OnLoad() {
 	wingRenderer.SetColor({ 0.0f,0.5f,1.0f,1.0f });
 
 	engineExhaustTransform.SetPosition({ 0.0f, 0.0f, 2.5f });
-	//engineExhaustTransform.SetLocalScale({ 0.9f, 0.9f, 0.9f });
+	engineExhaustTransform.SetLocalScale({ 0.9f, 0.9f, 0.9f });
 
-	auto& trailRenderer = engineExhaust.AddComponent<TrailRenderer>();
-	GradientKey keys[] = {
+	auto& exhaustTrailRenderer = engineExhaust.AddComponent<TrailRenderer>();
+	GradientKey exhaustTrailGradientkeys[] = {
 		// tail
 		{ 0.00f, { 0.70f, 0.00f, 0.00f, 0.00f } }, // transparent dark red
 		{ 0.12f, { 1.00f, 0.03f, 0.00f, 0.25f } }, // red
@@ -107,7 +113,7 @@ void MainScene::OnLoad() {
 		{ 0.86f, { 0.10f, 0.65f, 1.00f, 0.80f } }, // electric blue
 		{ 1.00f, { 0.55f, 0.95f, 1.00f, 0.00f } }, // blue-white core near engine
 	};
-	trailRenderer.GetGradient().SetKeys(keys);
+	exhaustTrailRenderer.GetGradient().SetKeys(exhaustTrailGradientkeys);
 
 	auto engineGlowMaterial = std::make_shared<UnlitMaterial>();
 
@@ -124,6 +130,23 @@ void MainScene::OnLoad() {
 	);
 	engineExhaustRenderer.SetColor({ 0.0f, 1.0f, 1.0f, 1.0f });
 	engineExhaustRenderer.SetEmissiveColor({ 1.0f, 0.0f, 0.0f });
+
+	wingTipLeftTransform.SetPosition({ -2.5f,0.0f,0.35f });
+	wingTipRightTransform.SetPosition({ 2.5f,0.0f,0.35f });
+
+	auto& wingTipLeftTrailRenderer = wingTipLeft.AddComponent<TrailRenderer>();
+	auto& wingTipRightTrailRenderer = wingTipRight.AddComponent<TrailRenderer>();
+	wingTipLeftTrailRenderer.SetTrailWidth(0.05f);
+	wingTipRightTrailRenderer.SetTrailWidth(0.05f);
+	GradientKey WingTipTrailGradientkeys[] = {
+	{ 0.00f, { 0.25f, 0.45f, 0.70f, 0.00f } }, // invisible cool-blue tail
+	{ 0.15f, { 0.35f, 0.65f, 0.95f, 0.18f } }, // faint blue
+	{ 0.40f, { 0.55f, 0.85f, 1.00f, 0.40f } }, // light cyan
+	{ 0.70f, { 0.80f, 0.95f, 1.00f, 0.65f } }, // pale cyan-white
+	{ 1.00f, { 1.00f, 1.00f, 1.00f, 0.85f } }, // bright white at wing tip
+	};
+	wingTipLeftTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
+	wingTipRightTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
 
 	m_aircraftRoot = &aircraftRoot;
 
