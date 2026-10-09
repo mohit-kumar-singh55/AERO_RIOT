@@ -199,6 +199,7 @@
     <ClCompile Include="SNX\Core\Components\Renderer\MeshRenderer.cpp" />
     <ClCompile Include="SNX\Core\Components\Renderer\PrimitiveRenderer.cpp" />
     <ClCompile Include="SNX\Core\Components\Renderer\TrailRenderer.cpp" />
+    <ClCompile Include="SNX\Core\Components\Renderer\VortexParticleEmitter.cpp" />
     <ClCompile Include="SNX\Core\Components\Transform.cpp" />
     <ClCompile Include="SNX\Core\Debugger\Debug.cpp" />
     <ClCompile Include="SNX\Core\Kinetics\Kinetics.cpp" />
@@ -246,6 +247,7 @@
     <ClInclude Include="SNX\Core\Components\Renderer\PrimitiveRenderer.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\Renderer.h" />
     <ClInclude Include="SNX\Core\Components\Renderer\TrailRenderer.h" />
+    <ClInclude Include="SNX\Core\Components\Renderer\VortexParticleEmitter.h" />
     <ClInclude Include="SNX\Core\Components\Transform.h" />
     <ClInclude Include="SNX\Core\Debugger\Debug.h" />
     <ClInclude Include="SNX\Core\Kinetics\Kinetics.h" />
@@ -284,18 +286,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <FxCompile Include="Game\Graphics\Shaders\EngineGlowPS.hlsl" />
-    <FxCompile Include="SNX\Graphics\Shaders\TrailPS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="SNX\Graphics\Shaders\TrailVS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-    </FxCompile>
+	<FxCompile Include="SNX\Graphics\Shaders\TrailPS.hlsl" />
+	<FxCompile Include="SNX\Graphics\Shaders\TrailVS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitPS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitVS.hlsl" />
   </ItemGroup>
@@ -308,6 +300,10 @@
       <ShaderType>Pixel</ShaderType>
       <EntryPointName>PSMain</EntryPointName>
     </FxCompile>
+	  <FxCompile Update="**\*CS.hlsl">
+		  <ShaderType>Compute</ShaderType>
+		  <EntryPointName>CSMain</EntryPointName>
+	  </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
