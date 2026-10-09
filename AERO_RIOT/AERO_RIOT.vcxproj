@@ -273,6 +273,7 @@
     <ClInclude Include="SNX\Input\InputManager.h" />
     <ClInclude Include="SNX\Utils\Conversion.h" />
     <ClInclude Include="SNX\Utils\ErrorHandler.h" />
+    <ClInclude Include="SNX\Utils\FileHandling.h" />
     <ClInclude Include="SNX\Utils\Gradient.h" />
   </ItemGroup>
   <ItemGroup>
@@ -286,10 +287,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <FxCompile Include="Game\Graphics\Shaders\EngineGlowPS.hlsl" />
-	<FxCompile Include="SNX\Graphics\Shaders\TrailPS.hlsl" />
-	<FxCompile Include="SNX\Graphics\Shaders\TrailVS.hlsl" />
+    <FxCompile Include="SNX\Graphics\Shaders\TrailPS.hlsl" />
+    <FxCompile Include="SNX\Graphics\Shaders\TrailVS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitPS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitVS.hlsl" />
+    <FxCompile Include="SNX\Graphics\Shaders\Vortex\VortexUpdateCS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Update="**\*VS.hlsl">
@@ -300,10 +311,10 @@
       <ShaderType>Pixel</ShaderType>
       <EntryPointName>PSMain</EntryPointName>
     </FxCompile>
-	  <FxCompile Update="**\*CS.hlsl">
-		  <ShaderType>Compute</ShaderType>
-		  <EntryPointName>CSMain</EntryPointName>
-	  </FxCompile>
+    <FxCompile Update="**\*CS.hlsl">
+      <ShaderType>Compute</ShaderType>
+      <EntryPointName>CSMain</EntryPointName>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

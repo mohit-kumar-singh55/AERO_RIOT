@@ -36,27 +36,27 @@ void Bullet::OnUpdate() {
 
 void Bullet::OnCollisionEnter(const Collision& collision) {
 	Debug::LogWarning(
-		Utils::Conversion::ToWString(GetGameObject().GetName())
+		Conversion::ToWString(GetGameObject().GetName())
 		+ L" Collided with " +
-		Utils::Conversion::ToWString(collision.other.GetGameObject().GetName()),
+		Conversion::ToWString(collision.other.GetGameObject().GetName()),
 		5.0f
 	);
 }
 
 void Bullet::OnCollisionStay(const Collision& collision) {
 	Debug::LogWarning(
-		Utils::Conversion::ToWString(GetGameObject().GetName())
+		Conversion::ToWString(GetGameObject().GetName())
 		+ L" Collision stayed with " +
-		Utils::Conversion::ToWString(collision.other.GetGameObject().GetName()),
+		Conversion::ToWString(collision.other.GetGameObject().GetName()),
 		5.0f
 	);
 }
 
 void Bullet::OnCollisionExit(const Collision& collision) {
 	Debug::LogWarning(
-		Utils::Conversion::ToWString(GetGameObject().GetName())
+		Conversion::ToWString(GetGameObject().GetName())
 		+ L" Collision exited with " +
-		Utils::Conversion::ToWString(collision.other.GetGameObject().GetName()),
+		Conversion::ToWString(collision.other.GetGameObject().GetName()),
 		5.0f
 	);
 }

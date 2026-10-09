@@ -2,9 +2,9 @@
 #include "TrailEffect.h"
 
 #include <stdexcept>
-#include <fstream>
 
 #include <SNX/Utils/ErrorHandler.h>
+#include <SNX/Utils/FileHandling.h>
 
 void TrailEffect::Initialize(
 	ID3D11Device* device,
@@ -15,35 +15,11 @@ void TrailEffect::Initialize(
 		throw std::invalid_argument("TrailEffect::Initialize: device is invalid.");
 
 	using namespace ErrorHandler;
-
-	auto loadShaderBytecode = [](const char* fileName) {
-		std::ifstream file(
-			fileName,
-			std::ios::binary | std::ios::ate
-		);
-
-		if (!file)
-			throw std::runtime_error("TrailEffect::Initialize: Shader file not found.");
-
-		const std::streamsize size = file.tellg();
-		file.seekg(0, std::ios::beg);
-
-		if (size <= 0)
-			throw std::runtime_error("TrailEffect::Initialize: Shader file is empty.");
-
-		std::vector<std::uint8_t> bytecode(size);
-
-		file.read(
-			reinterpret_cast<char*>(bytecode.data()),
-			size
-		);
-
-		return bytecode;
-		};
+	using namespace FileHandling;
 
 	// ! load shader files
-	m_vsBytecode = loadShaderBytecode(vsFilePath.data());
-	auto psBytecode = loadShaderBytecode(psFilePath.data());
+	m_vsBytecode = LoadShaderBytecode(vsFilePath.data());
+	auto psBytecode = LoadShaderBytecode(psFilePath.data());
 
 	// ! create shaders using the bytecodes
 	ThrowIfFailed(

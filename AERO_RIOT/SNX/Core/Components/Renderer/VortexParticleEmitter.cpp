@@ -3,6 +3,9 @@
 
 #include <SNX/Graphics/RenderContext.h>
 #include <SNX/Utils/ErrorHandler.h>
+#include <SNX/Utils/FileHandling.h>
+#include <SNX/Core/Time.h>
+#include <SNX/Core/Components/Transform.h>
 
 #include <vector>
 #include <algorithm>
@@ -13,12 +16,16 @@ VortexParticleEmitter::VortexParticleEmitter(
 ) noexcept :
 	Renderer(gameObject) {
 	m_capacity = std::max(1u, maxCapacity);
+
+	// calc. total no. of thread groups
+	m_groupCount = (m_capacity + THREAD_GROUP_SIZE - 1) / THREAD_GROUP_SIZE;	// -1 because of 0 based indexing
 }
 
 void VortexParticleEmitter::Initialize(const RenderContext& context) {
 	if (m_isInitialized) return;
 
 	using namespace ErrorHandler;
+	using namespace FileHandling;
 
 	// ! create buffer compatible with SRV & UAV
 	D3D11_BUFFER_DESC structuredBufferDesc{};
@@ -90,7 +97,18 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 		"VortexParticleEmitter::Initialize: Unable to create simulation buffer"
 	);
 
-	// TODO: load & create CS
+	// ! load & create CS
+	auto csBytecode = LoadShaderBytecode("Shaders\\VortexUpdateCS.cso");
+
+	ThrowIfFailed(
+		context.device->CreateComputeShader(
+			csBytecode.data(),
+			csBytecode.size(),
+			nullptr,
+			&m_updateCS
+		),
+		"VortexParticleEmitter::Initialize: Unable to create Compute Shader"
+	);
 
 	m_isInitialized = true;
 }
@@ -98,4 +116,55 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 void VortexParticleEmitter::Draw(const RenderContext& context) {
 	// ! one time initialization
 	Initialize(context);
+
+	// prepare simulation data
+	ParticleSimulationBuffer simulationData{};
+	simulationData.deltaTime = Time::DeltaTime();
+	simulationData.emitterPosition = GetTransform().GetRenderPosition();
+	simulationData.gravity = { 0.0f, -2.0f, 0.0f };
+	simulationData.spawnCount = 0;
+
+	context.deviceContext->UpdateSubresource(
+		m_simulationConstantBuffer.Get(),
+		0,
+		nullptr,
+		&simulationData,
+		0,
+		0
+	);
+
+	// bind buffers
+	ID3D11Buffer* simulationBuffer = m_simulationConstantBuffer.Get();
+	context.deviceContext->CSSetConstantBuffers(
+		0,
+		1,
+		&simulationBuffer
+	);
+
+	auto* particleUAV = m_particleUAV.Get();
+	context.deviceContext->CSSetUnorderedAccessViews(
+		0,
+		1,
+		&particleUAV,
+		nullptr
+	);
+
+	// set compute shader
+	context.deviceContext->CSSetShader(
+		m_updateCS.Get(),
+		nullptr,
+		0
+	);
+
+	// ! dispatch compute shader
+	context.deviceContext->Dispatch(m_groupCount, 1, 1);
+
+	// ! IMP: after dispatch, unbind particle buffer from UAV (necessary for binding it with SRV later)
+	ID3D11UnorderedAccessView* nullUAV = nullptr;
+	context.deviceContext->CSSetUnorderedAccessViews(
+		0,
+		1,
+		&nullUAV,
+		nullptr
+	);
 }

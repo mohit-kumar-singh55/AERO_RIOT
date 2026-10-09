@@ -12,7 +12,7 @@ struct GPUParticle {
 	float age = 0.0f;
 
 	DirectX::SimpleMath::Vector3 velocity = DirectX::SimpleMath::Vector3::Zero;
-	float lifetime = 0.0f;
+	float lifetime = 1.0f;
 
 	DirectX::SimpleMath::Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
 
@@ -56,4 +56,8 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer>  m_simulationConstantBuffer;		// game data
 
 	std::uint32_t m_capacity;	// max GPU particle slots
+
+	std::uint32_t m_groupCount;	// no. of thread groups
+
+	static constexpr std::uint32_t THREAD_GROUP_SIZE = 256;	// no. of threads in each group
 };
