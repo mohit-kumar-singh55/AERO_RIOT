@@ -4,13 +4,15 @@
 #include <SNX/Graphics/RenderContext.h>
 #include <SNX/Utils/ErrorHandler.h>
 
+#include <vector>
+#include <algorithm>
+
 VortexParticleEmitter::VortexParticleEmitter(
 	GameObject& gameObject,
 	std::uint32_t maxCapacity
 ) noexcept :
-	Renderer(gameObject),
-	m_capacity(maxCapacity) {
-	m_particles.reserve(m_capacity);
+	Renderer(gameObject) {
+	m_capacity = std::max(1u, maxCapacity);
 }
 
 void VortexParticleEmitter::Initialize(const RenderContext& context) {
@@ -27,8 +29,9 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 	structuredBufferDesc.StructureByteStride = sizeof(GPUParticle);
 
 	// setting initial data
+	std::vector<GPUParticle> initialParticles(m_capacity);
 	D3D11_SUBRESOURCE_DATA initialParticleData{};
-	initialParticleData.pSysMem = m_particles.data();
+	initialParticleData.pSysMem = initialParticles.data();
 
 	ThrowIfFailed(
 		context.device->CreateBuffer(

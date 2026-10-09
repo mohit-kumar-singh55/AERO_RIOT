@@ -4,7 +4,6 @@
 
 #include <wrl/client.h>
 #include <d3d11.h>
-#include <vector>
 
 #include <SimpleMath.h>
 
@@ -19,7 +18,7 @@ struct GPUParticle {
 
 	float size = 1.0f;
 	float rotation = 0.0f;
-	std::uint32_t active = 0.0f;	// is active?
+	std::uint32_t active = 0u;	// is active?
 	float padding = 0.0f;
 };
 
@@ -57,6 +56,4 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer>  m_simulationConstantBuffer;		// game data
 
 	std::uint32_t m_capacity;	// max GPU particle slots
-
-	std::vector<GPUParticle> m_particles;
 };
