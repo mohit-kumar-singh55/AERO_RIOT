@@ -8,7 +8,7 @@
 #include <wrl/client.h>
 #include <d3d11.h>
 #include <memory>
-#include <cstdlib>
+#include <cmath>
 
 #include <SNX/Graphics/Effects/TrailEffect.h>
 #include <SNX/Utils/Gradient.h>

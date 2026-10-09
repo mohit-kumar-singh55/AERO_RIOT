@@ -4,22 +4,23 @@
 
 #include <wrl/client.h>
 #include <d3d11.h>
+#include <vector>
 
 #include <SimpleMath.h>
 
 struct GPUParticle {
-	DirectX::SimpleMath::Vector3 position;
-	float age;
+	DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero;
+	float age = 0.0f;
 
-	DirectX::SimpleMath::Vector3 velocity;
-	float lifetime;
+	DirectX::SimpleMath::Vector3 velocity = DirectX::SimpleMath::Vector3::Zero;
+	float lifetime = 0.0f;
 
-	DirectX::SimpleMath::Vector4 color;
+	DirectX::SimpleMath::Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
 
-	float size;
-	float rotation;
-	std::uint32_t active;	// is active?
-	float padding;
+	float size = 1.0f;
+	float rotation = 0.0f;
+	std::uint32_t active = 0.0f;	// is active?
+	float padding = 0.0f;
 };
 
 struct ParticleSimulationBuffer {
@@ -37,6 +38,9 @@ public:
 		std::uint32_t maxCapacity	// max particle it can hold
 	) noexcept;
 
+	[[nodiscard]]
+	RenderPass GetRenderPass() const noexcept override { return RenderPass::Transparent; }
+
 protected:
 	void Draw(const RenderContext& context) override;
 
@@ -53,4 +57,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer>  m_simulationConstantBuffer;		// game data
 
 	std::uint32_t m_capacity;	// max GPU particle slots
+
+	std::vector<GPUParticle> m_particles;
 };
