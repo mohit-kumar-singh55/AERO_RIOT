@@ -39,6 +39,15 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 
 	// setting initial data
 	std::vector<GPUParticle> initialParticles(m_capacity);
+	// ? TEMP ****
+	for (std::size_t i = 0;i < 8;i++) {
+		initialParticles[i].active = 1;
+		initialParticles[i].lifetime = 1000.0f;
+		initialParticles[i].size = 0.3f + i;
+		initialParticles[i].velocity = { 0.0f,(2.0f * i),0.0f };
+		initialParticles[i].color = { 1.0f,0.0f,1.0f,1.0f };
+	}
+	// ? *********
 	D3D11_SUBRESOURCE_DATA initialParticleData{};
 	initialParticleData.pSysMem = initialParticles.data();
 
