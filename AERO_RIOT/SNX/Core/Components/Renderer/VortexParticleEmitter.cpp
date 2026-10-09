@@ -18,7 +18,9 @@ VortexParticleEmitter::VortexParticleEmitter(
 	m_capacity = std::max(1u, maxCapacity);
 
 	// calc. total no. of thread groups
-	m_groupCount = (m_capacity + THREAD_GROUP_SIZE - 1) / THREAD_GROUP_SIZE;	// -1 because of 0 based indexing
+	m_groupCount =
+		(m_capacity + THREAD_GROUP_SIZE - 1)
+		/ THREAD_GROUP_SIZE;	// -1 for integer ceiling division
 }
 
 void VortexParticleEmitter::Initialize(const RenderContext& context) {
@@ -166,5 +168,10 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		1,
 		&nullUAV,
 		nullptr
+	);
+	context.deviceContext->CSSetShader(
+		nullptr,
+		nullptr,
+		0
 	);
 }
