@@ -11,6 +11,7 @@
 #include <SNX/Core/Components/Collider/BoxCollider.h>
 #include <SNX/Core/Materials/Primitive/UnlitMaterial.h>
 #include <SNX/Core/Components/Renderer/TrailRenderer.h>
+#include <SNX/Core/Components/Renderer/VortexParticleEmitter.h>
 
 #include <SNX/Graphics/DeviceResources.h>
 #include <SNX/Input/InputManager.h>
@@ -147,6 +148,8 @@ void MainScene::OnLoad() {
 	};
 	wingTipLeftTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
 	wingTipRightTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
+
+	engineExhaust.AddComponent<VortexParticleEmitter>(8126);
 
 	m_aircraftRoot = &aircraftRoot;
 

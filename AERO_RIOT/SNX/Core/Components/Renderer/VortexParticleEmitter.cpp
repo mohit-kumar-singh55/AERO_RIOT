@@ -40,12 +40,34 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 	// setting initial data
 	std::vector<GPUParticle> initialParticles(m_capacity);
 	// ? TEMP ****
-	for (std::size_t i = 0;i < 8;i++) {
-		initialParticles[i].active = 1;
-		initialParticles[i].lifetime = 1000.0f;
-		initialParticles[i].size = 0.3f + i;
-		initialParticles[i].velocity = { 0.0f,(2.0f * i),0.0f };
-		initialParticles[i].color = { 1.0f,0.0f,1.0f,1.0f };
+	const std::size_t testParticleCount =
+		std::min<std::size_t>(8, m_capacity);
+
+	for (std::size_t i = 0; i < testParticleCount; i++) {
+		auto& particle = initialParticles[i];
+
+		particle.active = 1;
+		particle.lifetime = 1000.0f;
+		particle.size = 0.3f;
+
+		particle.position = {
+			(static_cast<float>(i) - 3.5f) * 0.6f,
+			0.0f,
+			0.0f
+		};
+
+		particle.velocity = {
+			0.0f,
+			0.5f + static_cast<float>(i) * 0.15f,
+			0.0f
+		};
+
+		particle.color = {
+			1.0f,
+			0.0f,
+			1.0f,
+			1.0f
+		};
 	}
 	// ? *********
 	D3D11_SUBRESOURCE_DATA initialParticleData{};

@@ -14,7 +14,7 @@ struct GPUParticle
     float padding;
 };
 
-RWStructuredBuffer<GPUParticle> Particles : register(u0);
+RWStructuredBuffer<GPUParticle> Particles : register(u0);   // u0 ->  UAV
 
 cbuffer Simulation : register(b0)
 {

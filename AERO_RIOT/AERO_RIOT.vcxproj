@@ -291,7 +291,19 @@
     <FxCompile Include="SNX\Graphics\Shaders\TrailVS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitPS.hlsl" />
     <FxCompile Include="SNX\Graphics\Shaders\UnlitVS.hlsl" />
-	<FxCompile Include="SNX\Graphics\Shaders\Vortex\VortexUpdateCS.hlsl" />
+    <FxCompile Include="SNX\Graphics\Shaders\Vortex\VortexPS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="SNX\Graphics\Shaders\Vortex\VortexUpdateCS.hlsl" />
+    <FxCompile Include="SNX\Graphics\Shaders\Vortex\VortexVS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Update="**\*VS.hlsl">
