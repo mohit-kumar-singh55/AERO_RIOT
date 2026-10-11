@@ -149,7 +149,7 @@ void MainScene::OnLoad() {
 	wingTipLeftTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
 	wingTipRightTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
 
-	engineExhaust.AddComponent<VortexParticleEmitter>(8126);
+	engineExhaust.AddComponent<VortexParticleEmitter>(8192);
 
 	m_aircraftRoot = &aircraftRoot;
 
@@ -201,6 +201,8 @@ bool MainScene::BuildRenderContext(RenderContext& context) const noexcept {
 	context.view = m_camera->GetView();
 	context.projection = m_camera->GetProjection();
 	context.cameraPosition = m_camera->GetPosition();
+	context.cameraRight = m_camera->GetRight();
+	context.cameraUp = m_camera->GetUp();
 
 	return context.IsValid();
 }

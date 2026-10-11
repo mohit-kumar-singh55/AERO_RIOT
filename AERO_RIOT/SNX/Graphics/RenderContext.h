@@ -14,6 +14,8 @@ struct RenderContext final {
 	DirectX::SimpleMath::Matrix view = DirectX::SimpleMath::Matrix::Identity;
 	DirectX::SimpleMath::Matrix projection = DirectX::SimpleMath::Matrix::Identity;
 	DirectX::SimpleMath::Vector3 cameraPosition = DirectX::SimpleMath::Vector3::Zero;
+	DirectX::SimpleMath::Vector3 cameraRight = DirectX::SimpleMath::Vector3::UnitX;
+	DirectX::SimpleMath::Vector3 cameraUp = DirectX::SimpleMath::Vector3::UnitY;
 
 	int viewportWidth = 0;
 	int viewportHeight = 0;

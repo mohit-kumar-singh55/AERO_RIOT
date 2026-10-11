@@ -60,6 +60,9 @@ public:
 	DirectX::SimpleMath::Vector3 GetForward() const noexcept;
 
 	[[nodiscard]]
+	DirectX::SimpleMath::Vector3 GetRight() const noexcept;
+
+	[[nodiscard]]
 	DirectX::SimpleMath::Vector3 GetUp() const noexcept;
 
 private:

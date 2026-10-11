@@ -16,16 +16,21 @@ struct GPUParticle
 
 StructuredBuffer<GPUParticle> Particles : register(t0); // t0 -> SRV
 
-cbuffer BillboardData : register(b0)
+cbuffer RenderData : register(b0)
 {
-    float Pad_1;
-    float3 CameraUP;
-    
-    float Pad_2;
+    row_major float4x4 ViewProjection;
+
     float3 CameraRight;
+    float Padding0;
+
+    float3 CameraUp;
+    float Padding1;
 }
 
-float4 VSMain(float4 pos : POSITION) : SV_POSITION
+float4 VSMain(
+    uint vertexID : SV_VertexID,
+    uint instanceID : SV_InstanceID
+) : SV_POSITION
 {
-    return pos;
+    return float4(1.0f, 1.0f, 1.0f, 1.0f);  // ? TEMP
 }

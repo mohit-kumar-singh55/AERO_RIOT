@@ -143,6 +143,46 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 		"VortexParticleEmitter::Initialize: Unable to create Compute Shader"
 	);
 
+	// ! create render data constant buffer
+	D3D11_BUFFER_DESC renderDataDesc{};
+	renderDataDesc.ByteWidth = sizeof(ParticleRenderBuffer);
+	renderDataDesc.Usage = D3D11_USAGE_DEFAULT;
+	renderDataDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	renderDataDesc.CPUAccessFlags = 0;
+
+	ThrowIfFailed(
+		context.device->CreateBuffer(
+			&renderDataDesc,
+			nullptr,
+			&m_renderConstantBuffer
+		),
+		"VortexParticleEmitter::Initialize: Unable to create render constant buffer"
+	);
+
+	// ! create vertex shader
+	auto vsBytecode = LoadShaderBytecode("Shaders\\VortexVS.cso");
+	ThrowIfFailed(
+		context.device->CreateVertexShader(
+			vsBytecode.data(),
+			vsBytecode.size(),
+			nullptr,
+			&m_particleVS
+		),
+		"VortexParticleEmitter::Initialize: Unable to create Vertex Shader"
+	);
+
+	// ! create pixel shader
+	auto psBytecode = LoadShaderBytecode("Shaders\\VortexPS.cso");
+	ThrowIfFailed(
+		context.device->CreatePixelShader(
+			psBytecode.data(),
+			psBytecode.size(),
+			nullptr,
+			&m_particlePS
+		),
+		"VortexParticleEmitter::Initialize: Unable to create Pixel Shader"
+	);
+
 	m_isInitialized = true;
 }
 

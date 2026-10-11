@@ -30,11 +30,21 @@ struct ParticleSimulationBuffer {
 	DirectX::SimpleMath::Vector3 gravity;
 };
 
+struct ParticleRenderBuffer {
+	DirectX::SimpleMath::Matrix viewProjection;
+
+	DirectX::SimpleMath::Vector3 cameraRight;
+	float padding0 = 0.0f;
+
+	DirectX::SimpleMath::Vector3 cameraUp;
+	float padding1 = 0.0f;
+};
+
 class VortexParticleEmitter : public Renderer {
 public:
 	VortexParticleEmitter(
 		GameObject& gameObject,
-		std::uint32_t maxCapacity	// max particle it can hold
+		std::uint32_t maxCapacity = 8192	// max particle it can hold
 	) noexcept;
 
 	[[nodiscard]]
@@ -54,6 +64,9 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> m_particleUAV;		// same buffer, read/write view
 	Microsoft::WRL::ComPtr<ID3D11ComputeShader> m_updateCS;					// simulation
 	Microsoft::WRL::ComPtr<ID3D11Buffer>  m_simulationConstantBuffer;		// game data
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_particleVS;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_renderConstantBuffer;
 
 	std::uint32_t m_capacity;	// max GPU particle slots
 

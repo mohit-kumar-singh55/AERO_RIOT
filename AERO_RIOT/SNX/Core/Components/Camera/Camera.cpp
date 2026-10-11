@@ -90,6 +90,10 @@ DirectX::SimpleMath::Vector3 Camera::GetForward() const noexcept {
 	return GetTransform().GetForward();
 }
 
+DirectX::SimpleMath::Vector3 Camera::GetRight() const noexcept {
+	return GetTransform().GetRight();
+}
+
 DirectX::SimpleMath::Vector3 Camera::GetUp() const noexcept {
 	return GetTransform().GetUp();
 }
