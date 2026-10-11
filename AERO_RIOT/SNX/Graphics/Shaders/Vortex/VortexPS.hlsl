@@ -1,4 +1,10 @@
-float4 PSMain() : SV_TARGET
+struct PSInput
 {
-    return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    float4 position : SV_Position;
+    float4 color : COLOR;
+};
+
+float4 PSMain(PSInput input) : SV_TARGET
+{
+    return input.color;
 }

@@ -245,4 +245,71 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		nullptr,
 		0
 	);
+
+	// prepare render constant buffer data
+	ParticleRenderBuffer renderData{};
+	renderData.viewProjection = context.view * context.projection;
+	renderData.cameraRight = context.cameraRight;
+	renderData.cameraUp = context.cameraUp;
+
+	context.deviceContext->UpdateSubresource(
+		m_renderConstantBuffer.Get(),
+		0,
+		nullptr,
+		&renderData,
+		0,
+		0
+	);
+
+	// bind buffers
+	ID3D11Buffer* renderDataBuffer = m_renderConstantBuffer.Get();
+	context.deviceContext->VSSetConstantBuffers(
+		0,
+		1,
+		&renderDataBuffer
+	);
+
+	// set SRV
+	auto* particleSRV = m_particleSRV.Get();
+	context.deviceContext->VSSetShaderResources(
+		0,
+		1,
+		&particleSRV
+	);
+
+	// no vertex buffer
+	context.deviceContext->IASetInputLayout(nullptr);
+
+	// create triangles from vertices
+	context.deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// set vertex shader
+	context.deviceContext->VSSetShader(
+		m_particleVS.Get(),
+		nullptr,
+		0
+	);
+
+	// set pixel shader
+	context.deviceContext->PSSetShader(
+		m_particlePS.Get(),
+		nullptr,
+		0
+	);
+
+	// ! draw
+	context.deviceContext->DrawInstanced(
+		6,			// no. of vertices per particle (2 triangles making a quad)
+		m_capacity,
+		0,
+		0
+	);
+
+	// ! IMP: after draw, unbind SRV
+	ID3D11ShaderResourceView* nullSRV = nullptr;
+	context.deviceContext->VSSetShaderResources(
+		0,
+		1,
+		&nullSRV
+	);
 }
