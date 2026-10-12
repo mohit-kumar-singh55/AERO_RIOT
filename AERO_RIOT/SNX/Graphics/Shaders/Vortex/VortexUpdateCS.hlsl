@@ -15,7 +15,7 @@ struct GPUParticle
 };
 
 RWStructuredBuffer<GPUParticle> Particles : register(u0); // u0 -> particle UAV
-RWStructuredBuffer<uint> SpawnCounter : register(u1);    // u1 -> atomic spawn counter
+RWStructuredBuffer<uint> SpawnCounter : register(u1); // u1 -> atomic spawn counter
 
 cbuffer Simulation : register(b0)
 {
@@ -54,9 +54,9 @@ void CSMain(uint3 id : SV_DispatchThreadID)
         return;
     }
 
-    // Dead slots compete for this frame's limited number of spawn requests.
+    // Dead slots compete for this frame's limited number of spawn requests
     uint spawnIndex;
-    InterlockedAdd(SpawnCounter[0], 1, spawnIndex);
+    InterlockedAdd(SpawnCounter[0], 1, spawnIndex); // aomically increments the spawn counter and returns the previous value as a unique spawn index
 
     if (spawnIndex >= SpawnCount)
         return;

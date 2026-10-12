@@ -38,7 +38,6 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 	structuredBufferDesc.StructureByteStride = sizeof(GPUParticle);
 
 	std::vector<GPUParticle> initialParticles(m_capacity);
-
 	D3D11_SUBRESOURCE_DATA initialParticleData{};
 	initialParticleData.pSysMem = initialParticles.data();
 
@@ -212,7 +211,7 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		0
 	);
 
-	// Reset the atomic spawn counter before this frame's compute dispatch.
+	// Reset the atomic spawn counter before this frame's compute dispatch
 	const UINT clearSpawnCounter[4] = { 0, 0, 0, 0 };
 	context.deviceContext->ClearUnorderedAccessViewUint(
 		m_spawnCounterUAV.Get(),
