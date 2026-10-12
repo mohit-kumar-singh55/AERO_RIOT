@@ -14,7 +14,8 @@ struct GPUParticle
     float padding;
 };
 
-RWStructuredBuffer<GPUParticle> Particles : register(u0);   // u0 ->  UAV
+RWStructuredBuffer<GPUParticle> Particles : register(u0); // u0 ->  UAV
+RWStructuredBuffer<uint> SpawnCounter : register(u1);
 
 cbuffer Simulation : register(b0)
 {
@@ -40,16 +41,38 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     
     GPUParticle particle = Particles[id.x];
     
-    if (particle.active == 0)
+    // update particle
+    if (particle.active == 1)
+    {
+        particle.age += DeltaTime;
+    
+        particle.velocity += Gravity * DeltaTime;
+        particle.position += particle.velocity * DeltaTime;
+    
+        if (particle.age >= particle.lifetime)
+            particle.active = 0;
+    
+        Particles[id.x] = particle;
+        
+        return;
+    }
+    
+    // else find available/dead slot
+    uint spawnIndex;
+    
+    InterlockedAdd(SpawnCounter[0], 1, spawnIndex);
+    
+    if (spawnIndex >= SpawnCount)
         return;
     
-    particle.age += DeltaTime;
+    // initialize particle
+    particle.age = 0;
+    particle.active = 1;
+    particle.size = 0.2f;
+    particle.lifetime = 3.0f;
+    particle.position = float3(0.0f, 0.0f, 0.0f);
+    particle.velocity = float3(0.0f, 2.0f, 0.0f);
+    particle.color = float4(1.0f, 0.0f, 1.0f, 1.0f);
     
-    particle.velocity += Gravity * DeltaTime;
-    particle.position += particle.velocity * DeltaTime;
-    
-    if (particle.age >= particle.lifetime)
-        particle.active = 0;
-    
-    Particles[id.x] = particle;
+    SpawnCount = 5;
 }

@@ -64,9 +64,13 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> m_particleUAV;		// same buffer, read/write view
 	Microsoft::WRL::ComPtr<ID3D11ComputeShader> m_updateCS;					// simulation
 	Microsoft::WRL::ComPtr<ID3D11Buffer>  m_simulationConstantBuffer;		// game data
+
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_particleVS;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_particlePS;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_renderConstantBuffer;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> m_spawnCounterBuffer;
+	Microsoft::WRL::ComPtr<ID3D11UnorderedAccessView> m_spawnCounterUAV;
 
 	std::uint32_t m_capacity;	// max GPU particle slots
 
