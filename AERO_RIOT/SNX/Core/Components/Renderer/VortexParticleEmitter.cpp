@@ -17,10 +17,10 @@ VortexParticleEmitter::VortexParticleEmitter(
 	Renderer(gameObject) {
 	m_capacity = std::max(1u, maxCapacity);
 
-	// calc. total no. of thread groups
+	// ceil(m_capacity / THREAD_GROUP_SIZE)
 	m_groupCount =
 		(m_capacity + THREAD_GROUP_SIZE - 1)
-		/ THREAD_GROUP_SIZE;	// -1 for integer ceiling division
+		/ THREAD_GROUP_SIZE;
 }
 
 void VortexParticleEmitter::Initialize(const RenderContext& context) {
@@ -29,47 +29,16 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 	using namespace ErrorHandler;
 	using namespace FileHandling;
 
-	// ! create buffer compatible with SRV & UAV
+	// ! create particle buffer compatible with SRV & UAV
 	D3D11_BUFFER_DESC structuredBufferDesc{};
 	structuredBufferDesc.ByteWidth = sizeof(GPUParticle) * m_capacity;
 	structuredBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	structuredBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;	// it allows us to create SRV & UAV & make shader able to read/write this buffer as a shader resource
-	structuredBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;	// it allows to treat this buffer as an array of fixed-size structures
+	structuredBufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+	structuredBufferDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	structuredBufferDesc.StructureByteStride = sizeof(GPUParticle);
 
-	// setting initial data
 	std::vector<GPUParticle> initialParticles(m_capacity);
-	// ? TEMP ****
-	const std::size_t testParticleCount =
-		std::min<std::size_t>(8, m_capacity);
 
-	for (std::size_t i = 0; i < testParticleCount; i++) {
-		auto& particle = initialParticles[i];
-
-		particle.active = 1;
-		particle.lifetime = 1000.0f;
-		particle.size = 0.3f;
-
-		particle.position = {
-			(static_cast<float>(i) - 3.5f) * 0.6f,
-			0.0f,
-			0.0f
-		};
-
-		particle.velocity = {
-			0.0f,
-			0.5f + static_cast<float>(i) * 0.15f,
-			0.0f
-		};
-
-		particle.color = {
-			1.0f,
-			0.0f,
-			1.0f,
-			1.0f
-		};
-	}
-	// ? *********
 	D3D11_SUBRESOURCE_DATA initialParticleData{};
 	initialParticleData.pSysMem = initialParticles.data();
 
@@ -82,7 +51,7 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 		"VortexParticleEmitter::Initialize: Unable to create structured buffer"
 	);
 
-	// ! create SRV to access (read-only) particle buffer from VS
+	// ! create SRV to access particle buffer read-only from VS
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
@@ -98,7 +67,7 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 		"VortexParticleEmitter::Initialize: Unable to create SRV"
 	);
 
-	// ! create UAV to access (read/write) particle buffer from CS
+	// ! create UAV to access particle buffer read/write from CS
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
@@ -114,7 +83,44 @@ void VortexParticleEmitter::Initialize(const RenderContext& context) {
 		"VortexParticleEmitter::Initialize: Unable to create UAV"
 	);
 
-	// ! create constant buffer for additional game data
+	// ! create one-element structured buffer used as an atomic spawn counter
+	D3D11_BUFFER_DESC spawnCounterDesc{};
+	spawnCounterDesc.ByteWidth = sizeof(std::uint32_t);
+	spawnCounterDesc.Usage = D3D11_USAGE_DEFAULT;
+	spawnCounterDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS;
+	spawnCounterDesc.CPUAccessFlags = 0;
+	spawnCounterDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+	spawnCounterDesc.StructureByteStride = sizeof(std::uint32_t);
+
+	std::uint32_t initialSpawnCounter = 0;
+	D3D11_SUBRESOURCE_DATA initialSpawnCounterData{};
+	initialSpawnCounterData.pSysMem = &initialSpawnCounter;
+
+	ThrowIfFailed(
+		context.device->CreateBuffer(
+			&spawnCounterDesc,
+			&initialSpawnCounterData,
+			&m_spawnCounterBuffer
+		),
+		"VortexParticleEmitter::Initialize: Unable to create spawn counter buffer"
+	);
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC spawnCounterUAVDesc{};
+	spawnCounterUAVDesc.Format = DXGI_FORMAT_UNKNOWN;
+	spawnCounterUAVDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	spawnCounterUAVDesc.Buffer.FirstElement = 0;
+	spawnCounterUAVDesc.Buffer.NumElements = 1;
+
+	ThrowIfFailed(
+		context.device->CreateUnorderedAccessView(
+			m_spawnCounterBuffer.Get(),
+			&spawnCounterUAVDesc,
+			&m_spawnCounterUAV
+		),
+		"VortexParticleEmitter::Initialize: Unable to create spawn counter UAV"
+	);
+
+	// ! create constant buffer for simulation data
 	D3D11_BUFFER_DESC simulationBufferDesc{};
 	simulationBufferDesc.ByteWidth = sizeof(ParticleSimulationBuffer);
 	simulationBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -195,7 +201,7 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 	simulationData.deltaTime = Time::DeltaTime();
 	simulationData.emitterPosition = GetTransform().GetRenderPosition();
 	simulationData.gravity = { 0.0f, -2.0f, 0.0f };
-	simulationData.spawnCount = 0;
+	simulationData.spawnCount = 5; // TEMP: five new particles per dispatch/frame
 
 	context.deviceContext->UpdateSubresource(
 		m_simulationConstantBuffer.Get(),
@@ -206,7 +212,14 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		0
 	);
 
-	// bind buffers
+	// Reset the atomic spawn counter before this frame's compute dispatch.
+	const UINT clearSpawnCounter[4] = { 0, 0, 0, 0 };
+	context.deviceContext->ClearUnorderedAccessViewUint(
+		m_spawnCounterUAV.Get(),
+		clearSpawnCounter
+	);
+
+	// bind simulation constant buffer
 	ID3D11Buffer* simulationBuffer = m_simulationConstantBuffer.Get();
 	context.deviceContext->CSSetConstantBuffers(
 		0,
@@ -214,11 +227,15 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		&simulationBuffer
 	);
 
-	auto* particleUAV = m_particleUAV.Get();
+	// u0 = particle buffer, u1 = spawn counter
+	ID3D11UnorderedAccessView* computeUAVs[] = {
+		m_particleUAV.Get(),
+		m_spawnCounterUAV.Get()
+	};
 	context.deviceContext->CSSetUnorderedAccessViews(
 		0,
-		1,
-		&particleUAV,
+		_countof(computeUAVs),
+		computeUAVs,
 		nullptr
 	);
 
@@ -232,12 +249,12 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 	// ! dispatch compute shader
 	context.deviceContext->Dispatch(m_groupCount, 1, 1);
 
-	// ! IMP: after dispatch, unbind particle buffer from UAV (necessary for binding it with SRV later)
-	ID3D11UnorderedAccessView* nullUAV = nullptr;
+	// ! unbind UAVs before reading the particle buffer as an SRV
+	ID3D11UnorderedAccessView* nullUAVs[] = { nullptr, nullptr };
 	context.deviceContext->CSSetUnorderedAccessViews(
 		0,
-		1,
-		&nullUAV,
+		_countof(nullUAVs),
+		nullUAVs,
 		nullptr
 	);
 	context.deviceContext->CSSetShader(
@@ -261,7 +278,7 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		0
 	);
 
-	// bind buffers
+	// bind render constant buffer
 	ID3D11Buffer* renderDataBuffer = m_renderConstantBuffer.Get();
 	context.deviceContext->VSSetConstantBuffers(
 		0,
@@ -269,7 +286,7 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		&renderDataBuffer
 	);
 
-	// set SRV
+	// bind particle SRV at t0
 	auto* particleSRV = m_particleSRV.Get();
 	context.deviceContext->VSSetShaderResources(
 		0,
@@ -277,35 +294,30 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 		&particleSRV
 	);
 
-	// no vertex buffer
+	// no vertex buffer/input layout; VS generates quad corners from SV_VertexID
 	context.deviceContext->IASetInputLayout(nullptr);
-
-	// create triangles from vertices
 	context.deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// set vertex shader
 	context.deviceContext->VSSetShader(
 		m_particleVS.Get(),
 		nullptr,
 		0
 	);
 
-	// set pixel shader
 	context.deviceContext->PSSetShader(
 		m_particlePS.Get(),
 		nullptr,
 		0
 	);
 
-	// ! draw
 	context.deviceContext->DrawInstanced(
-		6,			// no. of vertices per particle (2 triangles making a quad)
+		6,
 		m_capacity,
 		0,
 		0
 	);
 
-	// ! IMP: after draw, unbind SRV
+	// ! unbind SRV so the same particle buffer can become a UAV next frame
 	ID3D11ShaderResourceView* nullSRV = nullptr;
 	context.deviceContext->VSSetShaderResources(
 		0,
