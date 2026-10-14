@@ -24,6 +24,14 @@ cbuffer Simulation : register(b0)
 
     uint SpawnCount;
     float3 Gravity;
+    
+    float Lifetime;
+    float3 StartVelocity;
+
+    float4 StartColor;
+
+    float StartSize;
+    float3 Padding;
 }
 
 [numthreads(256, 1, 1)]
@@ -65,12 +73,12 @@ void CSMain(uint3 id : SV_DispatchThreadID)
     particle.position = EmitterPosition;
     particle.age = 0.0f;
 
-    particle.velocity = float3(0.0f, 2.0f, 0.0f);
-    particle.lifetime = 3.0f;
+    particle.velocity = StartVelocity;
+    particle.lifetime = Lifetime;
 
-    particle.color = float4(1.0f, 0.0f, 1.0f, 1.0f);
+    particle.color = StartColor;
 
-    particle.size = 0.2f;
+    particle.size = StartSize;
     particle.rotation = 0.0f;
     particle.active = 1;
     particle.padding = 0.0f;

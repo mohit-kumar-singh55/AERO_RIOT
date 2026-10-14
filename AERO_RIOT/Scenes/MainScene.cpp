@@ -151,6 +151,11 @@ void MainScene::OnLoad() {
 
 	auto& engineParticles = engineExhaust.AddComponent<VortexParticleEmitter>(8192);
 	engineParticles.SetEmissionRate(100.0);
+	engineParticles.SetGravity({ 0.0f,-9.8f,0.0f });
+	engineParticles.SetStartSize(0.2f);
+	engineParticles.SetStartVelocity({ 0.0f,0.0f,8.0f });
+	engineParticles.SetStartColor({ 1.0f,0.5f,0.5f,1.0f });
+	engineParticles.SetLifetime(3.0f);
 
 	m_aircraftRoot = &aircraftRoot;
 

@@ -9,11 +9,14 @@
 
 #include <algorithm>
 
+using DirectX::SimpleMath::Vector3;
+using DirectX::SimpleMath::Vector4;
+
 struct GPUParticle {
-	DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero;
+	Vector3 position = Vector3::Zero;
 	float age = 0.0f;
 
-	DirectX::SimpleMath::Vector3 velocity = DirectX::SimpleMath::Vector3::Zero;
+	Vector3 velocity = Vector3::Zero;
 	float lifetime = 1.0f;
 
 	DirectX::SimpleMath::Vector4 color{ 1.0f,1.0f,1.0f,1.0f };
@@ -26,19 +29,27 @@ struct GPUParticle {
 
 struct ParticleSimulationBuffer {
 	float deltaTime;
-	DirectX::SimpleMath::Vector3 emitterPosition;
+	Vector3 emitterPosition;
 
 	std::uint32_t spawnCount;
-	DirectX::SimpleMath::Vector3 gravity;
+	Vector3 gravity;
+
+	float lifetime;
+	Vector3 startVelocity;
+
+	Vector4 startColor;
+
+	float startSize;
+	Vector3 padding;
 };
 
 struct ParticleRenderBuffer {
 	DirectX::SimpleMath::Matrix viewProjection;
 
-	DirectX::SimpleMath::Vector3 cameraRight;
+	Vector3 cameraRight;
 	float padding0 = 0.0f;
 
-	DirectX::SimpleMath::Vector3 cameraUp;
+	Vector3 cameraUp;
 	float padding1 = 0.0f;
 };
 
@@ -52,12 +63,48 @@ public:
 	[[nodiscard]]
 	RenderPass GetRenderPass() const noexcept override { return RenderPass::Transparent; }
 
+	// settings
 	void SetEmissionRate(float particlesPerSecond) noexcept {
 		m_emissionRate = std::max(0.0f, particlesPerSecond);
 	}
 
 	[[nodiscard]]
 	float GetEmissionRate() const noexcept { return m_emissionRate; }
+
+	void SetLifetime(float lifetime) noexcept {
+		m_lifetime = std::max(0.0f, lifetime);
+	}
+
+	[[nodiscard]]
+	float GetLifetime() const noexcept { return m_lifetime; }
+
+	void SetStartSize(float startSize) noexcept {
+		m_startSize = startSize;
+	}
+
+	[[nodiscard]]
+	float GetStartSize() const noexcept { return m_startSize; }
+
+	void SetStartVelocity(Vector3 startVelocity) noexcept {
+		m_startVelocity = startVelocity;
+	}
+
+	[[nodiscard]]
+	Vector3 GetStartVelocity() const noexcept { return m_startVelocity; }
+
+	void SetGravity(Vector3 gravity) noexcept {
+		m_gravity = gravity;
+	}
+
+	[[nodiscard]]
+	Vector3 GetGravity() const noexcept { return m_gravity; }
+
+	void SetStartColor(Vector4 startColor) noexcept {
+		m_startColor = startColor;
+	}
+
+	[[nodiscard]]
+	Vector4 GetStartColor() const noexcept { return m_startColor; }
 
 protected:
 	void Draw(const RenderContext& context) override;
@@ -89,4 +136,11 @@ private:
 
 	float m_emissionRate = 10.0f;		// particles/sec
 	float m_spawnAccumulator = 0.0f;	// fractional spawn remainder carried between frames
+
+	// particle settings
+	Vector3 m_startVelocity{ 0.0f,0.0f,0.0f };
+	Vector3 m_gravity{ 0.0f,0.0f,0.0f };
+	Vector4 m_startColor{ 1.0f,0.0f,1.0f,1.0f };
+	float m_startSize = 0.2f;
+	float m_lifetime = 1.0f;
 };

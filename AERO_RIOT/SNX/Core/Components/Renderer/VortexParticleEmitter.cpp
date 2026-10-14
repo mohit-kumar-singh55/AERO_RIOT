@@ -207,8 +207,12 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 	ParticleSimulationBuffer simulationData{};
 	simulationData.deltaTime = deltaTime;
 	simulationData.emitterPosition = GetTransform().GetRenderPosition();
-	simulationData.gravity = { 0.0f, -2.0f, 0.0f };
+	simulationData.gravity = m_gravity;
 	simulationData.spawnCount = spawnCount;
+	simulationData.lifetime = m_lifetime;
+	simulationData.startColor = m_startColor;
+	simulationData.startSize = m_startSize;
+	simulationData.startVelocity = m_startVelocity;
 
 	context.deviceContext->UpdateSubresource(
 		m_simulationConstantBuffer.Get(),
