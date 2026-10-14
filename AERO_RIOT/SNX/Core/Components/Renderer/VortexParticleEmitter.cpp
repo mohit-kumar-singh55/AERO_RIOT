@@ -195,12 +195,19 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 	// ! one time initialization
 	Initialize(context);
 
-	// prepare simulation data
+	// ! prepare simulation data
+	// accumulate the no. of particle for this frame
+	m_spawnAccumulator += m_emissionRate * Time::DeltaTime();
+	// get the actual round int no. of particles to spawn thie frame
+	std::uint32_t spawnCount = static_cast<std::uint32_t>(m_spawnAccumulator);
+	// store the fraction part for next use
+	m_spawnAccumulator -= spawnCount;
+
 	ParticleSimulationBuffer simulationData{};
 	simulationData.deltaTime = Time::DeltaTime();
 	simulationData.emitterPosition = GetTransform().GetRenderPosition();
 	simulationData.gravity = { 0.0f, -2.0f, 0.0f };
-	simulationData.spawnCount = 5; // TEMP: five new particles per dispatch/frame
+	simulationData.spawnCount = spawnCount; // TEMP: five new particles per dispatch/frame
 
 	context.deviceContext->UpdateSubresource(
 		m_simulationConstantBuffer.Get(),

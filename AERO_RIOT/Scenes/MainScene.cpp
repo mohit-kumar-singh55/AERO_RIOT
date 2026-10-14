@@ -149,7 +149,8 @@ void MainScene::OnLoad() {
 	wingTipLeftTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
 	wingTipRightTrailRenderer.GetGradient().SetKeys(WingTipTrailGradientkeys);
 
-	engineExhaust.AddComponent<VortexParticleEmitter>(8192);
+	auto& engineParticles = engineExhaust.AddComponent<VortexParticleEmitter>(8192);
+	engineParticles.SetEmissionRate(100.0);
 
 	m_aircraftRoot = &aircraftRoot;
 

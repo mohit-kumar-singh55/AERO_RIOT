@@ -50,6 +50,13 @@ public:
 	[[nodiscard]]
 	RenderPass GetRenderPass() const noexcept override { return RenderPass::Transparent; }
 
+	void SetEmissionRate(float particlesPerSecond) noexcept {
+		m_emissionRate = std::max(0.0f, particlesPerSecond);
+	}
+
+	[[nodiscard]]
+	float GetEmissionRate() const noexcept { return m_emissionRate; }
+
 protected:
 	void Draw(const RenderContext& context) override;
 
@@ -77,4 +84,7 @@ private:
 	std::uint32_t m_groupCount;	// no. of thread groups
 
 	static constexpr std::uint32_t THREAD_GROUP_SIZE = 256;	// no. of threads in each group
+
+	float m_emissionRate = 10.0f;		// particles/sec
+	float m_spawnAccumulator = 0.0f;	// remaining particles to spawn for this second
 };
