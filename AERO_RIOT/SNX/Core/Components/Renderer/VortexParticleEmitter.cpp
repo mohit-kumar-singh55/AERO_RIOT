@@ -8,7 +8,6 @@
 #include <SNX/Core/Components/Transform.h>
 
 #include <vector>
-#include <algorithm>
 
 VortexParticleEmitter::VortexParticleEmitter(
 	GameObject& gameObject,
@@ -195,19 +194,21 @@ void VortexParticleEmitter::Draw(const RenderContext& context) {
 	// ! one time initialization
 	Initialize(context);
 
+	const float deltaTime = Time::DeltaTime();
+
 	// ! prepare simulation data
 	// accumulate the no. of particle for this frame
-	m_spawnAccumulator += m_emissionRate * Time::DeltaTime();
+	m_spawnAccumulator += m_emissionRate * deltaTime;
 	// get the actual round int no. of particles to spawn thie frame
 	std::uint32_t spawnCount = static_cast<std::uint32_t>(m_spawnAccumulator);
 	// store the fraction part for next use
 	m_spawnAccumulator -= spawnCount;
 
 	ParticleSimulationBuffer simulationData{};
-	simulationData.deltaTime = Time::DeltaTime();
+	simulationData.deltaTime = deltaTime;
 	simulationData.emitterPosition = GetTransform().GetRenderPosition();
 	simulationData.gravity = { 0.0f, -2.0f, 0.0f };
-	simulationData.spawnCount = spawnCount; // TEMP: five new particles per dispatch/frame
+	simulationData.spawnCount = spawnCount;
 
 	context.deviceContext->UpdateSubresource(
 		m_simulationConstantBuffer.Get(),

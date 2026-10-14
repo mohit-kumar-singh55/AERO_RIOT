@@ -7,6 +7,8 @@
 
 #include <SimpleMath.h>
 
+#include <algorithm>
+
 struct GPUParticle {
 	DirectX::SimpleMath::Vector3 position = DirectX::SimpleMath::Vector3::Zero;
 	float age = 0.0f;
@@ -86,5 +88,5 @@ private:
 	static constexpr std::uint32_t THREAD_GROUP_SIZE = 256;	// no. of threads in each group
 
 	float m_emissionRate = 10.0f;		// particles/sec
-	float m_spawnAccumulator = 0.0f;	// remaining particles to spawn for this second
+	float m_spawnAccumulator = 0.0f;	// fractional spawn remainder carried between frames
 };
